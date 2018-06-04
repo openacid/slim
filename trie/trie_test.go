@@ -7,10 +7,15 @@ import (
 
 func TestTrie(t *testing.T) {
 
+	type ExpectType struct {
+		key []byte
+		rst int
+	}
+
 	var cases = []struct {
 		key      [][]byte
-		value    [][]byte
-		expected [][][]byte
+		value    []interface{}
+		expected []ExpectType
 	}{
 		{
 			key: [][]byte{
@@ -20,19 +25,19 @@ func TestTrie(t *testing.T) {
 				{'b', 'c', 'e'},
 				{'c', 'd', 'e'},
 			},
-			value: [][]byte{
-				{0},
-				{1},
-				{2},
-				{3},
-				{4},
+			value: []interface{}{
+				0,
+				1,
+				2,
+				3,
+				4,
 			},
-			expected: [][][]byte{
-				{{'a', 'b', 'c'}, {0}},
-				{{'a', 'b', 'd'}, {1}},
-				{{'b', 'c', 'd'}, {2}},
-				{{'b', 'c', 'e'}, {3}},
-				{{'c', 'd', 'e'}, {4}},
+			expected: []ExpectType{
+				ExpectType{[]byte{'a', 'b', 'c'}, 0},
+				ExpectType{[]byte{'a', 'b', 'd'}, 1},
+				ExpectType{[]byte{'b', 'c', 'd'}, 2},
+				ExpectType{[]byte{'b', 'c', 'e'}, 3},
+				ExpectType{[]byte{'c', 'd', 'e'}, 4},
 			},
 		},
 		{
@@ -43,19 +48,19 @@ func TestTrie(t *testing.T) {
 				{'b', 'c', 'd'},
 				{'b', 'c', 'd', 'e'},
 			},
-			value: [][]byte{
-				{0},
-				{1},
-				{2},
-				{3},
-				{4},
+			value: []interface{}{
+				0,
+				1,
+				2,
+				3,
+				4,
 			},
-			expected: [][][]byte{
-				{{'a', 'b', 'c'}, {0}},
-				{{'a', 'b', 'c', 'd'}, {1}},
-				{{'b', 'c'}, {2}},
-				{{'b', 'c', 'd'}, {3}},
-				{{'b', 'c', 'd', 'e'}, {4}},
+			expected: []ExpectType{
+				ExpectType{[]byte{'a', 'b', 'c'}, 0},
+				ExpectType{[]byte{'a', 'b', 'c', 'd'}, 1},
+				ExpectType{[]byte{'b', 'c'}, 2},
+				ExpectType{[]byte{'b', 'c', 'd'}, 3},
+				ExpectType{[]byte{'b', 'c', 'd', 'e'}, 4},
 			},
 		},
 	}
@@ -63,32 +68,30 @@ func TestTrie(t *testing.T) {
 	for _, c := range cases {
 
 		trie := New(c.key, c.value)
-		for _, kv := range c.expected {
-			ks := kv[0]
-			val := kv[1]
-			rst, err := trie.Search(ks)
+		for _, ex := range c.expected {
+			rst := trie.Search(ex.key, EQ)
 
-			if err != nil {
-				t.Error(err)
-			}
-
-			if !reflect.DeepEqual(val, rst) {
-				t.Error("ks: ", ks, "expected value: ", val, "rst: ", rst)
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
 		trie.Squash()
-		for _, kv := range c.expected {
-			ks := kv[0]
-			val := kv[1]
-			rst, err := trie.Search(ks)
+		for _, ex := range c.expected {
+			rst := trie.Search(ex.key, EQ)
 
-			if err != nil {
-				t.Error(err)
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
+		}
 
-			if !reflect.DeepEqual(val, rst) {
-				t.Error("ks: ", ks, "expected value: ", val, "rst: ", rst)
+		trie.Squash()
+		trie.Squash()
+		for _, ex := range c.expected {
+			rst := trie.Search(ex.key, EQ)
+
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 	}
@@ -98,166 +101,281 @@ func TestTrieSearch(t *testing.T) {
 
 	var key = [][]byte{
 		{'a', 'b', 'c'},
+		{'a', 'b', 'c', 'd'},
 		{'a', 'b', 'd'},
+		{'a', 'b', 'd', 'e'},
+		{'b', 'c'},
 		{'b', 'c', 'd'},
-		{'b', 'c', 'e'},
+		{'b', 'c', 'd', 'e'},
 		{'c', 'd', 'e'},
 	}
-	var value = [][]byte{
-		{0},
-		{1},
-		{2},
-		{3},
-		{4},
+	var value = []interface{}{
+		[]byte{0},
+		[]byte{1},
+		[]byte{2},
+		[]byte{3},
+		[]byte{4},
+		[]byte{5},
+		[]byte{6},
+		[]byte{7},
 	}
 
 	var trie = New(key, value)
 
+	type ExpectType struct {
+		mode Mode
+		rst  interface{}
+	}
+
 	var cases = []struct {
 		key      []byte
-		expected []byte
-		err      error
+		expected []ExpectType
 	}{
 		{
 			[]byte{'a', 'b', 'c'},
-			[]byte{0},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{0}},
+				{LT | EQ, []byte{0}},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{1}},
+			},
 		},
 		{
 			[]byte{'a', 'b', 'd'},
-			[]byte{1},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{2}},
+				{LT | EQ, []byte{2}},
+				{LT, []byte{1}},
+				{GT | EQ, []byte{2}},
+				{GT, []byte{3}},
+			},
 		},
 		{
 			[]byte{'b', 'c', 'd'},
-			[]byte{2},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{5}},
+				{LT | EQ, []byte{5}},
+				{LT, []byte{4}},
+				{GT | EQ, []byte{5}},
+				{GT, []byte{6}},
+			},
 		},
 		{
 			[]byte{'b', 'c', 'e'},
-			[]byte{3},
-			nil,
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{6}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, []byte{7}},
+			},
 		},
 		{
 			[]byte{'c', 'd', 'e'},
-			[]byte{4},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{7}},
+				{LT | EQ, []byte{7}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, nil},
+			},
 		},
 		{
 			[]byte{'a', 'c', 'b'},
-			nil,
-			KeyNotExist,
-		},
-		{
-			[]byte{'a', 'b'},
-			nil,
-			KeyNotExist,
-		},
-		{
-			[]byte{'a', 'b', 'c', 'd'},
-			nil,
-			KeyNotExist,
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{3}},
+				{LT, []byte{3}},
+				{GT | EQ, []byte{4}},
+				{GT, []byte{4}},
+			},
 		},
 		{
 			[]byte{90, 'a', 'v'},
-			nil,
-			KeyNotExist,
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, nil},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{0}},
+			},
+		},
+		{
+			[]byte{'a', 'b'},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, nil},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{0}},
+			},
+		},
+		{
+			[]byte{'a', 'c'},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{3}},
+				{LT, []byte{3}},
+				{GT | EQ, []byte{4}},
+				{GT, []byte{4}},
+			},
+		},
+		{
+			[]byte{90},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, nil},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{0}},
+			},
+		},
+		{
+			[]byte{'a', 'b', 'c', 'd', 'e'},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{1}},
+				{LT, []byte{1}},
+				{GT | EQ, []byte{2}},
+				{GT, []byte{2}},
+			},
 		},
 	}
 
 	for _, c := range cases {
-		rst, err := trie.Search(c.key)
-		if !reflect.DeepEqual(err, c.err) {
-			t.Error("err not equal.", "expected: ", c.err, "got: ", err)
-		}
+		for _, ex := range c.expected {
 
-		if !reflect.DeepEqual(c.expected, rst) {
-			t.Error("key: ", c.key, "expected value: ", c.expected, "rst: ", rst)
+			rst := trie.Search(c.key, ex.mode)
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("key: ", c.key, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
+			}
 		}
 	}
 
 	var squashedCases = []struct {
 		key      []byte
-		expected []byte
-		err      error
+		expected []ExpectType
 	}{
 		{
+			[]byte{'a', 'b'},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, nil},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{0}},
+			},
+		},
+		{
 			[]byte{'a', 'b', 'c'},
-			[]byte{0},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{0}},
+				{LT | EQ, []byte{0}},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{1}},
+			},
 		},
 		{
 			[]byte{'a', 'd', 'c'},
-			[]byte{0},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{0}},
+				{LT | EQ, []byte{0}},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{1}},
+			},
 		},
 		{
 			[]byte{'a', 'b', 'd'},
-			[]byte{1},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{2}},
+				{LT | EQ, []byte{2}},
+				{LT, []byte{1}},
+				{GT | EQ, []byte{2}},
+				{GT, []byte{3}},
+			},
 		},
 		{
 			[]byte{'a', 'c', 'd'},
-			[]byte{1},
-			nil,
-		},
-		{
-			[]byte{'b', 'c', 'd'},
-			[]byte{2},
-			nil,
-		},
-		{
-			[]byte{'b', 'e', 'd'},
-			[]byte{2},
-			nil,
-		},
-		{
-			[]byte{'b', 'c', 'e'},
-			[]byte{3},
-			nil,
-		},
-		{
-			[]byte{'b', 'd', 'e'},
-			[]byte{3},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{2}},
+				{LT | EQ, []byte{2}},
+				{LT, []byte{1}},
+				{GT | EQ, []byte{2}},
+				{GT, []byte{3}},
+			},
 		},
 		{
 			[]byte{'c', 'd', 'e'},
-			[]byte{4},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{7}},
+				{LT | EQ, []byte{7}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, nil},
+			},
 		},
 		{
 			[]byte{'c', 'f', 'e'},
-			[]byte{4},
-			nil,
+			[]ExpectType{
+				{EQ, []byte{7}},
+				{LT | EQ, []byte{7}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, nil},
+			},
+		},
+		{
+			[]byte{'c', 'f', 'f'},
+			[]ExpectType{
+				{EQ, []byte{7}},
+				{LT | EQ, []byte{7}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, nil},
+			},
 		},
 		{
 			[]byte{'c'},
-			nil,
-			KeyNotExist,
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{6}},
+				{LT, []byte{6}},
+				{GT | EQ, []byte{7}},
+				{GT, []byte{7}},
+			},
 		},
 		{
 			[]byte{'a', 'c'},
-			nil,
-			KeyNotExist,
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, nil},
+				{LT, nil},
+				{GT | EQ, []byte{0}},
+				{GT, []byte{0}},
+			},
 		},
 		{
-			[]byte{'a', 'b', 'c', 'd'},
-			nil,
-			KeyNotExist,
+			[]byte{'a', 'b', 'c', 'd', 'e'},
+			[]ExpectType{
+				{EQ, nil},
+				{LT | EQ, []byte{1}},
+				{LT, []byte{1}},
+				{GT | EQ, []byte{2}},
+				{GT, []byte{2}},
+			},
 		},
 	}
 
 	trie.Squash()
 	for _, c := range squashedCases {
-		rst, err := trie.Search(c.key)
-		if !reflect.DeepEqual(err, c.err) {
-			t.Error("err not equal.", "expected: ", c.err, "got: ", err)
-		}
-
-		if !reflect.DeepEqual(c.expected, rst) {
-			t.Error("key: ", c.key, "expected value: ", c.expected, "rst: ", rst)
+		for _, ex := range c.expected {
+			rst := trie.Search(c.key, ex.mode)
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("key: ", c.key, "expected value: ", ex.rst, "rst: ", rst)
+			}
 		}
 	}
-
 }
