@@ -110,6 +110,12 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 	defer os.Remove(testDataFn)
 
 	sHeader := makeDefaultDataHeader(1000)
+
+	gHeaderSize := GetMarshalHeaderSize()
+	if gHeaderSize != 32 {
+		t.Fatalf("wrong header size: 32, %d", gHeaderSize)
+	}
+
 	err = marshalHeader(writer, sHeader)
 	if err != nil {
 		t.Fatalf("failed to marshalHeader: %v", err)

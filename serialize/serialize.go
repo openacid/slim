@@ -53,9 +53,9 @@ func makeDataHeader(verStr string, headerSize uint64, dataSize uint64) *dataHead
 }
 
 func makeDefaultDataHeader(dataSize uint64) *dataHeader {
-	headerSize := uint64(unsafe.Sizeof(uint64(0))*2 + version.MAXLEN)
+	headerSize := GetMarshalHeaderSize()
 
-	return makeDataHeader(version.VERSION, headerSize, dataSize)
+	return makeDataHeader(version.VERSION, uint64(headerSize), dataSize)
 }
 
 func readFull(reader io.Reader, buf []byte) (cnt int, err error) {
@@ -159,4 +159,8 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	}
 
 	return nil
+}
+
+func GetMarshalHeaderSize() int64 {
+	return int64(unsafe.Sizeof(uint64(0))*2 + version.MAXLEN)
 }
