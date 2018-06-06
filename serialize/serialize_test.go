@@ -6,7 +6,6 @@ import (
 	"math"
 	"os"
 	"testing"
-	"unsafe"
 	"xec/sparse"
 	"xec/version"
 )
@@ -160,19 +159,12 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 }
 
 func TestMarshalUnMarshal(t *testing.T) {
-	var elts [][]byte
 	index := []uint32{10, 20, 30, 40, 50, 60}
-	for _, elt := range index {
-		buf := new(bytes.Buffer)
-		binary.Write(buf, binary.LittleEndian, elt)
 
-		elts = append(elts, buf.Bytes())
-	}
-	eltSize := uint32(unsafe.Sizeof(uint32(0)))
-
-	sArray, err := sparse.New(eltSize, index, elts)
+	sArray := &sparse.SparseArray{EltConverter: sparse.U32Conv{}}
+	err := sArray.Init(index, index)
 	if err != nil {
-		t.Fatalf("failed to new sparse array: %v", err)
+		t.Fatalf("failed to init sparse array")
 	}
 
 	// marshal
@@ -206,7 +198,7 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSArray := &sparse.SparseArray{}
+	rSArray := &sparse.SparseArray{EltConverter: sparse.U32Conv{}}
 
 	err = Unmarshal(reader, rSArray)
 	if err != nil {
@@ -218,12 +210,8 @@ func TestMarshalUnMarshal(t *testing.T) {
 		t.Fatalf("wrong Cnt: %d, %d", rSArray.Cnt, sArray.Cnt)
 	}
 
-	if rSArray.EltSize != sArray.EltSize {
-		t.Fatalf("wrong EltSize: %d, %d", rSArray.EltSize, sArray.EltSize)
-	}
-
 	if len(sArray.Bitmaps) != len(rSArray.Bitmaps) {
-		t.Fatalf("wrong bitmap len: %d, %d", rSArray.EltSize, sArray.EltSize)
+		t.Fatalf("wrong bitmap len: %d, %d", len(rSArray.Bitmaps), len(sArray.Bitmaps))
 	}
 
 	for idx, elt := range sArray.Bitmaps {
@@ -247,8 +235,8 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 
 	for _, idx := range index {
-		sVal := binary.LittleEndian.Uint32(sArray.Get(idx))
-		rsVal := binary.LittleEndian.Uint32(rSArray.Get(idx))
+		sVal := sArray.Get(idx).(uint32)
+		rsVal := rSArray.Get(idx).(uint32)
 
 		if sVal != rsVal || sVal != idx {
 			t.Fatalf("wrong Elts value: %v, %v, %v", sVal, rsVal, idx)
