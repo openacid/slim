@@ -164,3 +164,7 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 func GetMarshalHeaderSize() int64 {
 	return int64(unsafe.Sizeof(uint64(0))*2 + version.MAXLEN)
 }
+
+func GetMarshalSize(obj proto.Message) int64 {
+	return GetMarshalHeaderSize() + int64(proto.Size(obj))
+}
