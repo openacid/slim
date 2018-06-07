@@ -173,6 +173,8 @@ func TestMarshalUnMarshal(t *testing.T) {
 		t.Fatalf("failed to init sparse array")
 	}
 
+	marshalSize := GetMarshalSize(sArray)
+
 	// marshal
 	wOFlags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	writer, err := os.OpenFile(testDataFn, wOFlags, 0755)
@@ -195,6 +197,10 @@ func TestMarshalUnMarshal(t *testing.T) {
 
 	if fInfo.Size() != int64(cnt) {
 		t.Fatalf("wrong file size: %d, %d", fInfo.Size(), cnt)
+	}
+
+	if fInfo.Size() != marshalSize {
+		t.Fatalf("wrong marshal size: %d, %d", fInfo.Size(), marshalSize)
 	}
 
 	// unmarshal
