@@ -1,8 +1,10 @@
 package trie
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
+	"xec/serialize"
 )
 
 func TestTrie(t *testing.T) {
@@ -377,5 +379,63 @@ func TestTrieSearch(t *testing.T) {
 				t.Error("key: ", c.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
+	}
+}
+
+func TestL1IndexMarshalUnmarshal(t *testing.T) {
+	l1Idx := NewL1Index()
+
+	keys := []string{"a", "b", "c", "d", "e"}
+	offsets := []int64{1, 2, 3, 4, 5}
+
+	kLen := len(keys)
+	for cnt := 0; cnt < kLen; cnt++ {
+		l1Idx.Add(keys[cnt], offsets[cnt])
+
+		if len(l1Idx.Keys) != cnt+1 {
+			t.Fatalf("length of Keys not right: %d, %d", cnt+1, len(l1Idx.Keys))
+		}
+
+		if len(l1Idx.Offsets) != cnt+1 {
+			t.Fatalf("length of Offets not right: %d, %d", cnt+1, len(l1Idx.Offsets))
+		}
+	}
+
+	// marshal
+	rw := new(bytes.Buffer)
+	cnt, err := serialize.Marshal(rw, l1Idx)
+	if err != nil {
+		t.Fatalf("failed to marshal L1Index: %v", cnt)
+	}
+
+	// unmarshal
+	rL1Idx := NewL1Index()
+	err = serialize.Unmarshal(rw, rL1Idx)
+	if err != nil {
+		t.Fatalf("failed to unmarshal L1Index: %v", cnt)
+	}
+
+	if len(rw.Bytes()) != 0 {
+		t.Fatalf("failed to unmarshal, rw not emtpy: %v", rw.Bytes())
+	}
+
+	for cnt := 1; cnt <= kLen; cnt++ {
+		k, o, ok := rL1Idx.RPop()
+		if !ok {
+			t.Fatalf("failed to rpop: %s, %d, %t", k, o, ok)
+		}
+
+		if k != keys[kLen-cnt] {
+			t.Fatalf("key not right: %s, %s", keys[kLen-cnt], k)
+		}
+
+		if o != offsets[kLen-cnt] {
+			t.Fatalf("offset not right: %d, %d", offsets[kLen-cnt], o)
+		}
+	}
+
+	_, _, ok := rL1Idx.RPop()
+	if ok {
+		t.Fatalf("failed to handle empty L1Index")
 	}
 }
