@@ -17,7 +17,7 @@ func wordKey(key []byte) []byte {
 	return w
 }
 
-func TestCompactTrie(t *testing.T) {
+func TestCompactedTrie(t *testing.T) {
 
 	type ExpectType struct {
 		key  []byte
@@ -104,7 +104,7 @@ func TestCompactTrie(t *testing.T) {
 			}
 		}
 
-		ctrie := &CompactTrie{
+		ctrie := &CompactedTrie{
 			Children: sparse.SparseArray{EltConverter: ChildConv{}},
 			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
 			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
@@ -133,7 +133,7 @@ func TestCompactTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = &CompactTrie{
+		ctrie = &CompactedTrie{
 			Children: sparse.SparseArray{EltConverter: ChildConv{}},
 			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
 			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
@@ -162,7 +162,7 @@ func TestCompactTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = &CompactTrie{
+		ctrie = &CompactedTrie{
 			Children: sparse.SparseArray{EltConverter: ChildConv{}},
 			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
 			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
@@ -183,7 +183,7 @@ func TestCompactTrie(t *testing.T) {
 	}
 }
 
-func TestCompactTrieSearch(t *testing.T) {
+func TestCompactedTrieSearch(t *testing.T) {
 
 	var key = [][]byte{
 		{'a', 'b', 'c'},
@@ -217,7 +217,7 @@ func TestCompactTrieSearch(t *testing.T) {
 
 	var trie = New(key, value)
 
-	ctrie := &CompactTrie{
+	ctrie := &CompactedTrie{
 		Children: sparse.SparseArray{EltConverter: ChildConv{}},
 		Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
 		Leaves:   sparse.SparseArray{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
@@ -459,7 +459,7 @@ func TestCompactTrieSearch(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie = &CompactTrie{
+	ctrie = &CompactedTrie{
 		Children: sparse.SparseArray{EltConverter: ChildConv{}},
 		Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
 		Leaves:   sparse.SparseArray{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
