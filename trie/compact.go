@@ -10,7 +10,7 @@ import (
 const WordMask = 0xf
 const MaxWord = 0x10
 
-type CompactTrie struct {
+type CompactedTrie struct {
 	Children sparse.SparseArray
 	Steps    sparse.SparseArray
 	Leaves   sparse.SparseArray
@@ -46,7 +46,7 @@ func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
 	return uint32(4)
 }
 
-func (st *CompactTrie) Compact(root *Node) (err error) {
+func (st *CompactedTrie) Compact(root *Node) (err error) {
 	if root == nil {
 		return
 	}
@@ -127,7 +127,7 @@ func (st *CompactTrie) Compact(root *Node) (err error) {
 	return nil
 }
 
-func (st *CompactTrie) Search(key []byte, mode Mode) (value interface{}) {
+func (st *CompactedTrie) Search(key []byte, mode Mode) (value interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -186,7 +186,7 @@ func (st *CompactTrie) Search(key []byte, mode Mode) (value interface{}) {
 	return
 }
 
-func (st *CompactTrie) getChild(idx uint16) *children {
+func (st *CompactedTrie) getChild(idx uint16) *children {
 	cval := st.Children.Get(uint32(idx))
 	if cval == nil {
 		return nil
@@ -196,7 +196,7 @@ func (st *CompactTrie) getChild(idx uint16) *children {
 	return &ch
 }
 
-func (st *CompactTrie) getStep(idx uint16) uint16 {
+func (st *CompactedTrie) getStep(idx uint16) uint16 {
 	step := st.Steps.Get(uint32(idx))
 	if step == nil {
 		return uint16(1)
@@ -210,7 +210,7 @@ func getChildIdx(ch *children, offset uint16) uint16 {
 	return ch.Offset + uint16(chNum) - uint16(1)
 }
 
-func (st *CompactTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
+func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
 	ltIdx, eqIdx, rtIdx = int32(-1), int32(-1), int32(-1)
 	ltLeaf = false
 
@@ -260,7 +260,7 @@ func (st *CompactTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rt
 	return
 }
 
-func (st *CompactTrie) leftMost(idx uint16) uint16 {
+func (st *CompactedTrie) leftMost(idx uint16) uint16 {
 	for {
 		if st.Leaves.Get(uint32(idx)) != nil {
 			return idx
@@ -271,7 +271,7 @@ func (st *CompactTrie) leftMost(idx uint16) uint16 {
 	}
 }
 
-func (st *CompactTrie) rightMost(idx uint16) uint16 {
+func (st *CompactedTrie) rightMost(idx uint16) uint16 {
 	offset := uint16(unsafe.Sizeof(uint16(0)) * 8)
 	for {
 		ch := st.getChild(idx)
