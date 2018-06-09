@@ -390,14 +390,22 @@ func TestL1IndexMarshalUnmarshal(t *testing.T) {
 
 	kLen := len(keys)
 	for cnt := 0; cnt < kLen; cnt++ {
-		l1Idx.Add(keys[cnt], offsets[cnt])
+		l1Idx.Add(keys[cnt], offsets[cnt], offsets[cnt], offsets[cnt])
 
 		if len(l1Idx.Keys) != cnt+1 {
 			t.Fatalf("length of Keys not right: %d, %d", cnt+1, len(l1Idx.Keys))
 		}
 
-		if len(l1Idx.Offsets) != cnt+1 {
-			t.Fatalf("length of Offets not right: %d, %d", cnt+1, len(l1Idx.Offsets))
+		if len(l1Idx.L2IdxOffsets) != cnt+1 {
+			t.Fatalf("length of L2 Offets not right: %d, %d", cnt+1, len(l1Idx.L2IdxOffsets))
+		}
+
+		if len(l1Idx.NeedleOffsets) != cnt+1 {
+			t.Fatalf("length of Needle Offets not right: %d, %d", cnt+1, len(l1Idx.NeedleOffsets))
+		}
+
+		if len(l1Idx.NeedleIDListOffsets) != cnt+1 {
+			t.Fatalf("length of NeedleIDList Offets not right: %d, %d", cnt+1, len(l1Idx.NeedleIDListOffsets))
 		}
 	}
 
@@ -420,21 +428,29 @@ func TestL1IndexMarshalUnmarshal(t *testing.T) {
 	}
 
 	for cnt := 1; cnt <= kLen; cnt++ {
-		k, o, ok := rL1Idx.RPop()
+		k, l2O, nO, ndIO, ok := rL1Idx.RPop()
 		if !ok {
-			t.Fatalf("failed to rpop: %s, %d, %t", k, o, ok)
+			t.Fatalf("failed to rpop: %v", rL1Idx)
 		}
 
 		if k != keys[kLen-cnt] {
 			t.Fatalf("key not right: %s, %s", keys[kLen-cnt], k)
 		}
 
-		if o != offsets[kLen-cnt] {
-			t.Fatalf("offset not right: %d, %d", offsets[kLen-cnt], o)
+		if l2O != offsets[kLen-cnt] {
+			t.Fatalf("L2 offset not right: %d, %d", offsets[kLen-cnt], l2O)
+		}
+
+		if nO != offsets[kLen-cnt] {
+			t.Fatalf("Needle offset not right: %d, %d", offsets[kLen-cnt], nO)
+		}
+
+		if ndIO != offsets[kLen-cnt] {
+			t.Fatalf("NeedleID offset not right: %d, %d", offsets[kLen-cnt], ndIO)
 		}
 	}
 
-	_, _, ok := rL1Idx.RPop()
+	_, _, _, _, ok := rL1Idx.RPop()
 	if ok {
 		t.Fatalf("failed to handle empty L1Index")
 	}
