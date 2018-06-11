@@ -167,7 +167,7 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 func TestMarshalUnMarshal(t *testing.T) {
 	index := []uint32{10, 20, 30, 40, 50, 60}
 
-	sArray := &sparse.SparseArray{EltConverter: sparse.U32Conv{}}
+	sArray := &sparse.Array{EltConverter: sparse.U32Conv{}}
 	err := sArray.Init(index, index)
 	if err != nil {
 		t.Fatalf("failed to init sparse array")
@@ -210,7 +210,7 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSArray := &sparse.SparseArray{EltConverter: sparse.U32Conv{}}
+	rSArray := &sparse.Array{EltConverter: sparse.U32Conv{}}
 
 	err = Unmarshal(reader, rSArray)
 	if err != nil {
