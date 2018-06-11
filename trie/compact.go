@@ -11,9 +11,9 @@ const WordMask = 0xf
 const MaxWord = 0x10
 
 type CompactedTrie struct {
-	Children sparse.SparseArray
-	Steps    sparse.SparseArray
-	Leaves   sparse.SparseArray
+	Children sparse.Array
+	Steps    sparse.Array
+	Leaves   sparse.Array
 }
 
 type children struct {

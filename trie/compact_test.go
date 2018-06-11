@@ -105,9 +105,9 @@ func TestCompactedTrie(t *testing.T) {
 		}
 
 		ctrie := &CompactedTrie{
-			Children: sparse.SparseArray{EltConverter: ChildConv{}},
-			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
+			Children: sparse.Array{EltConverter: ChildConv{}},
+			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
 		}
 
 		err := ctrie.Compact(trie)
@@ -134,9 +134,9 @@ func TestCompactedTrie(t *testing.T) {
 		}
 
 		ctrie = &CompactedTrie{
-			Children: sparse.SparseArray{EltConverter: ChildConv{}},
-			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
+			Children: sparse.Array{EltConverter: ChildConv{}},
+			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
 		}
 
 		err = ctrie.Compact(trie)
@@ -163,9 +163,9 @@ func TestCompactedTrie(t *testing.T) {
 		}
 
 		ctrie = &CompactedTrie{
-			Children: sparse.SparseArray{EltConverter: ChildConv{}},
-			Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.SparseArray{EltConverter: sparse.U16Conv{}},
+			Children: sparse.Array{EltConverter: ChildConv{}},
+			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
 		}
 
 		err = ctrie.Compact(trie)
@@ -218,9 +218,9 @@ func TestCompactedTrieSearch(t *testing.T) {
 	var trie = New(key, value)
 
 	ctrie := &CompactedTrie{
-		Children: sparse.SparseArray{EltConverter: ChildConv{}},
-		Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.SparseArray{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
+		Children: sparse.Array{EltConverter: ChildConv{}},
+		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+		Leaves:   sparse.Array{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
 	}
 
 	err := ctrie.Compact(trie)
@@ -460,9 +460,9 @@ func TestCompactedTrieSearch(t *testing.T) {
 	trie.Squash()
 
 	ctrie = &CompactedTrie{
-		Children: sparse.SparseArray{EltConverter: ChildConv{}},
-		Steps:    sparse.SparseArray{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.SparseArray{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
+		Children: sparse.Array{EltConverter: ChildConv{}},
+		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+		Leaves:   sparse.Array{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
 	}
 
 	err = ctrie.Compact(trie)
