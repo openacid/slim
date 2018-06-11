@@ -1,5 +1,7 @@
 package trie
 
+import "reflect"
+
 type Node struct {
 	Children map[int]*Node
 	Branches []int
@@ -17,7 +19,13 @@ const (
 
 const leafBranch = -1
 
-func New(keys [][]byte, values []interface{}) (root *Node) {
+func New(keys [][]byte, values interface{}) (root *Node, ok bool) {
+
+	var valSlice []interface{}
+	valSlice, ok = toSlice(values)
+	if !ok {
+		return
+	}
 
 	root = &Node{Children: make(map[int]*Node), Step: 1}
 
@@ -44,7 +52,7 @@ func New(keys [][]byte, values []interface{}) (root *Node) {
 			node = n
 		}
 
-		leaf := &Node{Value: values[i]}
+		leaf := &Node{Value: valSlice[i]}
 
 		node.Children[leafBranch] = leaf
 		node.Branches = append(node.Branches, leafBranch)
@@ -184,4 +192,18 @@ func (r *Node) rightMost() *Node {
 		lastBr := node.Branches[len(node.Branches)-1]
 		node = node.Children[lastBr]
 	}
+}
+
+func toSlice(arg interface{}) (rst []interface{}, ok bool) {
+	s := reflect.ValueOf(arg)
+	if s.Kind() != reflect.Slice {
+		return
+	}
+	l := s.Len()
+	rst = make([]interface{}, l)
+	for i := 0; i < l; i++ {
+		rst[i] = s.Index(i).Interface()
+	}
+	ok = true
+	return
 }
