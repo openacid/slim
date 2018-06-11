@@ -14,7 +14,7 @@ func TestTrie(t *testing.T) {
 
 	var cases = []struct {
 		key      [][]byte
-		value    []interface{}
+		value    interface{}
 		expected []ExpectType
 	}{
 		{
@@ -25,7 +25,7 @@ func TestTrie(t *testing.T) {
 				{'b', 'c', 'e'},
 				{'c', 'd', 'e'},
 			},
-			value: []interface{}{
+			value: []int{
 				0,
 				1,
 				2,
@@ -48,7 +48,7 @@ func TestTrie(t *testing.T) {
 				{'b', 'c', 'd'},
 				{'b', 'c', 'd', 'e'},
 			},
-			value: []interface{}{
+			value: []int{
 				0,
 				1,
 				2,
@@ -67,7 +67,7 @@ func TestTrie(t *testing.T) {
 
 	for _, c := range cases {
 
-		trie := New(c.key, c.value)
+		trie, _ := New(c.key, c.value)
 		for _, ex := range c.expected {
 			rst := trie.Search(ex.key, EQ)
 
@@ -109,7 +109,7 @@ func TestTrieSearch(t *testing.T) {
 		{'b', 'c', 'd', 'e'},
 		{'c', 'd', 'e'},
 	}
-	var value = []interface{}{
+	var value = [][]byte{
 		[]byte{0},
 		[]byte{1},
 		[]byte{2},
@@ -120,7 +120,7 @@ func TestTrieSearch(t *testing.T) {
 		[]byte{7},
 	}
 
-	var trie = New(key, value)
+	var trie, _ = New(key, value)
 
 	type ExpectType struct {
 		mode Mode

@@ -97,7 +97,7 @@ func TestCompactedTrie(t *testing.T) {
 			c.key[i] = wordKey(k)
 		}
 
-		trie := New(c.key, c.value)
+		trie, _ := New(c.key, c.value)
 		for _, ex := range c.expected {
 			rst := trie.Search(wordKey(ex.key), ex.mode)
 
@@ -202,7 +202,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 		key[i] = wordKey(k)
 	}
 
-	var trie = New(key, value)
+	var trie, _ = New(key, value)
 
 	ctrie := NewCompactedTrie(sparse.ByteConv{EltSize: uint32(1)})
 	err := ctrie.Compact(trie)
@@ -481,7 +481,7 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 		uint16(4),
 	}
 
-	trie := New(key, value)
+	trie, _ := New(key, value)
 
 	ctrie := NewCompactedTrie(sparse.U16Conv{})
 	err := ctrie.Compact(trie)
@@ -503,7 +503,8 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// unmarshal
-	rCtrie, err := Unmarshal(rw, sparse.U16Conv{})
+	rCtrie := NewCompactedTrie(sparse.U16Conv{})
+	err = rCtrie.Unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}

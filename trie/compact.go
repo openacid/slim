@@ -324,24 +324,18 @@ func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
 	return cnt, nil
 }
 
-func Unmarshal(reader io.Reader, c sparse.EltConverter) (*CompactedTrie, error) {
-	ct := &CompactedTrie{
-		Children: sparse.Array{EltConverter: ChildConv{}},
-		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.Array{EltConverter: c},
-	}
-
+func (ct *CompactedTrie) Unmarshal(reader io.Reader) error {
 	if err := serialize.Unmarshal(reader, &ct.Children); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := serialize.Unmarshal(reader, &ct.Steps); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := serialize.Unmarshal(reader, &ct.Leaves); err != nil {
-		return nil, err
+		return err
 	}
 
-	return ct, nil
+	return nil
 }
