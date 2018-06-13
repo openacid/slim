@@ -2,8 +2,10 @@ package trie
 
 import (
 	"encoding/binary"
+	"io"
 	"unsafe"
 	"xec/bit"
+	"xec/serialize"
 	"xec/sparse"
 )
 
@@ -291,4 +293,55 @@ func (st *CompactedTrie) rightMost(idx uint16) uint16 {
 
 		idx = getChildIdx(ch, offset)
 	}
+}
+
+func (ct *CompactedTrie) GetMarshalSize() int64 {
+	cSize := serialize.GetMarshalSize(&ct.Children)
+	sSize := serialize.GetMarshalSize(&ct.Steps)
+	lSize := serialize.GetMarshalSize(&ct.Leaves)
+
+	return cSize + sSize + lSize
+}
+
+func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
+	var n uint64
+
+	if n, err = serialize.Marshal(writer, &ct.Children); err != nil {
+		return 0, err
+	}
+	cnt += int64(n)
+
+	if n, err = serialize.Marshal(writer, &ct.Steps); err != nil {
+		return 0, err
+	}
+	cnt += int64(n)
+
+	if n, err = serialize.Marshal(writer, &ct.Leaves); err != nil {
+		return 0, err
+	}
+	cnt += int64(n)
+
+	return cnt, nil
+}
+
+func Unmarshal(reader io.Reader, c sparse.EltConverter) (*CompactedTrie, error) {
+	ct := &CompactedTrie{
+		Children: sparse.Array{EltConverter: ChildConv{}},
+		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+		Leaves:   sparse.Array{EltConverter: c},
+	}
+
+	if err := serialize.Unmarshal(reader, &ct.Children); err != nil {
+		return nil, err
+	}
+
+	if err := serialize.Unmarshal(reader, &ct.Steps); err != nil {
+		return nil, err
+	}
+
+	if err := serialize.Unmarshal(reader, &ct.Leaves); err != nil {
+		return nil, err
+	}
+
+	return ct, nil
 }
