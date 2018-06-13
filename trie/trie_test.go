@@ -1,10 +1,8 @@
 package trie
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
-	"xec/serialize"
 )
 
 func TestTrie(t *testing.T) {
@@ -379,79 +377,5 @@ func TestTrieSearch(t *testing.T) {
 				t.Error("key: ", c.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
-	}
-}
-
-func TestL1IndexMarshalUnmarshal(t *testing.T) {
-	l1Idx := NewL1Index()
-
-	keys := []string{"a", "b", "c", "d", "e"}
-	offsets := []int64{1, 2, 3, 4, 5}
-
-	kLen := len(keys)
-	for cnt := 0; cnt < kLen; cnt++ {
-		l1Idx.Add(keys[cnt], offsets[cnt], offsets[cnt], offsets[cnt])
-
-		if len(l1Idx.Keys) != cnt+1 {
-			t.Fatalf("length of Keys not right: %d, %d", cnt+1, len(l1Idx.Keys))
-		}
-
-		if len(l1Idx.L2IdxOffsets) != cnt+1 {
-			t.Fatalf("length of L2 Offets not right: %d, %d", cnt+1, len(l1Idx.L2IdxOffsets))
-		}
-
-		if len(l1Idx.NeedleOffsets) != cnt+1 {
-			t.Fatalf("length of Needle Offets not right: %d, %d", cnt+1, len(l1Idx.NeedleOffsets))
-		}
-
-		if len(l1Idx.NeedleIDListOffsets) != cnt+1 {
-			t.Fatalf("length of NeedleIDList Offets not right: %d, %d", cnt+1, len(l1Idx.NeedleIDListOffsets))
-		}
-	}
-
-	// marshal
-	rw := new(bytes.Buffer)
-	cnt, err := serialize.Marshal(rw, l1Idx)
-	if err != nil {
-		t.Fatalf("failed to marshal L1Index: %v", cnt)
-	}
-
-	// unmarshal
-	rL1Idx := NewL1Index()
-	err = serialize.Unmarshal(rw, rL1Idx)
-	if err != nil {
-		t.Fatalf("failed to unmarshal L1Index: %v", cnt)
-	}
-
-	if len(rw.Bytes()) != 0 {
-		t.Fatalf("failed to unmarshal, rw not emtpy: %v", rw.Bytes())
-	}
-
-	for cnt := 1; cnt <= kLen; cnt++ {
-		k, l2O, nO, ndIO, ok := rL1Idx.RPop()
-		if !ok {
-			t.Fatalf("failed to rpop: %v", rL1Idx)
-		}
-
-		if k != keys[kLen-cnt] {
-			t.Fatalf("key not right: %s, %s", keys[kLen-cnt], k)
-		}
-
-		if l2O != offsets[kLen-cnt] {
-			t.Fatalf("L2 offset not right: %d, %d", offsets[kLen-cnt], l2O)
-		}
-
-		if nO != offsets[kLen-cnt] {
-			t.Fatalf("Needle offset not right: %d, %d", offsets[kLen-cnt], nO)
-		}
-
-		if ndIO != offsets[kLen-cnt] {
-			t.Fatalf("NeedleID offset not right: %d, %d", offsets[kLen-cnt], ndIO)
-		}
-	}
-
-	_, _, _, _, ok := rL1Idx.RPop()
-	if ok {
-		t.Fatalf("failed to handle empty L1Index")
 	}
 }
