@@ -46,6 +46,16 @@ func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
 	return uint32(4)
 }
 
+func NewCompactedTrie(c sparse.EltConverter) *CompactedTrie {
+	ct := &CompactedTrie{
+		Children: sparse.Array{EltConverter: ChildConv{}},
+		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
+		Leaves:   sparse.Array{EltConverter: c},
+	}
+
+	return ct
+}
+
 func (st *CompactedTrie) Compact(root *Node) (err error) {
 	if root == nil {
 		return

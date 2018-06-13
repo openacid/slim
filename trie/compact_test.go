@@ -104,12 +104,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie := &CompactedTrie{
-			Children: sparse.Array{EltConverter: ChildConv{}},
-			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
-		}
-
+		ctrie := NewCompactedTrie(sparse.U16Conv{})
 		err := ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -133,12 +128,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = &CompactedTrie{
-			Children: sparse.Array{EltConverter: ChildConv{}},
-			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
-		}
-
+		ctrie = NewCompactedTrie(sparse.U16Conv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -162,12 +152,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = &CompactedTrie{
-			Children: sparse.Array{EltConverter: ChildConv{}},
-			Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-			Leaves:   sparse.Array{EltConverter: sparse.U16Conv{}},
-		}
-
+		ctrie = NewCompactedTrie(sparse.U16Conv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -217,12 +202,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	var trie = New(key, value)
 
-	ctrie := &CompactedTrie{
-		Children: sparse.Array{EltConverter: ChildConv{}},
-		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.Array{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
-	}
-
+	ctrie := NewCompactedTrie(sparse.ByteConv{EltSize: uint32(1)})
 	err := ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
@@ -459,12 +439,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie = &CompactedTrie{
-		Children: sparse.Array{EltConverter: ChildConv{}},
-		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.Array{EltConverter: sparse.ByteConv{EltSize: uint32(1)}},
-	}
-
+	ctrie = NewCompactedTrie(sparse.ByteConv{EltSize: uint32(1)})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
