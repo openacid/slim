@@ -1,6 +1,8 @@
 package trie
 
 import (
+	"bytes"
+	proto "github.com/golang/protobuf/proto"
 	"reflect"
 	"testing"
 	"xec/sparse"
@@ -460,5 +462,62 @@ func TestCompactedTrieSearch(t *testing.T) {
 				t.Fatal("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
 			}
 		}
+	}
+}
+
+func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
+	key := [][]byte{
+		{1, 2, 3},
+		{1, 2, 4},
+		{2, 3, 4},
+		{2, 3, 5},
+		{3, 4, 5},
+	}
+	value := []interface{}{
+		uint16(0),
+		uint16(1),
+		uint16(2),
+		uint16(3),
+		uint16(4),
+	}
+
+	trie := New(key, value)
+
+	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	err := ctrie.Compact(trie)
+	if err != nil {
+		t.Fatalf("compact trie error: %v", err)
+	}
+
+	rw := new(bytes.Buffer)
+
+	size := ctrie.GetMarshalSize()
+
+	n, err := ctrie.Marshal(rw)
+	if err != nil {
+		t.Fatalf("failed to marshal ctrie: %v", err)
+	}
+
+	if n != size || int64(rw.Len()) != size {
+		t.Fatalf("wrong marshal size: %d, %d, %d", n, size, rw.Len())
+	}
+
+	// unmarshal
+	rCtrie, err := Unmarshal(rw, sparse.U16Conv{})
+	if err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	// check
+	if !proto.Equal(&ctrie.Children, &rCtrie.Children) {
+		t.Fatalf("Children not the same")
+	}
+
+	if !proto.Equal(&ctrie.Steps, &rCtrie.Steps) {
+		t.Fatalf("Step not the same")
+	}
+
+	if !proto.Equal(&ctrie.Leaves, &rCtrie.Leaves) {
+		t.Fatalf("Leaves not the same")
 	}
 }
