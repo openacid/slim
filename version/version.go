@@ -7,7 +7,7 @@ const (
 	 *
 	 * length of version string should be at least
 	 * one byte smaller than MAXLEN because having to make room
-	 * for delimter in byte array
+	 * for delimiter in byte array
 	 */
 	MAXLEN = 16
 )
