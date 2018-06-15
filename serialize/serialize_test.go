@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"testing"
+
 	"xec/sparse"
 	"xec/version"
 )
@@ -121,7 +122,6 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 		t.Fatalf("failed to marshalHeader: %v", err)
 	}
 
-	t.Logf("header to marshal: %v", sHeader)
 	writer.Close()
 
 	// unmarshal
@@ -135,8 +135,6 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to unmarshalHeader: %v", err)
 	}
-
-	t.Logf("header unmarshaled: %v", rSHeader)
 
 	if rSHeader.dataSize != sHeader.dataSize {
 		t.Fatalf("wrong data size: %v, %v", rSHeader.dataSize, sHeader.dataSize)
