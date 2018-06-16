@@ -1,6 +1,10 @@
 package trie
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
 
 type Node struct {
 	Children map[int]*Node
@@ -58,6 +62,38 @@ func New(keys [][]byte, values interface{}) (root *Node, ok bool) {
 		node.Branches = append(node.Branches, leafBranch)
 	}
 	return
+}
+
+func (r *Node) ToStrings(cc int) []string {
+
+	var line string
+	if cc == leafBranch {
+		line = fmt.Sprintf("  $(%d):", len(r.Branches))
+	} else {
+		line = fmt.Sprintf("%03d(%d):", cc, len(r.Branches))
+	}
+
+	rst := make([]string, 0, 64)
+
+	if len(r.Branches) > 0 {
+
+		for _, b := range r.Branches {
+			subtrie := r.Children[b].ToStrings(b)
+			indent := strings.Repeat(" ", len(line))
+			for _, s := range subtrie {
+				if len(rst) == 0 {
+					rst = append(rst, line+s)
+				} else {
+					rst = append(rst, indent+s)
+				}
+			}
+		}
+
+	} else {
+		rst = append(rst, line)
+	}
+
+	return rst
 }
 
 func (r *Node) Squash() {

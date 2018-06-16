@@ -2,10 +2,11 @@ package trie
 
 import (
 	"bytes"
-	proto "github.com/golang/protobuf/proto"
 	"reflect"
 	"testing"
 	"xec/sparse"
+
+	proto "github.com/golang/protobuf/proto"
 )
 
 func wordKey(key []byte) []byte {
@@ -17,6 +18,115 @@ func wordKey(key []byte) []byte {
 	}
 
 	return w
+}
+
+func TestMaxKeys(t *testing.T) {
+
+	nn := 16
+	mx := 32768
+
+	keys := make([][]byte, 0, mx)
+	values := make([]interface{}, 0, mx)
+
+	for i := 0; i < nn; i++ {
+		for j := 0; j < nn; j++ {
+			for k := 0; k < nn; k++ {
+				for l := 0; l < 8; l++ {
+					key := []byte{byte(i), byte(j), byte(k), byte(l)}
+					keys = append(keys, key)
+
+					value := i*nn*nn*nn + j*nn*nn + k*nn + l
+					values = append(values, uint16(value))
+
+				}
+			}
+
+		}
+	}
+
+	trie, ok := New(keys, values)
+	if ok {} else {
+		t.Fatalf( "create new trie" )
+	}
+	trie.Squash()
+
+	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	err := ctrie.Compact(trie)
+	if err == nil {
+	} else {
+		t.Fatalf("error: %s", err)
+	}
+
+	if ctrie.Children.Cnt == 1+16+256+4096 {
+	} else {
+		t.Fatalf("children cnt should be %d", 1+16+256+4096)
+	}
+	if ctrie.Steps.Cnt == uint32(0) {
+	} else {
+		t.Fatalf("Steps cnt should be %d", mx)
+	}
+	if ctrie.Leaves.Cnt == uint32(mx) {
+	} else {
+		t.Fatalf("leaves cnt should be %d", mx)
+	}
+}
+
+func TestMaxNode(t *testing.T) {
+
+	mx := 32768
+
+	keys := make([][]byte, 0, mx)
+	values := make([]interface{}, 0, mx)
+
+	for i := 0; i < mx; i++ {
+
+		key := []byte{
+			byte((i >> 14) & 0x01),
+			byte((i >> 13) & 0x01),
+			byte((i >> 12) & 0x01),
+			byte((i >> 11) & 0x01),
+			byte((i >> 10) & 0x01),
+			byte((i >> 9) & 0x01),
+			byte((i >> 8) & 0x01),
+			byte((i >> 7) & 0x01),
+			byte((i >> 6) & 0x01),
+			byte((i >> 5) & 0x01),
+			byte((i >> 4) & 0x01),
+			byte((i >> 3) & 0x01),
+			byte((i >> 2) & 0x01),
+			byte((i >> 1) & 0x01),
+			byte(i & 0x01),
+		}
+
+		keys = append(keys, key)
+		values = append(values, uint16(i))
+	}
+
+	trie, ok := New(keys, values)
+	if ok {} else {
+		t.Fatalf( "create new trie" )
+	}
+	trie.Squash()
+
+	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	err := ctrie.Compact(trie)
+	if err == nil {
+	} else {
+		t.Fatalf("error: %s", err)
+	}
+
+	if ctrie.Children.Cnt == uint32(mx-1) {
+	} else {
+		t.Fatalf("children cnt should be %d", mx-1)
+	}
+	if ctrie.Steps.Cnt == uint32(0) {
+	} else {
+		t.Fatalf("Steps cnt should be %d", mx)
+	}
+	if ctrie.Leaves.Cnt == uint32(mx) {
+	} else {
+		t.Fatalf("leaves cnt should be %d", mx)
+	}
 }
 
 func TestCompactedTrie(t *testing.T) {
