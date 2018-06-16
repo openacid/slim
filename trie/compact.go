@@ -7,10 +7,14 @@ import (
 	"xec/bit"
 	"xec/serialize"
 	"xec/sparse"
+	"errors"
 )
 
-const WordMask = 0xf
-const MaxWord = 0x10
+const (
+	WordMask = 0xf
+	LeafWord = 0x10
+	MaxNodeCnt = 65536
+)
 
 type CompactedTrie struct {
 	Children sparse.Array
@@ -22,6 +26,11 @@ type children struct {
 	Bitmap uint16
 	Offset uint16
 }
+
+var (
+	ErrTooManyTrieNodes = errors.New("compacted trie exceeds max node count=65536")
+	ErrTrieBranchValueOverflow = errors.New("compacted trie branch value must <=0x0f")
+)
 
 type ChildConv struct {
 }
@@ -70,7 +79,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 	tq := make([]*Node, 0, 256)
 	tq = append(tq, root)
 
-	for nId := uint16(0); ; {
+	for nId := uint32(0); ; {
 		if len(tq) == 0 {
 			break
 		}
@@ -85,24 +94,27 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 		brs := node.Branches
 
 		if brs[0] == leafBranch {
-			leafIndex = append(leafIndex, uint32(nId))
+			leafIndex = append(leafIndex, nId)
 			leafData = append(leafData, node.Children[brs[0]].Value)
 
 			brs = brs[1:]
 		}
 
 		if node.Step > 1 {
-			stepIndex = append(stepIndex, uint32(nId))
+			stepIndex = append(stepIndex, nId)
 			stepData = append(stepData, node.Step)
 
 		}
 
 		if len(brs) > 0 {
-			childIndex = append(childIndex, uint32(nId))
-			offset := nId + uint16(len(tq)) + uint16(1)
+			childIndex = append(childIndex, nId)
+			offset := uint16(nId) + uint16(len(tq)) + uint16(1)
 
 			bitmap := uint16(0)
 			for _, b := range brs {
+				if b & WordMask != b {
+					return ErrTrieBranchValueOverflow
+				}
 				bitmap |= uint16(1) << (uint16(b) & WordMask)
 			}
 
@@ -119,6 +131,9 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 		}
 
 		nId++
+		if nId > MaxNodeCnt {
+			return ErrTooManyTrieNodes
+		}
 	}
 
 	err = st.Children.Init(childIndex, childData)
@@ -146,7 +161,7 @@ func (st *CompactedTrie) Search(key []byte, mode Mode) (value interface{}) {
 	for idx := uint16(0); ; {
 		var word byte
 		if uint16(len(key)) == idx {
-			word = byte(MaxWord)
+			word = byte(LeafWord)
 		} else {
 			word = (uint8(key[idx]) & WordMask)
 		}
@@ -166,7 +181,7 @@ func (st *CompactedTrie) Search(key []byte, mode Mode) (value interface{}) {
 			break
 		}
 
-		if word == MaxWord {
+		if word == LeafWord {
 			break
 		}
 
@@ -228,7 +243,7 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 
 	leaf := st.Leaves.Get(uint32(idx))
 
-	if word == MaxWord {
+	if word == LeafWord {
 		if leaf != nil {
 			eqIdx = int32(idx)
 		}
@@ -258,11 +273,11 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 	}
 
 	rtStart := word + 1
-	if word == MaxWord {
+	if word == LeafWord {
 		rtStart = uint8(0)
 	}
 
-	for i := rtStart; i < MaxWord; i++ {
+	for i := rtStart; i < LeafWord; i++ {
 		if (ch.Bitmap >> i & 1) == 1 {
 			rtIdx = int32(getChildIdx(ch, uint16(i+1)))
 			break
