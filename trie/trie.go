@@ -1,10 +1,14 @@
 package trie
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 )
+
+var ErrDuplicateKeys = errors.New("keys can not be duplicate")
+var ErrValuesNotSlice = errors.New("values must be in a slice")
 
 type Node struct {
 	Children map[int]*Node
@@ -23,11 +27,11 @@ const (
 
 const leafBranch = -1
 
-func New(keys [][]byte, values interface{}) (root *Node, ok bool) {
+func New(keys [][]byte, values interface{}) (root *Node, err error) {
 
-	var valSlice []interface{}
-	valSlice, ok = toSlice(values)
+	valSlice, ok := toSlice(values)
 	if !ok {
+		err = ErrValuesNotSlice
 		return
 	}
 
@@ -37,23 +41,27 @@ func New(keys [][]byte, values interface{}) (root *Node, ok bool) {
 
 		var node = root
 		var j int
-		var b byte
 
-		for j, b = range key {
-			br := int(b)
+		for j = 0; j < len(key); j++ {
+			br := int(key[j])
 			if node.Children[br] == nil {
 				break
 			}
 			node = node.Children[br]
 		}
 
-		for _, b = range key[j:] {
+		for _, b := range key[j:] {
 			br := int(b)
 			n := &Node{Children: make(map[int]*Node), Step: 1}
 
 			node.Children[br] = n
 			node.Branches = append(node.Branches, br)
 			node = n
+		}
+
+		if node.Children[leafBranch] != nil {
+			err = ErrDuplicateKeys
+			return
 		}
 
 		leaf := &Node{Value: valSlice[i]}

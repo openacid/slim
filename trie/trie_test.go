@@ -379,3 +379,51 @@ func TestTrieSearch(t *testing.T) {
 		}
 	}
 }
+
+func TestTrieNew(t *testing.T) {
+
+	var cases = []struct {
+		keys        [][]byte
+		values      interface{}
+		expectedErr error
+	}{
+		{
+			keys: [][]byte{
+				{'a', 'b', 'c'},
+				{'b', 'c', 'd'},
+				{'c', 'd', 'e'},
+			},
+			values:      []int{0, 1, 2},
+			expectedErr: nil,
+		},
+		{
+			keys: [][]byte{
+				{'a', 'b', 'c'},
+				{'a', 'b', 'c'},
+				{'c', 'd', 'e'},
+			},
+			values:      []int{0, 1, 2},
+			expectedErr: ErrDuplicateKeys,
+		},
+		{
+			keys: [][]byte{
+				{'a', 'b', 'c'},
+				{'b', 'c', 'd'},
+				{'c', 'd', 'e'},
+			},
+			values: map[string]int{
+				"abc": 0,
+				"bcd": 1,
+				"cde": 2,
+			},
+			expectedErr: ErrValuesNotSlice,
+		},
+	}
+
+	for _, c := range cases {
+		_, err := New(c.keys, c.values)
+		if !reflect.DeepEqual(err, c.expectedErr) {
+			t.Fatalf("new trie: expectedErr: %v, got: %v", c.expectedErr, err)
+		}
+	}
+}
