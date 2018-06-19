@@ -17,14 +17,6 @@ type Node struct {
 	Value    interface{}
 }
 
-type Mode byte
-
-const (
-	LT Mode = 4 // less than    0100
-	EQ Mode = 2 // equal        0010
-	GT Mode = 1 // greater than 0001
-)
-
 const leafBranch = -1
 
 func New(keys [][]byte, values interface{}) (root *Node, err error) {

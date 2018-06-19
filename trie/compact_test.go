@@ -2,12 +2,44 @@ package trie
 
 import (
 	"bytes"
+	"encoding/binary"
 	"reflect"
 	"testing"
 	"xec/sparse"
 
 	proto "github.com/golang/protobuf/proto"
 )
+
+type CompactedExpectType struct {
+	ltVal interface{}
+	eqVal interface{}
+	gtVal interface{}
+}
+
+/* this covertor is not secure,
+just to make it easier to test it as a number of uint64
+*/
+type TestIntConv struct{}
+
+func (c TestIntConv) MarshalElt(d interface{}) []byte {
+	b := make([]byte, 8)
+	v := uint64(d.(int))
+	binary.LittleEndian.PutUint64(b, v)
+	return b
+}
+
+func (c TestIntConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+
+	size := uint32(8)
+	s := b[:size]
+
+	d := binary.LittleEndian.Uint64(s)
+	return size, int(d)
+}
+
+func (c TestIntConv) GetMarshaledEltSize(b []byte) uint32 {
+	return 8
+}
 
 func wordKey(key []byte) []byte {
 	w := make([]byte, len(key)*2)
@@ -46,7 +78,7 @@ func TestMaxKeys(t *testing.T) {
 
 	trie, err := New(keys, values)
 	if err != nil {
-		t.Fatalf("create new trie: %v", err)
+		t.Fatalf("create new trie")
 	}
 
 	trie.Squash()
@@ -125,16 +157,15 @@ func TestMaxNode(t *testing.T) {
 
 func TestCompactedTrie(t *testing.T) {
 
-	type ExpectType struct {
-		key  []byte
-		rst  uint16
-		mode Mode
+	type ExpectKeyType struct {
+		key []byte
+		rst CompactedExpectType
 	}
 
 	var cases = []struct {
 		key      [][]byte
 		value    []interface{}
-		expected []ExpectType
+		expected []ExpectKeyType
 	}{
 		{
 			key: [][]byte{
@@ -145,18 +176,18 @@ func TestCompactedTrie(t *testing.T) {
 				{3, 4, 5},
 			},
 			value: []interface{}{
-				uint16(0),
-				uint16(1),
-				uint16(2),
-				uint16(3),
-				uint16(4),
+				0,
+				1,
+				2,
+				3,
+				4,
 			},
-			expected: []ExpectType{
-				ExpectType{[]byte{1, 2, 3}, 0, EQ},
-				ExpectType{[]byte{1, 2, 4}, 1, EQ},
-				ExpectType{[]byte{2, 3, 4}, 2, EQ},
-				ExpectType{[]byte{2, 3, 5}, 3, EQ},
-				ExpectType{[]byte{3, 4, 5}, 4, EQ},
+			expected: []ExpectKeyType{
+				ExpectKeyType{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
+				ExpectKeyType{[]byte{1, 2, 4}, CompactedExpectType{0, 1, 2}},
+				ExpectKeyType{[]byte{2, 3, 4}, CompactedExpectType{1, 2, 3}},
+				ExpectKeyType{[]byte{2, 3, 5}, CompactedExpectType{2, 3, 4}},
+				ExpectKeyType{[]byte{3, 4, 5}, CompactedExpectType{3, 4, nil}},
 			},
 		},
 		{
@@ -170,27 +201,22 @@ func TestCompactedTrie(t *testing.T) {
 				{2, 3, 15},
 			},
 			value: []interface{}{
-				uint16(0),
-				uint16(1),
-				uint16(2),
-				uint16(3),
-				uint16(4),
-				uint16(5),
-				uint16(6),
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
 			},
-			expected: []ExpectType{
-				ExpectType{[]byte{1, 2, 3}, 0, EQ},
-				ExpectType{[]byte{1, 2, 3, 4}, 1, EQ},
-				ExpectType{[]byte{2, 3}, 2, EQ},
-				ExpectType{[]byte{2, 3, 0}, 3, EQ},
-				ExpectType{[]byte{2, 3, 4}, 4, EQ},
-				ExpectType{[]byte{2, 3, 4, 5}, 5, EQ},
-				ExpectType{[]byte{2, 3, 15}, 6, EQ},
-				ExpectType{[]byte{2, 3, 4}, 3, LT},
-				ExpectType{[]byte{2, 3, 0}, 2, LT},
-				ExpectType{[]byte{2, 3, 0}, 3, LT | EQ},
-				ExpectType{[]byte{2, 3, 4}, 5, GT},
-				ExpectType{[]byte{2, 3, 6}, 6, GT},
+			expected: []ExpectKeyType{
+				ExpectKeyType{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
+				ExpectKeyType{[]byte{1, 2, 3, 4}, CompactedExpectType{0, 1, 2}},
+				ExpectKeyType{[]byte{2, 3}, CompactedExpectType{1, 2, 3}},
+				ExpectKeyType{[]byte{2, 3, 0}, CompactedExpectType{2, 3, 4}},
+				ExpectKeyType{[]byte{2, 3, 4}, CompactedExpectType{3, 4, 5}},
+				ExpectKeyType{[]byte{2, 3, 4, 5}, CompactedExpectType{4, 5, 6}},
+				ExpectKeyType{[]byte{2, 3, 15}, CompactedExpectType{5, 6, nil}},
 			},
 		},
 	}
@@ -202,52 +228,79 @@ func TestCompactedTrie(t *testing.T) {
 		}
 
 		trie, _ := New(c.key, c.value)
+		for _, ex := range c.expected {
+			lt, eq, gt := trie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
-		ctrie := NewCompactedTrie(sparse.U16Conv{})
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Fatal("key: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst)
+			}
+		}
+
+		ctrie := NewCompactedTrie(TestIntConv{})
 		err := ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			rst := ctrie.Search(wordKey(ex.key), ex.mode)
+			lt, eq, gt := ctrie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Fatal("ks: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst, ex.mode)
+				t.Fatal("key: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
 		trie.Squash()
 		trie.Squash()
+		for _, ex := range c.expected {
+			lt, eq, gt := trie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
-		ctrie = NewCompactedTrie(sparse.U16Conv{})
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+			}
+		}
+
+		ctrie = NewCompactedTrie(TestIntConv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			rst := ctrie.Search(wordKey(ex.key), ex.mode)
+			lt, eq, gt := ctrie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
 		trie.Squash()
 		trie.Squash()
+		for _, ex := range c.expected {
+			lt, eq, gt := trie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
-		ctrie = NewCompactedTrie(sparse.U16Conv{})
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+			}
+		}
+
+		ctrie = NewCompactedTrie(TestIntConv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			rst := ctrie.Search(wordKey(ex.key), ex.mode)
+			lt, eq, gt := ctrie.Search(wordKey(ex.key))
+			rst := CompactedExpectType{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 	}
@@ -266,19 +319,14 @@ func TestCompactedTrieSearch(t *testing.T) {
 		{'c', 'd', 'e'},
 	}
 	var value = []interface{}{
-		[]byte{0},
-		[]byte{1},
-		[]byte{2},
-		[]byte{3},
-		[]byte{4},
-		[]byte{5},
-		[]byte{6},
-		[]byte{7},
-	}
-
-	type ExpectType struct {
-		mode Mode
-		rst  interface{}
+		0,
+		1,
+		2,
+		3,
+		4,
+		5,
+		6,
+		7,
 	}
 
 	for i, k := range key {
@@ -287,7 +335,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	var trie, _ = New(key, value)
 
-	ctrie := NewCompactedTrie(sparse.ByteConv{EltSize: uint32(1)})
+	ctrie := NewCompactedTrie(TestIntConv{})
 	err := ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
@@ -295,231 +343,113 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	var cases = []struct {
 		key      []byte
-		expected []ExpectType
+		expected CompactedExpectType
 	}{
 		{
 			[]byte{'a', 'b', 'c'},
-			[]ExpectType{
-				{EQ, []byte{0}},
-				{LT | EQ, []byte{0}},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{1}},
-			},
+			CompactedExpectType{nil, 0, 1},
 		},
 		{
 			[]byte{'a', 'b', 'd'},
-			[]ExpectType{
-				{EQ, []byte{2}},
-				{LT | EQ, []byte{2}},
-				{LT, []byte{1}},
-				{GT | EQ, []byte{2}},
-				{GT, []byte{3}},
-			},
+			CompactedExpectType{1, 2, 3},
 		},
 		{
 			[]byte{'b', 'c', 'd'},
-			[]ExpectType{
-				{EQ, []byte{5}},
-				{LT | EQ, []byte{5}},
-				{LT, []byte{4}},
-				{GT | EQ, []byte{5}},
-				{GT, []byte{6}},
-			},
+			CompactedExpectType{4, 5, 6},
 		},
 		{
 			[]byte{'b', 'c', 'e'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{6}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, []byte{7}},
-			},
+			CompactedExpectType{6, nil, 7},
 		},
 		{
 			[]byte{'c', 'd', 'e'},
-			[]ExpectType{
-				{EQ, []byte{7}},
-				{LT | EQ, []byte{7}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, nil},
-			},
+			CompactedExpectType{6, 7, nil},
 		},
 		{
 			[]byte{'a', 'c', 'b'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{3}},
-				{LT, []byte{3}},
-				{GT | EQ, []byte{4}},
-				{GT, []byte{4}},
-			},
+			CompactedExpectType{3, nil, 4},
 		},
 		{
 			[]byte{'a', 'b'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, nil},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{0}},
-			},
+			CompactedExpectType{nil, nil, 0},
 		},
 		{
 			[]byte{'a', 'c'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{3}},
-				{LT, []byte{3}},
-				{GT | EQ, []byte{4}},
-				{GT, []byte{4}},
-			},
+			CompactedExpectType{3, nil, 4},
 		},
 		{
 			[]byte{'a', 'b', 'c', 'd', 'e'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{1}},
-				{LT, []byte{1}},
-				{GT | EQ, []byte{2}},
-				{GT, []byte{2}},
-			},
+			CompactedExpectType{1, nil, 2},
+		},
+		{
+			[]byte{'a', 'b', 'c'},
+			CompactedExpectType{nil, 0, 1},
 		},
 	}
 
 	for _, c := range cases {
 
 		kk := wordKey(c.key)
-		for _, ex := range c.expected {
-
-			rst := ctrie.Search(kk, ex.mode)
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Fatal("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
-			}
+		lt, eq, gt := ctrie.Search(kk)
+		rst := CompactedExpectType{lt, eq, gt}
+		if !reflect.DeepEqual(c.expected, rst) {
+			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
 		}
 	}
 
 	var squashedCases = []struct {
 		key      []byte
-		expected []ExpectType
+		expected CompactedExpectType
 	}{
 		{
 			[]byte{'a', 'b'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, nil},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{0}},
-			},
+			CompactedExpectType{nil, nil, 0},
 		},
 		{
 			[]byte{'a', 'b', 'c'},
-			[]ExpectType{
-				{EQ, []byte{0}},
-				{LT | EQ, []byte{0}},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{1}},
-			},
+			CompactedExpectType{nil, 0, 1},
 		},
 		{
 			[]byte{'a', 'd', 'c'},
-			[]ExpectType{
-				{EQ, []byte{0}},
-				{LT | EQ, []byte{0}},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{1}},
-			},
+			CompactedExpectType{nil, 0, 1},
 		},
 		{
 			[]byte{'a', 'b', 'd'},
-			[]ExpectType{
-				{EQ, []byte{2}},
-				{LT | EQ, []byte{2}},
-				{LT, []byte{1}},
-				{GT | EQ, []byte{2}},
-				{GT, []byte{3}},
-			},
+			CompactedExpectType{1, 2, 3},
 		},
 		{
 			[]byte{'a', 'c', 'd'},
-			[]ExpectType{
-				{EQ, []byte{2}},
-				{LT | EQ, []byte{2}},
-				{LT, []byte{1}},
-				{GT | EQ, []byte{2}},
-				{GT, []byte{3}},
-			},
+			CompactedExpectType{1, 2, 3},
 		},
 		{
 			[]byte{'c', 'd', 'e'},
-			[]ExpectType{
-				{EQ, []byte{7}},
-				{LT | EQ, []byte{7}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, nil},
-			},
+			CompactedExpectType{6, 7, nil},
 		},
 		{
 			[]byte{'c', 'f', 'e'},
-			[]ExpectType{
-				{EQ, []byte{7}},
-				{LT | EQ, []byte{7}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, nil},
-			},
+			CompactedExpectType{6, 7, nil},
 		},
 		{
 			[]byte{'c', 'f', 'f'},
-			[]ExpectType{
-				{EQ, []byte{7}},
-				{LT | EQ, []byte{7}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, nil},
-			},
+			CompactedExpectType{6, 7, nil},
 		},
 		{
 			[]byte{'c'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{6}},
-				{LT, []byte{6}},
-				{GT | EQ, []byte{7}},
-				{GT, []byte{7}},
-			},
+			CompactedExpectType{6, nil, 7},
 		},
 		{
 			[]byte{'a', 'c'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, nil},
-				{LT, nil},
-				{GT | EQ, []byte{0}},
-				{GT, []byte{0}},
-			},
+			CompactedExpectType{nil, nil, 0},
 		},
 		{
 			[]byte{'a', 'b', 'c', 'd', 'e'},
-			[]ExpectType{
-				{EQ, nil},
-				{LT | EQ, []byte{1}},
-				{LT, []byte{1}},
-				{GT | EQ, []byte{2}},
-				{GT, []byte{2}},
-			},
+			CompactedExpectType{1, nil, 2},
 		},
 	}
 
 	trie.Squash()
 
-	ctrie = NewCompactedTrie(sparse.ByteConv{EltSize: uint32(1)})
+	ctrie = NewCompactedTrie(TestIntConv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
@@ -528,12 +458,10 @@ func TestCompactedTrieSearch(t *testing.T) {
 	for _, c := range squashedCases {
 
 		kk := wordKey(c.key)
-		for _, ex := range c.expected {
-
-			rst := ctrie.Search(kk, ex.mode)
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Fatal("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
-			}
+		lt, eq, gt := ctrie.Search(kk)
+		rst := CompactedExpectType{lt, eq, gt}
+		if !reflect.DeepEqual(c.expected, rst) {
+			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
 		}
 	}
 }
