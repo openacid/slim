@@ -202,13 +202,6 @@ func TestCompactedTrie(t *testing.T) {
 		}
 
 		trie, _ := New(c.key, c.value)
-		for _, ex := range c.expected {
-			rst := trie.Search(wordKey(ex.key), ex.mode)
-
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst, ex.mode)
-			}
-		}
 
 		ctrie := NewCompactedTrie(sparse.U16Conv{})
 		err := ctrie.Compact(trie)
@@ -226,13 +219,6 @@ func TestCompactedTrie(t *testing.T) {
 
 		trie.Squash()
 		trie.Squash()
-		for _, ex := range c.expected {
-			rst := trie.Search(wordKey(ex.key), ex.mode)
-
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
-			}
-		}
 
 		ctrie = NewCompactedTrie(sparse.U16Conv{})
 		err = ctrie.Compact(trie)
@@ -250,13 +236,6 @@ func TestCompactedTrie(t *testing.T) {
 
 		trie.Squash()
 		trie.Squash()
-		for _, ex := range c.expected {
-			rst := trie.Search(wordKey(ex.key), ex.mode)
-
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
-			}
-		}
 
 		ctrie = NewCompactedTrie(sparse.U16Conv{})
 		err = ctrie.Compact(trie)
@@ -415,12 +394,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 		kk := wordKey(c.key)
 		for _, ex := range c.expected {
 
-			rst := trie.Search(kk, ex.mode)
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
-			}
-
-			rst = ctrie.Search(kk, ex.mode)
+			rst := ctrie.Search(kk, ex.mode)
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
 			}
@@ -556,12 +530,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 		kk := wordKey(c.key)
 		for _, ex := range c.expected {
 
-			rst := trie.Search(kk, ex.mode)
-			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
-			}
-
-			rst = ctrie.Search(kk, ex.mode)
+			rst := ctrie.Search(kk, ex.mode)
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", kk, "expected value: ", ex.rst, "rst: ", rst, "mode: ", ex.mode)
 			}
