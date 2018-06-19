@@ -120,7 +120,7 @@ func (r *Node) Squash() {
 	}
 }
 
-func (r *Node) Search(key []byte, mode Mode) (value interface{}) {
+func (r *Node) Search(key []byte) (ltValue, eqValue, gtValue interface{}) {
 
 	var eqNode = r
 	var ltNode *Node
@@ -162,14 +162,14 @@ func (r *Node) Search(key []byte, mode Mode) (value interface{}) {
 		}
 	}
 
-	if mode&LT == LT && ltNode != nil {
-		value = ltNode.rightMost().Value
+	if ltNode != nil {
+		ltValue = ltNode.rightMost().Value
 	}
-	if mode&GT == GT && gtNode != nil {
-		value = gtNode.leftMost().Value
+	if gtNode != nil {
+		gtValue = gtNode.leftMost().Value
 	}
-	if mode&EQ == EQ && eqNode != nil {
-		value = eqNode.Value
+	if eqNode != nil {
+		eqValue = eqNode.Value
 	}
 
 	return
