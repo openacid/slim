@@ -2,17 +2,17 @@ package trie
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"unsafe"
 	"xec/bit"
 	"xec/serialize"
 	"xec/sparse"
-	"errors"
 )
 
 const (
-	WordMask = 0xf
-	LeafWord = 0x10
+	WordMask   = 0xf
+	LeafWord   = 0x10
 	MaxNodeCnt = 65536
 )
 
@@ -28,7 +28,7 @@ type children struct {
 }
 
 var (
-	ErrTooManyTrieNodes = errors.New("compacted trie exceeds max node count=65536")
+	ErrTooManyTrieNodes        = errors.New("compacted trie exceeds max node count=65536")
 	ErrTrieBranchValueOverflow = errors.New("compacted trie branch value must <=0x0f")
 )
 
@@ -112,7 +112,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 
 			bitmap := uint16(0)
 			for _, b := range brs {
-				if b & WordMask != b {
+				if b&WordMask != b {
 					return ErrTrieBranchValueOverflow
 				}
 				bitmap |= uint16(1) << (uint16(b) & WordMask)
@@ -154,7 +154,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 	return nil
 }
 
-func (st *CompactedTrie) Search(key []byte, mode Mode) (value interface{}) {
+func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -194,20 +194,20 @@ func (st *CompactedTrie) Search(key []byte, mode Mode) (value interface{}) {
 		}
 	}
 
-	if mode&LT == LT && ltIdx != -1 {
+	if ltIdx != -1 {
 		if ltLeaf {
-			value = st.Leaves.Get(uint32(ltIdx))
+			ltVal = st.Leaves.Get(uint32(ltIdx))
 		} else {
 			rmIdx := st.rightMost(uint16(ltIdx))
-			value = st.Leaves.Get(uint32(rmIdx))
+			ltVal = st.Leaves.Get(uint32(rmIdx))
 		}
 	}
-	if mode&GT == GT && gtIdx != -1 {
+	if gtIdx != -1 {
 		fmIdx := st.leftMost(uint16(gtIdx))
-		value = st.Leaves.Get(uint32(fmIdx))
+		gtVal = st.Leaves.Get(uint32(fmIdx))
 	}
-	if mode&EQ == EQ && eqIdx != -1 {
-		value = st.Leaves.Get(uint32(eqIdx))
+	if eqIdx != -1 {
+		eqVal = st.Leaves.Get(uint32(eqIdx))
 	}
 
 	return
