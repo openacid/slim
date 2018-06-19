@@ -44,29 +44,26 @@ func TestMaxKeys(t *testing.T) {
 		}
 	}
 
-	trie, ok := New(keys, values)
-	if ok {} else {
-		t.Fatalf( "create new trie" )
+	trie, err := New(keys, values)
+	if err != nil {
+		t.Fatalf("create new trie: %v", err)
 	}
+
 	trie.Squash()
 
 	ctrie := NewCompactedTrie(sparse.U16Conv{})
-	err := ctrie.Compact(trie)
-	if err == nil {
-	} else {
+	err = ctrie.Compact(trie)
+	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
 
-	if ctrie.Children.Cnt == 1+16+256+4096 {
-	} else {
+	if ctrie.Children.Cnt != 1+16+256+4096 {
 		t.Fatalf("children cnt should be %d", 1+16+256+4096)
 	}
-	if ctrie.Steps.Cnt == uint32(0) {
-	} else {
+	if ctrie.Steps.Cnt != uint32(0) {
 		t.Fatalf("Steps cnt should be %d", mx)
 	}
-	if ctrie.Leaves.Cnt == uint32(mx) {
-	} else {
+	if ctrie.Leaves.Cnt != uint32(mx) {
 		t.Fatalf("leaves cnt should be %d", mx)
 	}
 }
@@ -102,29 +99,26 @@ func TestMaxNode(t *testing.T) {
 		values = append(values, uint16(i))
 	}
 
-	trie, ok := New(keys, values)
-	if ok {} else {
-		t.Fatalf( "create new trie" )
+	trie, err := New(keys, values)
+	if err != nil {
+		t.Fatalf("create new trie: %v", err)
 	}
+
 	trie.Squash()
 
 	ctrie := NewCompactedTrie(sparse.U16Conv{})
-	err := ctrie.Compact(trie)
-	if err == nil {
-	} else {
+	err = ctrie.Compact(trie)
+	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
 
-	if ctrie.Children.Cnt == uint32(mx-1) {
-	} else {
+	if ctrie.Children.Cnt != uint32(mx-1) {
 		t.Fatalf("children cnt should be %d", mx-1)
 	}
-	if ctrie.Steps.Cnt == uint32(0) {
-	} else {
+	if ctrie.Steps.Cnt != uint32(0) {
 		t.Fatalf("Steps cnt should be %d", mx)
 	}
-	if ctrie.Leaves.Cnt == uint32(mx) {
-	} else {
+	if ctrie.Leaves.Cnt != uint32(mx) {
 		t.Fatalf("leaves cnt should be %d", mx)
 	}
 }
