@@ -18,10 +18,10 @@ import (
  *	   - only use fixed-size type, e.g. not int, use int32 or int64
  *	   - test Every version of dataHeader ever existed
  */
-type dataHeader struct {
-	version    [version.MAXLEN]byte // version.VERSION, major.minor.release
-	headerSize uint64               // the length in bytes of dataHeader size
-	dataSize   uint64               // the length in bytes of serialized data size
+type DataHeader struct {
+	Version    [version.MAXLEN]byte // version.VERSION, major.minor.release
+	HeaderSize uint64               // the length in bytes of dataHeader size
+	DataSize   uint64               // the length in bytes of serialized data size
 }
 
 func bytesToString(buf []byte, delimter byte) (str string, err error) {
@@ -33,7 +33,7 @@ func bytesToString(buf []byte, delimter byte) (str string, err error) {
 	return string(buf[:delimPos]), err
 }
 
-func makeDataHeader(verStr string, headerSize uint64, dataSize uint64) *dataHeader {
+func makeDataHeader(verStr string, headerSize uint64, dataSize uint64) *DataHeader {
 	if len(verStr) >= version.MAXLEN {
 		panic("version length overflow")
 	}
@@ -42,17 +42,17 @@ func makeDataHeader(verStr string, headerSize uint64, dataSize uint64) *dataHead
 		panic("forward compatibility is not supported")
 	}
 
-	header := dataHeader{
-		headerSize: headerSize,
-		dataSize:   dataSize,
+	header := DataHeader{
+		HeaderSize: headerSize,
+		DataSize:   dataSize,
 	}
 
-	copy(header.version[:], verStr)
+	copy(header.Version[:], verStr)
 
 	return &header
 }
 
-func makeDefaultDataHeader(dataSize uint64) *dataHeader {
+func makeDefaultDataHeader(dataSize uint64) *DataHeader {
 	headerSize := GetMarshalHeaderSize()
 
 	return makeDataHeader(version.VERSION, uint64(headerSize), dataSize)
@@ -73,7 +73,7 @@ func readFull(reader io.Reader, buf []byte) (cnt int, err error) {
 	return n, err
 }
 
-func unmarshalHeader(reader io.Reader) (header *dataHeader, err error) {
+func UnmarshalHeader(reader io.Reader) (header *DataHeader, err error) {
 	verBuf := make([]byte, version.MAXLEN)
 
 	if _, err := readFull(reader, verBuf); err != nil {
@@ -108,7 +108,7 @@ func unmarshalHeader(reader io.Reader) (header *dataHeader, err error) {
 	return makeDataHeader(verStr, headerSize, dataSize), nil
 }
 
-func marshalHeader(writer io.Writer, header *dataHeader) (err error) {
+func marshalHeader(writer io.Writer, header *DataHeader) (err error) {
 	return binary.Write(writer, binary.LittleEndian, header)
 }
 
@@ -143,12 +143,12 @@ func Marshal(writer io.Writer, obj proto.Message) (cnt uint64, err error) {
 }
 
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
-	dataHeader, err := unmarshalHeader(reader)
+	dataHeader, err := UnmarshalHeader(reader)
 	if err != nil {
 		return err
 	}
 
-	dataBuf := make([]byte, dataHeader.dataSize)
+	dataBuf := make([]byte, dataHeader.DataSize)
 
 	if _, err := reader.Read(dataBuf); err != nil {
 		return err
