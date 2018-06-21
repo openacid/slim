@@ -68,34 +68,34 @@ func TestMakeDataHeader(t *testing.T) {
 	headerSize := uint64(100)
 	header := makeDataHeader(ver, headerSize, dataSize)
 
-	if header.dataSize != dataSize {
+	if header.DataSize != dataSize {
 		t.Fatalf("wrong data size")
 	}
 
-	if header.headerSize != headerSize {
+	if header.HeaderSize != headerSize {
 		t.Fatalf("wrong header size")
 	}
 
-	verStr, err := bytesToString(header.version[:], 0)
+	verStr, err := bytesToString(header.Version[:], 0)
 	if err != nil || verStr != ver {
 		t.Fatalf("wrong version: %v, %s, expect: %s", err, verStr, ver)
 	}
 
 	header = makeDefaultDataHeader(dataSize)
-	if header.dataSize != dataSize {
+	if header.DataSize != dataSize {
 		t.Fatalf("wrong data size")
 	}
 
 	// sizeof(uint64) * 2 + version.MAXLEN
-	if header.headerSize != 32 {
-		t.Fatalf("wrong header size: %v", header.headerSize)
+	if header.HeaderSize != 32 {
+		t.Fatalf("wrong header size: %v", header.HeaderSize)
 	}
 
-	if len(header.version) != version.MAXLEN {
-		t.Fatalf("wrong version length: %v", len(header.version))
+	if len(header.Version) != version.MAXLEN {
+		t.Fatalf("wrong version length: %v", len(header.Version))
 	}
 
-	verStr, err = bytesToString(header.version[:], 0)
+	verStr, err = bytesToString(header.Version[:], 0)
 	if err != nil || verStr != version.VERSION {
 		t.Fatalf("wrong version: %v, %s, expect: %s", err, verStr, version.VERSION)
 	}
@@ -131,28 +131,28 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSHeader, err := unmarshalHeader(reader)
+	rSHeader, err := UnmarshalHeader(reader)
 	if err != nil {
 		t.Fatalf("failed to unmarshalHeader: %v", err)
 	}
 
-	if rSHeader.dataSize != sHeader.dataSize {
-		t.Fatalf("wrong data size: %v, %v", rSHeader.dataSize, sHeader.dataSize)
+	if rSHeader.DataSize != sHeader.DataSize {
+		t.Fatalf("wrong data size: %v, %v", rSHeader.DataSize, sHeader.DataSize)
 	}
 
-	if rSHeader.headerSize != sHeader.headerSize {
+	if rSHeader.HeaderSize != sHeader.HeaderSize {
 		t.Fatalf("wrong header size: %v, %v",
-			rSHeader.headerSize, sHeader.headerSize)
+			rSHeader.HeaderSize, sHeader.HeaderSize)
 	}
 
-	for idx, sByte := range sHeader.version {
-		rByte := rSHeader.version[idx]
+	for idx, sByte := range sHeader.Version {
+		rByte := rSHeader.Version[idx]
 		if rByte != sByte {
 			t.Fatalf("wrong byte in version: %v, %v, %v", idx, sByte, rByte)
 		}
 	}
 
-	rVersion, err := bytesToString(rSHeader.version[:], 0)
+	rVersion, err := bytesToString(rSHeader.Version[:], 0)
 	if err != nil {
 		t.Fatalf("failed to restore version string")
 	}
