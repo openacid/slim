@@ -353,7 +353,7 @@ func (r *Node) removeBranch(br int) {
 		},
 	)
 
-	if r.Branches[idx] == br {
+	if idx < len(r.Branches) && r.Branches[idx] == br {
 		r.Branches = append(r.Branches[:idx], r.Branches[idx+1:]...)
 	}
 
