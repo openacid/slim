@@ -307,3 +307,153 @@ func TestTrieNew(t *testing.T) {
 		}
 	}
 }
+
+func TestRangeTrie(t *testing.T) {
+
+	var starts = [][]byte{
+		[]byte("0000001118"),
+		[]byte("0000001128"),
+		[]byte("0000001138"),
+		[]byte("0000001148"),
+	}
+
+	var ends = [][]byte{
+		[]byte("0000001127"),
+		[]byte("0000001137"),
+		[]byte("0000001146"),
+		[]byte("0000001148"),
+	}
+
+	var values = []int{
+		0,
+		1,
+		2,
+		3,
+	}
+
+	rt, err := NewRangeTrie(starts, ends, values)
+	if err != nil {
+		t.Fatal("new range trie failed")
+	}
+
+	type ExpectType struct {
+		ltVal interface{}
+		eqVal interface{}
+		gtVal interface{}
+	}
+
+	var cases = []struct {
+		key      []byte
+		expected ExpectType
+	}{
+		{
+			[]byte("0000001118"),
+			ExpectType{nil, 0, 1},
+		},
+		{
+			[]byte("0000001120"),
+			ExpectType{0, nil, 1},
+		},
+		{
+			[]byte("0000001128"),
+			ExpectType{0, 1, 2},
+		},
+		{
+			[]byte("0000001147"),
+			ExpectType{2, nil, 3},
+		},
+		{
+			[]byte("0000001148"),
+			ExpectType{2, 3, nil},
+		},
+	}
+
+	rt.RemoveEndLeaves()
+	for _, c := range cases {
+		ltVal, eqVal, gtVal := rt.Search(c.key)
+
+		if !reflect.DeepEqual(c.expected.ltVal, ltVal) {
+			t.Error("key: ", c.key, "expected lt value: ", c.expected.ltVal, "rst: ", ltVal)
+		}
+		if !reflect.DeepEqual(c.expected.eqVal, eqVal) {
+			t.Error("key: ", c.key, "expected eq value: ", c.expected.eqVal, "rst: ", eqVal)
+		}
+		if !reflect.DeepEqual(c.expected.gtVal, gtVal) {
+			t.Error("key: ", c.key, "expected gt value: ", c.expected.gtVal, "rst: ", gtVal)
+		}
+	}
+}
+
+func TestRangeTrieSquash(t *testing.T) {
+
+	var starts = [][]byte{
+		[]byte{'a', 'b', 'c', 'd'},
+		[]byte{'a', 'b', 'd', 'f'},
+		[]byte{'a', 'b', 'e', 'h'},
+		[]byte{'a', 'b', 'f', 'a'},
+	}
+
+	var ends = [][]byte{
+		[]byte{'a', 'b', 'd', 'e'},
+		[]byte{'a', 'b', 'e', 'f'},
+		[]byte{'a', 'b', 'e', 'h'},
+		[]byte{'a', 'b', 'f', 'j'},
+	}
+
+	var values = []int{
+		0,
+		1,
+		2,
+		3,
+	}
+
+	rt, _ := NewRangeTrie(starts, ends, values)
+	rt.Squash()
+	rt.RemoveEndLeaves()
+
+	type ExpectType struct {
+		ltVal interface{}
+		eqVal interface{}
+		gtVal interface{}
+	}
+
+	var cases = []struct {
+		key      []byte
+		expected ExpectType
+	}{
+		{
+			[]byte{'a', 'b', 'c', 'd'},
+			ExpectType{nil, 0, 1},
+		},
+		{
+			[]byte{'a', 'b', 'd', 'e'},
+			ExpectType{0, nil, 1},
+		},
+		{
+			[]byte{'a', 'b', 'e', 'h'},
+			ExpectType{1, 2, 3},
+		},
+		{
+			[]byte{'a', 'b', 'f', 'h'},
+			ExpectType{3, nil, nil},
+		},
+		{
+			[]byte{'a', 'b', 'f', 'j'},
+			ExpectType{3, nil, nil},
+		},
+	}
+
+	for _, c := range cases {
+		ltVal, eqVal, gtVal := rt.Search(c.key)
+
+		if !reflect.DeepEqual(c.expected.ltVal, ltVal) {
+			t.Error("key: ", c.key, "expected lt value: ", c.expected.ltVal, "rst: ", ltVal)
+		}
+		if !reflect.DeepEqual(c.expected.eqVal, eqVal) {
+			t.Error("key: ", c.key, "expected eq value: ", c.expected.eqVal, "rst: ", eqVal)
+		}
+		if !reflect.DeepEqual(c.expected.gtVal, gtVal) {
+			t.Error("key: ", c.key, "expected gt value: ", c.expected.gtVal, "rst: ", gtVal)
+		}
+	}
+}
