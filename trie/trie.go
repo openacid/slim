@@ -4,17 +4,24 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
 var ErrDuplicateKeys = errors.New("keys can not be duplicate")
 var ErrValuesNotSlice = errors.New("values must be in a slice")
+var ErrRangeNotMatch = errors.New("length of starts and ends not equal")
+var ErrKVLenNotMatch = errors.New("length of keys and values not equal")
+var ErrKeyOutOfOrder = errors.New("keys not ascending sorted")
 
 type Node struct {
 	Children map[int]*Node
 	Branches []int
 	Step     uint16
 	Value    interface{}
+
+	isStartLeaf bool
+	isEndLeaf   bool
 }
 
 const leafBranch = -1
@@ -27,40 +34,20 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 		return
 	}
 
+	if len(keys) != len(valSlice) {
+		err = ErrKVLenNotMatch
+		return
+	}
+
 	root = &Node{Children: make(map[int]*Node), Step: 1}
 
-	for i, key := range keys {
-
-		var node = root
-		var j int
-
-		for j = 0; j < len(key); j++ {
-			br := int(key[j])
-			if node.Children[br] == nil {
-				break
-			}
-			node = node.Children[br]
-		}
-
-		for _, b := range key[j:] {
-			br := int(b)
-			n := &Node{Children: make(map[int]*Node), Step: 1}
-
-			node.Children[br] = n
-			node.Branches = append(node.Branches, br)
-			node = n
-		}
-
-		if node.Children[leafBranch] != nil {
-			err = ErrDuplicateKeys
+	for i := 0; i < len(keys); i++ {
+		_, err = root.addKV(keys[i], valSlice[i], false, false)
+		if err != nil {
 			return
 		}
-
-		leaf := &Node{Value: valSlice[i]}
-
-		node.Children[leafBranch] = leaf
-		node.Branches = append(node.Branches, leafBranch)
 	}
+
 	return
 }
 
@@ -241,5 +228,134 @@ func toSlice(arg interface{}) (rst []interface{}, ok bool) {
 		rst[i] = s.Index(i).Interface()
 	}
 	ok = true
+	return
+}
+
+func (r *Node) addKV(key []byte, value interface{}, isStartLeaf, isEndLeaf bool) (leaf *Node, err error) {
+
+	var node = r
+	var j int
+
+	for j = 0; j < len(key); j++ {
+		br := int(key[j])
+		if node.Children[br] == nil {
+			break
+		}
+		node = node.Children[br]
+	}
+
+	if j == len(key) {
+		leaf = node.Children[leafBranch]
+		if leaf != nil {
+			err = ErrDuplicateKeys
+			return
+		}
+
+		if len(node.Branches) != 0 {
+			// means this key is a prefix of an existed key, so key's adding order is not ascending.
+			err = ErrKeyOutOfOrder
+			return
+		}
+	}
+
+	for _, b := range key[j:] {
+		br := int(b)
+		n := &Node{Children: make(map[int]*Node), Step: 1}
+
+		node.Children[br] = n
+		node.Branches = append(node.Branches, br)
+		node = n
+	}
+
+	leaf = &Node{Value: value, isStartLeaf: isStartLeaf, isEndLeaf: isEndLeaf}
+
+	node.Children[leafBranch] = leaf
+	node.Branches = append(node.Branches, leafBranch)
+
+	return
+}
+
+func NewRangeTrie(starts, ends [][]byte, values interface{}) (root *Node, err error) {
+
+	if len(starts) != len(ends) {
+		err = ErrRangeNotMatch
+		return
+	}
+
+	valSlice, ok := toSlice(values)
+	if !ok {
+		err = ErrValuesNotSlice
+		return
+	}
+
+	if len(starts) != len(valSlice) {
+		err = ErrKVLenNotMatch
+		return
+	}
+
+	root = &Node{Children: make(map[int]*Node), Step: 1}
+
+	for i := 0; i < len(starts); i++ {
+		var leaf *Node
+		leaf, err = root.addKV(starts[i], valSlice[i], true, false)
+		if err != nil {
+			return
+		}
+
+		_, err = root.addKV(ends[i], valSlice[i], false, true)
+		if err != nil {
+			if err == ErrDuplicateKeys {
+				leaf.isEndLeaf = true
+				err = nil
+			} else {
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func (r *Node) RemoveEndLeaves() {
+
+	leaf := r.Children[leafBranch]
+	if leaf != nil {
+
+		if leaf.isEndLeaf && !leaf.isStartLeaf {
+
+			delete(r.Children, leafBranch)
+			r.removeBranch(leafBranch)
+		}
+	}
+
+	for k, n := range r.Children {
+
+		if len(n.Branches) == 0 {
+			// leaf node do not need to remove end branch
+			continue
+		}
+
+		n.RemoveEndLeaves()
+
+		if len(n.Branches) == 0 {
+			delete(r.Children, k)
+			r.removeBranch(k)
+		}
+	}
+}
+
+func (r *Node) removeBranch(br int) {
+
+	idx := sort.Search(
+		len(r.Branches),
+		func(i int) bool {
+			return r.Branches[i] >= br
+		},
+	)
+
+	if r.Branches[idx] == br {
+		r.Branches = append(r.Branches[:idx], r.Branches[idx+1:]...)
+	}
+
 	return
 }
