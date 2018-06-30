@@ -1,8 +1,10 @@
 package trie
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+	"xec/xerrors"
 )
 
 func TestTrie(t *testing.T) {
@@ -283,7 +285,7 @@ func TestTrieNew(t *testing.T) {
 				{'c', 'd', 'e'},
 			},
 			values:      []int{0, 1, 2},
-			expectedErr: ErrDuplicateKeys,
+			expectedErr: xerrors.New(ErrDuplicateKeys, fmt.Sprintf("key: abc")),
 		},
 		{
 			keys: [][]byte{
