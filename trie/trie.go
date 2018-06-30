@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"xec/xerrors"
 )
 
 var ErrDuplicateKeys = errors.New("keys can not be duplicate")
@@ -42,8 +43,10 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 	root = &Node{Children: make(map[int]*Node), Step: 1}
 
 	for i := 0; i < len(keys); i++ {
-		_, err = root.addKV(keys[i], valSlice[i], false, false)
+		key := keys[i]
+		_, err = root.addKV(key, valSlice[i], false, false)
 		if err != nil {
+			err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
 			return
 		}
 	}
@@ -297,17 +300,22 @@ func NewRangeTrie(starts, ends [][]byte, values interface{}) (root *Node, err er
 
 	for i := 0; i < len(starts); i++ {
 		var leaf *Node
-		leaf, err = root.addKV(starts[i], valSlice[i], true, false)
+
+		key := starts[i]
+		leaf, err = root.addKV(key, valSlice[i], true, false)
 		if err != nil {
+			err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
 			return
 		}
 
-		_, err = root.addKV(ends[i], valSlice[i], false, true)
+		key = ends[i]
+		_, err = root.addKV(key, valSlice[i], false, true)
 		if err != nil {
 			if err == ErrDuplicateKeys {
 				leaf.isEndLeaf = true
 				err = nil
 			} else {
+				err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
 				return
 			}
 		}
