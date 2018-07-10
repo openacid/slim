@@ -5,9 +5,9 @@ import (
 	"errors"
 	"io"
 	"unsafe"
+	"xec/array"
 	"xec/bit"
 	"xec/serialize"
-	"xec/sparse"
 )
 
 const (
@@ -17,9 +17,9 @@ const (
 )
 
 type CompactedTrie struct {
-	Children sparse.Array
-	Steps    sparse.Array
-	Leaves   sparse.Array
+	Children array.CompactedArray
+	Steps    array.CompactedArray
+	Leaves   array.CompactedArray
 }
 
 type children struct {
@@ -57,11 +57,11 @@ func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
 	return uint32(4)
 }
 
-func NewCompactedTrie(c sparse.EltConverter) *CompactedTrie {
+func NewCompactedTrie(c array.EltConverter) *CompactedTrie {
 	ct := &CompactedTrie{
-		Children: sparse.Array{EltConverter: ChildConv{}},
-		Steps:    sparse.Array{EltConverter: sparse.U16Conv{}},
-		Leaves:   sparse.Array{EltConverter: c},
+		Children: array.CompactedArray{EltConverter: ChildConv{}},
+		Steps:    array.CompactedArray{EltConverter: array.U16Conv{}},
+		Leaves:   array.CompactedArray{EltConverter: c},
 	}
 
 	return ct
