@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"xec/sparse"
+	"xec/array"
 	"xec/version"
 )
 
@@ -165,10 +165,10 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 func TestMarshalUnMarshal(t *testing.T) {
 	index := []uint32{10, 20, 30, 40, 50, 60}
 
-	sArray := &sparse.Array{EltConverter: sparse.U32Conv{}}
+	sArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
 	err := sArray.Init(index, index)
 	if err != nil {
-		t.Fatalf("failed to init sparse array")
+		t.Fatalf("failed to init compacted array")
 	}
 
 	marshalSize := GetMarshalSize(sArray)
@@ -183,7 +183,7 @@ func TestMarshalUnMarshal(t *testing.T) {
 
 	cnt, err := Marshal(writer, sArray)
 	if err != nil {
-		t.Fatalf("failed to store sparse array: %v", err)
+		t.Fatalf("failed to store compacted array: %v", err)
 	}
 
 	writer.Close()
@@ -208,14 +208,14 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSArray := &sparse.Array{EltConverter: sparse.U32Conv{}}
+	rSArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
 
 	err = Unmarshal(reader, rSArray)
 	if err != nil {
 		t.Fatalf("failed to load data: %v", err)
 	}
 
-	// check sparse array
+	// check compacted array
 	if rSArray.Cnt != sArray.Cnt {
 		t.Fatalf("wrong Cnt: %d, %d", rSArray.Cnt, sArray.Cnt)
 	}
