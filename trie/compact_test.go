@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"reflect"
 	"testing"
-	"xec/sparse"
+	"xec/array"
 
 	proto "github.com/golang/protobuf/proto"
 )
@@ -83,7 +83,7 @@ func TestMaxKeys(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	ctrie := NewCompactedTrie(array.U16Conv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -138,7 +138,7 @@ func TestMaxNode(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	ctrie := NewCompactedTrie(array.U16Conv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -484,7 +484,7 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 
 	trie, _ := New(key, value)
 
-	ctrie := NewCompactedTrie(sparse.U16Conv{})
+	ctrie := NewCompactedTrie(array.U16Conv{})
 	err := ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -504,7 +504,7 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// unmarshal
-	rCtrie := NewCompactedTrie(sparse.U16Conv{})
+	rCtrie := NewCompactedTrie(array.U16Conv{})
 	err = rCtrie.Unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
