@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -341,24 +342,15 @@ func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
 }
 
 func (ct *CompactedTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
-	var n int64
 
-	if n, err = serialize.MarshalAt(f, offset, &ct.Children); err != nil {
+	buf := new(bytes.Buffer)
+	if cnt, err = ct.Marshal(buf); err != nil {
 		return 0, err
 	}
-	offset += n
-	cnt += n
 
-	if n, err = serialize.MarshalAt(f, offset, &ct.Steps); err != nil {
+	if _, err = f.WriteAt(buf.Bytes(), offset); err != nil {
 		return 0, err
 	}
-	offset += n
-	cnt += n
-
-	if n, err = serialize.MarshalAt(f, offset, &ct.Leaves); err != nil {
-		return 0, err
-	}
-	cnt += n
 
 	return cnt, nil
 }
