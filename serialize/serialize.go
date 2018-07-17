@@ -3,10 +3,12 @@ package serialize
 import (
 	"bytes"
 	"encoding/binary"
-	proto "github.com/golang/protobuf/proto"
 	"io"
+	"os"
 	"unsafe"
 	"xec/version"
+
+	proto "github.com/golang/protobuf/proto"
 )
 
 /**
@@ -116,7 +118,7 @@ func marshalHeader(writer io.Writer, header *DataHeader) (err error) {
  * the content written to writer may be wrong if there were error during Marshal()
  * So make a temp copy, and copy it to destination if everything is ok
  */
-func Marshal(writer io.Writer, obj proto.Message) (cnt uint64, err error) {
+func Marshal(writer io.Writer, obj proto.Message) (cnt int64, err error) {
 	marshaledData, err := proto.Marshal(obj)
 	if err != nil {
 		return 0, err
@@ -134,12 +136,38 @@ func Marshal(writer io.Writer, obj proto.Message) (cnt uint64, err error) {
 
 	nHeader, err := writer.Write(headerBuf.Bytes())
 	if err != nil {
-		return uint64(nHeader), err
+		return int64(nHeader), err
 	}
 
 	nData, err := writer.Write(marshaledData)
 
-	return uint64(nHeader + nData), err
+	return int64(nHeader + nData), err
+}
+
+func MarshalAt(f *os.File, offset int64, obj proto.Message) (cnt int64, err error) {
+	marshaledData, err := proto.Marshal(obj)
+	if err != nil {
+		return 0, err
+	}
+
+	dataSize := uint64(len(marshaledData))
+	dataHeader := makeDefaultDataHeader(dataSize)
+
+	headerBuf := new(bytes.Buffer)
+	err = marshalHeader(headerBuf, dataHeader)
+	if err != nil {
+		return 0, err
+	}
+
+	nHeader, err := f.WriteAt(headerBuf.Bytes(), offset)
+	if err != nil {
+		return int64(nHeader), err
+	}
+	offset += int64(nHeader)
+
+	nData, err := f.WriteAt(marshaledData, offset)
+
+	return int64(nHeader + nData), nil
 }
 
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
@@ -159,6 +187,37 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	}
 
 	return nil
+}
+
+func UnmarshalAt(f *os.File, offset int64, obj proto.Message) (n int64, err error) {
+	headerSize := GetMarshalHeaderSize()
+	headerData := make([]byte, headerSize)
+	if _, err := f.ReadAt(headerData, offset); err != nil {
+		return n, err
+	}
+	offset += headerSize
+
+	header, err := UnmarshalHeader(bytes.NewBuffer(headerData))
+	if err != nil {
+		return n, err
+	}
+
+	dataSize := int64(header.DataSize)
+	rest := make([]byte, dataSize)
+	if _, err := f.ReadAt(rest, offset); err != nil {
+		return n, err
+	}
+
+	data := append(headerData, rest...)
+
+	err = Unmarshal(bytes.NewBuffer(data), obj)
+	if err != nil {
+		return n, err
+	}
+
+	n = int64(headerSize + dataSize)
+
+	return n, nil
 }
 
 func GetMarshalHeaderSize() int64 {
