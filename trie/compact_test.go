@@ -3,12 +3,15 @@ package trie
 import (
 	"bytes"
 	"encoding/binary"
+	"os"
 	"reflect"
 	"testing"
 	"xec/array"
 
 	proto "github.com/golang/protobuf/proto"
 )
+
+var testDataFn = "data"
 
 type CompactedExpectType struct {
 	ltVal interface{}
@@ -511,6 +514,105 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// check
+	checkCompactedTrie(ctrie, rCtrie, t)
+}
+
+func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
+	key := [][]byte{
+		{1, 2, 3},
+		{1, 2, 4},
+		{2, 3, 4},
+		{2, 3, 5},
+		{3, 4, 5},
+	}
+
+	value1 := []interface{}{
+		uint16(0),
+		uint16(1),
+		uint16(2),
+		uint16(3),
+		uint16(4),
+	}
+
+	value2 := []interface{}{
+		uint16(10),
+		uint16(11),
+		uint16(12),
+		uint16(13),
+		uint16(14),
+	}
+
+	trie1, _ := New(key, value1)
+	trie2, _ := New(key, value2)
+
+	ctrie1 := NewCompactedTrie(array.U16Conv{})
+	err := ctrie1.Compact(trie1)
+	if err != nil {
+		t.Fatalf("compact trie error: %v", err)
+	}
+
+	ctrie2 := NewCompactedTrie(array.U16Conv{})
+	err = ctrie2.Compact(trie2)
+	if err != nil {
+		t.Fatalf("compact trie error: %v", err)
+	}
+
+	// marshalat
+	wOFlags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	writer, err := os.OpenFile(testDataFn, wOFlags, 0755)
+	if err != nil {
+		t.Fatalf("failed to create file: %s, %v", testDataFn, err)
+	}
+	defer os.Remove(testDataFn)
+
+	offset1 := int64(0)
+	n, err := ctrie1.MarshalAt(writer, offset1)
+	if err != nil {
+		t.Fatalf("failed to marshal ctrie: %v", err)
+	}
+
+	size := ctrie1.GetMarshalSize()
+	if n != size {
+		t.Fatalf("wrong marshal size: %d, %d", n, size)
+	}
+
+	offset2 := offset1 + n
+	n, err = ctrie2.MarshalAt(writer, offset2)
+	if err != nil {
+		t.Fatalf("failed to marshal ctrie: %v", err)
+	}
+	size = ctrie1.GetMarshalSize()
+	if n != size {
+		t.Fatalf("wrong marshal size: %d, %d", n, size)
+	}
+
+	writer.Close()
+
+	// unmarshalat
+	reader, err := os.OpenFile(testDataFn, os.O_RDONLY, 0755)
+	if err != nil {
+		t.Fatalf("failed to read file: %s, %v", testDataFn, err)
+	}
+	defer reader.Close()
+
+	rCtrie1 := NewCompactedTrie(array.U16Conv{})
+	_, err = rCtrie1.UnmarshalAt(reader, offset1)
+	if err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	checkCompactedTrie(ctrie1, rCtrie1, t)
+
+	rCtrie2 := NewCompactedTrie(array.U16Conv{})
+	_, err = rCtrie2.UnmarshalAt(reader, offset2)
+	if err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	checkCompactedTrie(ctrie2, rCtrie2, t)
+}
+
+func checkCompactedTrie(ctrie, rCtrie *CompactedTrie, t *testing.T) {
 	if !proto.Equal(&ctrie.Children, &rCtrie.Children) {
 		t.Fatalf("Children not the same")
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"os"
 	"unsafe"
 	"xec/array"
 	"xec/bit"
@@ -319,22 +320,45 @@ func (ct *CompactedTrie) GetMarshalSize() int64 {
 }
 
 func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
-	var n uint64
+	var n int64
 
 	if n, err = serialize.Marshal(writer, &ct.Children); err != nil {
 		return 0, err
 	}
-	cnt += int64(n)
+	cnt += n
 
 	if n, err = serialize.Marshal(writer, &ct.Steps); err != nil {
 		return 0, err
 	}
-	cnt += int64(n)
+	cnt += n
 
 	if n, err = serialize.Marshal(writer, &ct.Leaves); err != nil {
 		return 0, err
 	}
-	cnt += int64(n)
+	cnt += n
+
+	return cnt, nil
+}
+
+func (ct *CompactedTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
+	var n int64
+
+	if n, err = serialize.MarshalAt(f, offset, &ct.Children); err != nil {
+		return 0, err
+	}
+	offset += n
+	cnt += n
+
+	if n, err = serialize.MarshalAt(f, offset, &ct.Steps); err != nil {
+		return 0, err
+	}
+	offset += n
+	cnt += n
+
+	if n, err = serialize.MarshalAt(f, offset, &ct.Leaves); err != nil {
+		return 0, err
+	}
+	cnt += n
 
 	return cnt, nil
 }
@@ -353,4 +377,26 @@ func (ct *CompactedTrie) Unmarshal(reader io.Reader) error {
 	}
 
 	return nil
+}
+
+func (ct *CompactedTrie) UnmarshalAt(f *os.File, offset int64) (n int64, err error) {
+	childrenSize, err := serialize.UnmarshalAt(f, offset, &ct.Children)
+	if err != nil {
+		return n, err
+	}
+	offset += childrenSize
+
+	stepsSize, err := serialize.UnmarshalAt(f, offset, &ct.Steps)
+	if err != nil {
+		return n, err
+	}
+	offset += stepsSize
+
+	leavesSize, err := serialize.UnmarshalAt(f, offset, &ct.Leaves)
+	if err != nil {
+		return n, err
+	}
+
+	n = childrenSize + stepsSize + leavesSize
+	return n, nil
 }
