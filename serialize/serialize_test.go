@@ -216,6 +216,72 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 
 	// check compacted array
+	checkCompactedArray(index, rSArray, sArray, t)
+}
+
+func TestMarshalAtUnMarshalAt(t *testing.T) {
+	index1 := []uint32{10, 20, 30, 40, 50, 60}
+	index2 := []uint32{15, 25, 35, 45, 55, 65}
+
+	sArray1 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	err := sArray1.Init(index1, index1)
+	if err != nil {
+		t.Fatalf("failed to init compacted array")
+	}
+
+	sArray2 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	err = sArray2.Init(index2, index2)
+	if err != nil {
+		t.Fatalf("failed to init compacted array")
+	}
+
+	// marshalat
+	wOFlags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	writer, err := os.OpenFile(testDataFn, wOFlags, 0755)
+	if err != nil {
+		t.Fatalf("failed to create file: %s, %v", testDataFn, err)
+	}
+	defer os.Remove(testDataFn)
+
+	offset1 := int64(0)
+	cnt, err := MarshalAt(writer, offset1, sArray1)
+	if err != nil {
+		t.Fatalf("failed to store compacted array: %v", err)
+	}
+
+	offset2 := offset1 + cnt
+	_, err = MarshalAt(writer, offset2, sArray2)
+	if err != nil {
+		t.Fatalf("failed to store compacted array: %v", err)
+	}
+
+	writer.Close()
+
+	// unmarshalat
+	reader, err := os.OpenFile(testDataFn, os.O_RDONLY, 0755)
+	if err != nil {
+		t.Fatalf("failed to read file: %s, %v", testDataFn, err)
+	}
+	defer reader.Close()
+
+	rSArray1 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	_, err = UnmarshalAt(reader, offset1, rSArray1)
+	if err != nil {
+		t.Fatalf("failed to load data: %v", err)
+	}
+
+	checkCompactedArray(index1, rSArray1, sArray1, t)
+
+	rSArray2 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	_, err = UnmarshalAt(reader, offset2, rSArray2)
+	if err != nil {
+		t.Fatalf("failed to load data: %v", err)
+	}
+
+	checkCompactedArray(index2, rSArray2, sArray2, t)
+}
+
+func checkCompactedArray(index []uint32, rSArray, sArray *array.CompactedArray, t *testing.T) {
 	if rSArray.Cnt != sArray.Cnt {
 		t.Fatalf("wrong Cnt: %d, %d", rSArray.Cnt, sArray.Cnt)
 	}
