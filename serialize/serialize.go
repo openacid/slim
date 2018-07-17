@@ -170,6 +170,7 @@ func MarshalAt(f *os.File, offset int64, obj proto.Message) (cnt int64, err erro
 	return int64(nHeader + nData), nil
 }
 
+// UnmarshalAt use os.File.WriteAt() to avoid concurrent writing.
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	dataHeader, err := UnmarshalHeader(reader)
 	if err != nil {
@@ -189,33 +190,31 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	return nil
 }
 
+// UnmarshalAt use os.File.ReadAt() to avoid concurrent reading.
 func UnmarshalAt(f *os.File, offset int64, obj proto.Message) (n int64, err error) {
 	headerSize := GetMarshalHeaderSize()
 	headerData := make([]byte, headerSize)
 	if _, err := f.ReadAt(headerData, offset); err != nil {
-		return n, err
+		return 0, err
 	}
 	offset += headerSize
 
 	header, err := UnmarshalHeader(bytes.NewBuffer(headerData))
 	if err != nil {
-		return n, err
+		return 0, err
 	}
 
 	dataSize := int64(header.DataSize)
 	rest := make([]byte, dataSize)
 	if _, err := f.ReadAt(rest, offset); err != nil {
-		return n, err
+		return 0, err
 	}
 
-	data := append(headerData, rest...)
-
-	err = Unmarshal(bytes.NewBuffer(data), obj)
-	if err != nil {
-		return n, err
+	if err := proto.Unmarshal(rest, obj); err != nil {
+		return 0, err
 	}
 
-	n = int64(headerSize + dataSize)
+	n = int64(headerSize) + int64(dataSize)
 
 	return n, nil
 }
