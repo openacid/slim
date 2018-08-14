@@ -22,7 +22,8 @@ type Node struct {
 	Value    interface{}
 
 	isStartLeaf bool
-	isEndLeaf   bool
+
+	NodeCnt int
 }
 
 const leafBranch = -1
@@ -44,7 +45,7 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 
 	for i := 0; i < len(keys); i++ {
 		key := keys[i]
-		_, err = root.addKV(key, valSlice[i], false, false)
+		_, err = root.AddKV(key, valSlice[i], false, false)
 		if err != nil {
 			err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
 			return
@@ -86,10 +87,12 @@ func (r *Node) ToStrings(cc int) []string {
 	return rst
 }
 
-func (r *Node) Squash() {
+func (r *Node) Squash() int {
+
+	var cnt int
 
 	for k, n := range r.Children {
-		n.Squash()
+		cnt += n.Squash()
 
 		if len(n.Branches) == 1 {
 			if n.Branches[0] == leafBranch {
@@ -98,8 +101,11 @@ func (r *Node) Squash() {
 			child := n.Children[n.Branches[0]]
 			child.Step += 1
 			r.Children[k] = child
+			cnt += 1
 		}
 	}
+
+	return cnt
 }
 
 func (r *Node) Search(key []byte) (ltValue, eqValue, gtValue interface{}) {
@@ -234,7 +240,7 @@ func toSlice(arg interface{}) (rst []interface{}, ok bool) {
 	return
 }
 
-func (r *Node) addKV(key []byte, value interface{}, isStartLeaf, isEndLeaf bool) (leaf *Node, err error) {
+func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash bool) (leaf *Node, err error) {
 
 	var node = r
 	var j int
@@ -259,6 +265,17 @@ func (r *Node) addKV(key []byte, value interface{}, isStartLeaf, isEndLeaf bool)
 			err = ErrKeyOutOfOrder
 			return
 		}
+
+		// must return before
+	}
+
+	commonNode := node
+	newBranch := int(key[j])
+
+	var ltNode *Node
+	numBr := len(commonNode.Branches)
+	if numBr > 0 {
+		ltNode = commonNode.Children[commonNode.Branches[numBr-1]]
 	}
 
 	for _, b := range key[j:] {
@@ -268,68 +285,41 @@ func (r *Node) addKV(key []byte, value interface{}, isStartLeaf, isEndLeaf bool)
 		node.Children[br] = n
 		node.Branches = append(node.Branches, br)
 		node = n
+
+		r.NodeCnt += 1
 	}
 
-	leaf = &Node{Value: value, isStartLeaf: isStartLeaf, isEndLeaf: isEndLeaf}
+	leaf = &Node{Value: value, isStartLeaf: isStartLeaf}
 
 	node.Children[leafBranch] = leaf
 	node.Branches = append(node.Branches, leafBranch)
 
-	return
-}
-
-func NewRangeTrie(starts, ends [][]byte, values interface{}) (root *Node, err error) {
-
-	if len(starts) != len(ends) {
-		err = ErrRangeNotMatch
-		return
-	}
-
-	valSlice, ok := toSlice(values)
-	if !ok {
-		err = ErrValuesNotSlice
-		return
-	}
-
-	if len(starts) != len(valSlice) {
-		err = ErrKVLenNotMatch
-		return
-	}
-
-	root = &Node{Children: make(map[int]*Node), Step: 1}
-
-	for i := 0; i < len(starts); i++ {
-		var leaf *Node
-
-		key := starts[i]
-		leaf, err = root.addKV(key, valSlice[i], true, false)
-		if err != nil {
-			err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
-			return
+	if needSquash {
+		if ltNode != nil {
+			r.NodeCnt -= ltNode.Squash()
 		}
 
-		key = ends[i]
-		_, err = root.addKV(key, valSlice[i], false, true)
-		if err != nil {
-			if err == ErrDuplicateKeys {
-				leaf.isEndLeaf = true
-				err = nil
-			} else {
-				err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
-				return
-			}
+		if r.NodeCnt > MaxNodeCnt {
+			delete(commonNode.Children, newBranch)
+			commonNode.removeBranch(newBranch)
+			return nil, ErrTooManyTrieNodes
 		}
 	}
 
 	return
 }
 
-func (r *Node) RemoveEndLeaves() {
+func NewRangeTrie() *Node {
+	return &Node{Children: make(map[int]*Node), Step: 1}
+}
+
+func (r *Node) RemoveUselessLeaves() {
+	// remove leaves which are not start leaf
 
 	leaf := r.Children[leafBranch]
 	if leaf != nil {
 
-		if leaf.isEndLeaf && !leaf.isStartLeaf {
+		if !leaf.isStartLeaf {
 
 			delete(r.Children, leafBranch)
 			r.removeBranch(leafBranch)
@@ -339,11 +329,11 @@ func (r *Node) RemoveEndLeaves() {
 	for k, n := range r.Children {
 
 		if len(n.Branches) == 0 {
-			// leaf node do not need to remove end branch
+			// leaf node do not need to remove any branch
 			continue
 		}
 
-		n.RemoveEndLeaves()
+		n.RemoveUselessLeaves()
 
 		if len(n.Branches) == 0 {
 			delete(r.Children, k)
