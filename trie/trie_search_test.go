@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"xec/testutil"
 
 	"github.com/google/btree"
 )
@@ -25,7 +26,7 @@ type testSrcType struct {
 
 var (
 	cnt    = int64(1000)
-	keyLen = uint32(512)
+	keyLen = uint32(1024)
 	valLen = uint32(2)
 
 	btreeDegree = 2
@@ -40,11 +41,19 @@ func BenchmarkTrieSearch(b *testing.B) {
 	}
 
 	tr := testSrc.root
+	//searchKey := splitStringTo4BitWords(testSrc.searchKey)
 	searchKey := testSrc.searchKey
+
+	var val []byte
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = trieSearchTestKV(tr, searchKey)
+		val = trieSearchTestKV(tr, searchKey)
+		//_, _, _ = tr.Search(searchKey)
+	}
+
+	if !testutil.ByteSliceEqual(val, testSrc.searchValue) {
+		b.Errorf("search value is wrong.")
 	}
 }
 
@@ -57,9 +66,16 @@ func BenchmarkTrieSearchNotFound(b *testing.B) {
 	tr := testSrc.root
 	searchKey := fmt.Sprintf("%snot found", testSrc.searchKey)
 
+	var val []byte
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = trieSearchTestKV(tr, searchKey)
+		val = trieSearchTestKV(tr, searchKey)
+		//_, _, _ = tr.Search(searchKey)
+	}
+
+	if val != nil {
+		b.Errorf("search not exsisted value failed.")
 	}
 }
 
@@ -225,7 +241,7 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 }
 
 func trieSearchTestKV(ct *CompactedTrie, key string) []byte {
-	_, eq, _ := ct.Search(splitStringTo4BitWords(key))
+	eq := ct.SearchStringEqual(key)
 	if eq == nil {
 		return nil
 	}

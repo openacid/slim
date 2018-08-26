@@ -14,7 +14,7 @@ import (
 
 const (
 	WordMask   = 0xf
-	LeafWord   = 0x10
+	LeafWord   = byte(0x10)
 	MaxNodeCnt = 65536
 )
 
@@ -38,7 +38,7 @@ type ChildConv struct {
 }
 
 func (c ChildConv) MarshalElt(d interface{}) []byte {
-	child := d.(children)
+	child := d.(*children)
 
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint16(b[:2], child.Bitmap)
@@ -48,11 +48,15 @@ func (c ChildConv) MarshalElt(d interface{}) []byte {
 }
 
 func (c ChildConv) UnmarshalElt(b []byte) (uint32, interface{}) {
-	d := children{
+
+	var d interface{}
+
+	d = &children{
 		Bitmap: binary.LittleEndian.Uint16(b[:2]),
 		Offset: binary.LittleEndian.Uint16(b[2:4]),
 	}
-	return uint32(4), d
+
+	return 4, d
 }
 
 func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
@@ -74,7 +78,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 		return
 	}
 
-	childIndex, childData := []uint32{}, []children{}
+	childIndex, childData := []uint32{}, []*children{}
 	stepIndex, stepData := []uint32{}, []uint16{}
 	leafIndex, leafData := []uint32{}, []interface{}{}
 
@@ -120,7 +124,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 				bitmap |= uint16(1) << (uint16(b) & WordMask)
 			}
 
-			ch := children{
+			ch := &children{
 				Bitmap: bitmap,
 				Offset: offset,
 			}
@@ -215,14 +219,127 @@ func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	return
 }
 
+// rm splitStringTo4BitWrods before trie.Search
+func (st *CompactedTrie) SearchString(key string) (ltVal, eqVal, gtVal interface{}) {
+	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
+	ltLeaf := false
+
+	// string to 4-bit words
+	lenWords := 2 * uint16(len(key))
+
+	for idx := uint16(0); ; {
+		var word byte
+		if lenWords == idx {
+			word = LeafWord
+		} else {
+			if idx&uint16(1) == uint16(1) {
+				word = (byte(key[idx>>1]) & 0x0f)
+			} else {
+				word = (byte(key[idx>>1]) & 0xf0) >> 4
+			}
+		}
+
+		li, ei, ri, leaf := st.neighborBranches(uint16(eqIdx), word)
+		if li >= 0 {
+			ltIdx = li
+			ltLeaf = leaf
+		}
+
+		if ri >= 0 {
+			gtIdx = ri
+		}
+
+		eqIdx = ei
+		if eqIdx == -1 {
+			break
+		}
+
+		if word == LeafWord {
+			break
+		}
+
+		idx += st.getStep(uint16(eqIdx))
+
+		if idx > lenWords {
+			gtIdx = eqIdx
+			eqIdx = -1
+			break
+		}
+	}
+
+	if ltIdx != -1 {
+		if ltLeaf {
+			ltVal = st.Leaves.Get(uint32(ltIdx))
+		} else {
+			rmIdx := st.rightMost(uint16(ltIdx))
+			ltVal = st.Leaves.Get(uint32(rmIdx))
+		}
+	}
+	if gtIdx != -1 {
+		fmIdx := st.leftMost(uint16(gtIdx))
+		gtVal = st.Leaves.Get(uint32(fmIdx))
+	}
+	if eqIdx != -1 {
+		eqVal = st.Leaves.Get(uint32(eqIdx))
+	}
+
+	return
+}
+
+// just return equal value for trie.Search benchmark
+func (st *CompactedTrie) SearchStringEqual(key string) (eqVal interface{}) {
+	eqIdx := int32(0)
+
+	// string to 4-bit words
+	lenWords := 2 * uint16(len(key))
+
+	for idx := uint16(0); ; {
+		var word byte
+		if lenWords == idx {
+			word = LeafWord
+		} else {
+			if idx&uint16(1) == uint16(1) {
+				word = (byte(key[idx>>1]) & 0x0f)
+			} else {
+				word = (byte(key[idx>>1]) & 0xf0) >> 4
+			}
+		}
+
+		ei := st.nextBranch(uint16(eqIdx), word)
+
+		eqIdx = ei
+		if eqIdx == -1 {
+			break
+		}
+
+		if word == LeafWord {
+			break
+		}
+
+		idx += st.getStep(uint16(eqIdx))
+
+		if idx > lenWords {
+			eqIdx = -1
+			break
+		}
+	}
+
+	if eqIdx != -1 {
+		eqVal = st.Leaves.Get(uint32(eqIdx))
+	}
+
+	return
+}
+
 func (st *CompactedTrie) getChild(idx uint16) *children {
-	cval := st.Children.Get(uint32(idx))
-	if cval == nil {
+	if !st.Children.Has(uint32(idx)) {
 		return nil
 	}
-	ch := cval.(children)
 
-	return &ch
+	cval := st.Children.Get(uint32(idx))
+	ch := cval.(*children)
+
+	return ch
 }
 
 func (st *CompactedTrie) getStep(idx uint16) uint16 {
@@ -243,14 +360,14 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 	ltIdx, eqIdx, rtIdx = int32(-1), int32(-1), int32(-1)
 	ltLeaf = false
 
-	leaf := st.Leaves.Get(uint32(idx))
+	isLeaf := st.Leaves.Has(uint32(idx))
 
 	if word == LeafWord {
-		if leaf != nil {
+		if isLeaf {
 			eqIdx = int32(idx)
 		}
 	} else {
-		if leaf != nil {
+		if isLeaf {
 			ltIdx = int32(idx)
 			ltLeaf = true
 		}
@@ -289,9 +406,32 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 	return
 }
 
+func (st *CompactedTrie) nextBranch(idx uint16, word byte) (eqIdx int32) {
+	eqIdx = int32(-1)
+
+	isLeaf := st.Leaves.Has(uint32(idx))
+
+	if word == LeafWord {
+		if isLeaf {
+			eqIdx = int32(idx)
+		}
+	}
+
+	ch := st.getChild(idx)
+	if ch == nil {
+		return
+	}
+
+	if (ch.Bitmap >> word & 1) == 1 {
+		eqIdx = int32(getChildIdx(ch, uint16(word+1)))
+	}
+
+	return
+}
+
 func (st *CompactedTrie) leftMost(idx uint16) uint16 {
 	for {
-		if st.Leaves.Get(uint32(idx)) != nil {
+		if st.Leaves.Has(uint32(idx)) {
 			return idx
 		}
 
@@ -303,11 +443,11 @@ func (st *CompactedTrie) leftMost(idx uint16) uint16 {
 func (st *CompactedTrie) rightMost(idx uint16) uint16 {
 	offset := uint16(unsafe.Sizeof(uint16(0)) * 8)
 	for {
-		ch := st.getChild(idx)
-		if ch == nil {
+		if !st.Children.Has(uint32(idx)) {
 			return idx
 		}
 
+		ch := st.getChild(idx)
 		idx = getChildIdx(ch, offset)
 	}
 }

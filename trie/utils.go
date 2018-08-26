@@ -4,6 +4,7 @@ import (
 	crand "crypto/rand"
 	"io"
 	"sort"
+	"unsafe"
 
 	"github.com/google/btree"
 )
@@ -53,12 +54,17 @@ func (c testKVConv) MarshalElt(d interface{}) []byte {
 
 func (c testKVConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 
-	elt := &testKV{}
 	keySize := c.keySize
 	eltSize := c.keySize + c.valSize
 
-	elt.key = string(b[0:keySize])
-	elt.val = b[keySize:eltSize]
+	buf := b[0:keySize]
+
+	// byte slice to string for trie.Search benchmark
+	// do faster than string([]byte)
+	key := *(*string)(unsafe.Pointer(&buf))
+	val := b[keySize:eltSize]
+
+	elt := &testKV{key: key, val: val}
 
 	return c.keySize + c.valSize, elt
 }
