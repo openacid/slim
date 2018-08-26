@@ -26,10 +26,11 @@ func (c U16Conv) MarshalElt(d interface{}) []byte {
 
 func (c U16Conv) UnmarshalElt(b []byte) (uint32, interface{}) {
 
+	var d interface{}
 	size := uint32(2)
 	s := b[:size]
 
-	d := binary.LittleEndian.Uint16(s)
+	d = binary.LittleEndian.Uint16(s)
 	return size, d
 }
 

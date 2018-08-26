@@ -28,7 +28,9 @@ type CompactedArray struct {
 var bmWidth = uint32(unsafe.Sizeof(uint64(0))) * 8
 
 func bmBit(bmWidth uint32, idx uint32) (uint32, uint32) {
-	return idx / bmWidth, idx % bmWidth
+	c := idx / bmWidth
+	r := idx - uint32(c*bmWidth)
+	return c, r
 }
 
 func (sa *CompactedArray) appendElt(index uint32, elt []byte) {
@@ -107,4 +109,20 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 	}
 
 	return nil
+}
+
+func (sa *CompactedArray) Has(idx uint32) bool {
+	iBm, iBit := bmBit(bmWidth, idx)
+
+	if iBm >= uint32(len(sa.Bitmaps)) {
+		return false
+	}
+
+	var bmWord = sa.Bitmaps[iBm]
+
+	if ((bmWord >> iBit) & 1) == 1 {
+		return true
+	}
+
+	return false
 }
