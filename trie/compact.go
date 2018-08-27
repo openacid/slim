@@ -35,6 +35,7 @@ var (
 )
 
 type ChildConv struct {
+	child *children
 }
 
 func (c ChildConv) MarshalElt(d interface{}) []byte {
@@ -49,24 +50,40 @@ func (c ChildConv) MarshalElt(d interface{}) []byte {
 
 func (c ChildConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 
-	var d interface{}
+	c.child.Bitmap = binary.LittleEndian.Uint16(b[:2])
+	c.child.Offset = binary.LittleEndian.Uint16(b[2:4])
 
-	d = &children{
-		Bitmap: binary.LittleEndian.Uint16(b[:2]),
-		Offset: binary.LittleEndian.Uint16(b[2:4]),
-	}
-
-	return 4, d
+	return uint32(4), c.child
 }
 
 func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
 	return uint32(4)
 }
 
+type StepConv struct {
+	step *uint16
+}
+
+func (c StepConv) MarshalElt(d interface{}) []byte {
+	b := make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, *(d.(*uint16)))
+	return b
+}
+
+func (c StepConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+	*c.step = binary.LittleEndian.Uint16(b[:2])
+	return uint32(2), c.step
+}
+
+func (c StepConv) GetMarshaledEltSize(b []byte) uint32 {
+	return uint32(2)
+}
+
 func NewCompactedTrie(c array.EltConverter) *CompactedTrie {
+	var step uint16 = 0
 	ct := &CompactedTrie{
-		Children: array.CompactedArray{EltConverter: ChildConv{}},
-		Steps:    array.CompactedArray{EltConverter: array.U16Conv{}},
+		Children: array.CompactedArray{EltConverter: ChildConv{child: &children{}}},
+		Steps:    array.CompactedArray{EltConverter: StepConv{step: &step}},
 		Leaves:   array.CompactedArray{EltConverter: c},
 	}
 
@@ -79,7 +96,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 	}
 
 	childIndex, childData := []uint32{}, []*children{}
-	stepIndex, stepData := []uint32{}, []uint16{}
+	stepIndex, stepData := []uint32{}, []*uint16{}
 	leafIndex, leafData := []uint32{}, []interface{}{}
 
 	tq := make([]*Node, 0, 256)
@@ -108,7 +125,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 
 		if node.Step > 1 {
 			stepIndex = append(stepIndex, nId)
-			stepData = append(stepData, node.Step)
+			stepData = append(stepData, &node.Step)
 
 		}
 
@@ -347,13 +364,13 @@ func (st *CompactedTrie) getStep(idx uint16) uint16 {
 	if step == nil {
 		return uint16(1)
 	} else {
-		return step.(uint16)
+		return *(step.(*uint16))
 	}
 }
 
 func getChildIdx(ch *children, offset uint16) uint16 {
 	chNum := bit.Cnt1Before(uint64(ch.Bitmap), uint32(offset))
-	return ch.Offset + uint16(chNum) - uint16(1)
+	return ch.Offset + uint16(chNum-1)
 }
 
 func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {

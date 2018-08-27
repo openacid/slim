@@ -613,11 +613,11 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 }
 
 func checkCompactedTrie(ctrie, rCtrie *CompactedTrie, t *testing.T) {
-	if !proto.Equal(&ctrie.Children, &rCtrie.Children) {
+	if !proto.Equal(&(ctrie.Children.CompactedArray), &(rCtrie.Children.CompactedArray)) {
 		t.Fatalf("Children not the same")
 	}
 
-	if !proto.Equal(&ctrie.Steps, &rCtrie.Steps) {
+	if !proto.Equal(&(ctrie.Steps.CompactedArray), &(rCtrie.Steps.CompactedArray)) {
 		t.Fatalf("Step not the same")
 	}
 

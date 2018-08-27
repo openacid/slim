@@ -241,7 +241,8 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 }
 
 func trieSearchTestKV(ct *CompactedTrie, key string) []byte {
-	eq := ct.SearchStringEqual(key)
+	_, eq, _ := ct.SearchString(key)
+	//eq := ct.SearchStringEqual(key)
 	if eq == nil {
 		return nil
 	}
