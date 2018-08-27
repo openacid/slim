@@ -3,7 +3,6 @@ package array
 import (
 	"errors"
 	"reflect"
-	"unsafe"
 
 	"xec/bit"
 	"xec/prototype"
@@ -25,16 +24,16 @@ type CompactedArray struct {
 	EltConverter
 }
 
-var bmWidth = uint32(unsafe.Sizeof(uint64(0))) * 8
+var bmWidth = uint32(64) // how many bits of an uint64 == 2 ^ 6
 
-func bmBit(bmWidth uint32, idx uint32) (uint32, uint32) {
-	c := idx / bmWidth
-	r := idx - uint32(c*bmWidth)
+func bmBit(idx uint32) (uint32, uint32) {
+	c := idx >> uint32(6) // == idx / bmWidth
+	r := idx & uint32(63) // == idx % bmWidth
 	return c, r
 }
 
 func (sa *CompactedArray) appendElt(index uint32, elt []byte) {
-	iBm, iBit := bmBit(bmWidth, index)
+	iBm, iBit := bmBit(index)
 
 	var bmWord = &sa.Bitmaps[iBm]
 	if *bmWord == 0 {
@@ -90,7 +89,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 }
 
 func (sa *CompactedArray) Get(idx uint32) interface{} {
-	iBm, iBit := bmBit(bmWidth, idx)
+	iBm, iBit := bmBit(idx)
 
 	if iBm >= uint32(len(sa.Bitmaps)) {
 		return nil
@@ -98,21 +97,21 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 
 	var bmWord = sa.Bitmaps[iBm]
 
-	if ((bmWord >> iBit) & 1) == 1 {
-		base := sa.Offsets[iBm]
-		cnt1 := bit.Cnt1Before(bmWord, iBit)
-
-		stIdx := sa.GetMarshaledEltSize(nil) * (base + cnt1)
-
-		_, val := sa.UnmarshalElt(sa.Elts[stIdx:])
-		return val
+	if ((bmWord >> iBit) & 1) == 0 {
+		return nil
 	}
 
-	return nil
+	base := sa.Offsets[iBm]
+	cnt1 := bit.Cnt1Before(bmWord, iBit)
+
+	stIdx := sa.GetMarshaledEltSize(nil) * (base + cnt1)
+
+	_, val := sa.UnmarshalElt(sa.Elts[stIdx:])
+	return val
 }
 
 func (sa *CompactedArray) Has(idx uint32) bool {
-	iBm, iBit := bmBit(bmWidth, idx)
+	iBm, iBit := bmBit(idx)
 
 	if iBm >= uint32(len(sa.Bitmaps)) {
 		return false
@@ -120,9 +119,5 @@ func (sa *CompactedArray) Has(idx uint32) bool {
 
 	var bmWord = sa.Bitmaps[iBm]
 
-	if ((bmWord >> iBit) & 1) == 1 {
-		return true
-	}
-
-	return false
+	return (bmWord>>iBit)&1 > 0
 }

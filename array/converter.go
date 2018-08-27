@@ -25,13 +25,9 @@ func (c U16Conv) MarshalElt(d interface{}) []byte {
 }
 
 func (c U16Conv) UnmarshalElt(b []byte) (uint32, interface{}) {
+	elt := binary.LittleEndian.Uint16(b[:2])
 
-	var d interface{}
-	size := uint32(2)
-	s := b[:size]
-
-	d = binary.LittleEndian.Uint16(s)
-	return size, d
+	return 2, elt
 }
 
 func (c U16Conv) GetMarshaledEltSize(b []byte) uint32 {
