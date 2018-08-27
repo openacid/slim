@@ -2,6 +2,7 @@ package trie
 
 import (
 	crand "crypto/rand"
+	"encoding/binary"
 	"io"
 	"sort"
 	"unsafe"
@@ -36,41 +37,35 @@ func (c testKVConv) MarshalElt(d interface{}) []byte {
 
 	elt := d.(*testKV)
 
-	b := make([]byte, c.keySize+c.valSize)
-	var i int
+	p := unsafe.Pointer(&elt)
 
-	key := []byte(elt.key)
-	for i = 0; i < len(key); i++ {
-		b[i] = key[i]
-	}
-
-	for j := 0; j < len(elt.val); j++ {
-		b[i] = elt.val[j]
-		i += 1
-	}
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, *(*uint64)(p))
 
 	return b
 }
 
 func (c testKVConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 
-	keySize := c.keySize
-	eltSize := c.keySize + c.valSize
+	size := uint32(8)
+	s := b[:size]
 
-	buf := b[0:keySize]
+	buf := binary.LittleEndian.Uint64(s)
 
-	// byte slice to string for trie.Search benchmark
-	// do faster than string([]byte)
-	key := *(*string)(unsafe.Pointer(&buf))
-	val := b[keySize:eltSize]
+	// addr of uint64 == addr of elt pointer
+	p := unsafe.Pointer(&buf)
 
-	elt := &testKV{key: key, val: val}
+	// convter pointer
+	covP := *(*unsafe.Pointer)(p)
 
-	return c.keySize + c.valSize, elt
+	// addr of *testKV
+	eltP := (*testKV)(covP)
+
+	return uint32(8), eltP
 }
 
 func (c testKVConv) GetMarshaledEltSize(b []byte) uint32 {
-	return c.keySize + c.valSize
+	return uint32(8)
 }
 
 func makeStrings(cnt, leng int64) ([]string, error) {
