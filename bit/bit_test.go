@@ -2,7 +2,7 @@ package bit
 
 import "testing"
 
-func TestCnt1Before(t *testing.T) {
+func TestPopCnt64Before(t *testing.T) {
 	var cases = []struct {
 		n    uint64
 		iBit uint32
@@ -18,7 +18,7 @@ func TestCnt1Before(t *testing.T) {
 	}
 	for _, c := range cases {
 		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := Cnt1Before(n, iBit)
+		actN := PopCnt64Before(n, iBit)
 		if actN != expN {
 			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
 		}
