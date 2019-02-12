@@ -4,8 +4,8 @@ import (
 	"errors"
 	"reflect"
 
-	"xec/bit"
-	"xec/prototype"
+	"github.com/openacid/slim/bit"
+	"github.com/openacid/slim/prototype"
 )
 
 /*
