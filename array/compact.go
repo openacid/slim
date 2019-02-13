@@ -102,7 +102,7 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 	}
 
 	base := sa.Offsets[iBm]
-	cnt1 := bit.Cnt1Before(bmWord, iBit)
+	cnt1 := bit.PopCnt64Before(bmWord, iBit)
 
 	stIdx := sa.GetMarshaledEltSize(nil) * (base + cnt1)
 
