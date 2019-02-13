@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"xec/array"
-	"xec/version"
+	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/version"
 )
 
 var testDataFn = "data"

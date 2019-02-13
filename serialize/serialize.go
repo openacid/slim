@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"unsafe"
-	"xec/version"
+	"github.com/openacid/slim/version"
 
 	proto "github.com/golang/protobuf/proto"
 )
