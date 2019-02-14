@@ -3,10 +3,9 @@ package serialize
 import (
 	"bytes"
 	"encoding/binary"
-	"io"
-	"os"
-	"unsafe"
 	"github.com/openacid/slim/version"
+	"io"
+	"unsafe"
 
 	proto "github.com/golang/protobuf/proto"
 )
@@ -65,11 +64,11 @@ func readFull(reader io.Reader, buf []byte) (cnt int, err error) {
 
 	for n < toRead {
 		cnt, err = reader.Read(buf[n:])
-		n += cnt
 
 		if err != nil {
 			break
 		}
+		n += cnt
 	}
 
 	return n, err
@@ -144,7 +143,7 @@ func Marshal(writer io.Writer, obj proto.Message) (cnt int64, err error) {
 	return int64(nHeader + nData), err
 }
 
-func MarshalAt(f *os.File, offset int64, obj proto.Message) (cnt int64, err error) {
+func MarshalAt(writer io.WriterAt, offset int64, obj proto.Message) (cnt int64, err error) {
 	marshaledData, err := proto.Marshal(obj)
 	if err != nil {
 		return 0, err
@@ -159,13 +158,13 @@ func MarshalAt(f *os.File, offset int64, obj proto.Message) (cnt int64, err erro
 		return 0, err
 	}
 
-	nHeader, err := f.WriteAt(headerBuf.Bytes(), offset)
+	nHeader, err := writer.WriteAt(headerBuf.Bytes(), offset)
 	if err != nil {
 		return int64(nHeader), err
 	}
 	offset += int64(nHeader)
 
-	nData, err := f.WriteAt(marshaledData, offset)
+	nData, err := writer.WriteAt(marshaledData, offset)
 
 	return int64(nHeader + nData), nil
 }
@@ -191,10 +190,10 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 }
 
 // UnmarshalAt use os.File.ReadAt() to avoid concurrent reading.
-func UnmarshalAt(f *os.File, offset int64, obj proto.Message) (n int64, err error) {
+func UnmarshalAt(reader io.ReaderAt, offset int64, obj proto.Message) (n int64, err error) {
 	headerSize := GetMarshalHeaderSize()
 	headerData := make([]byte, headerSize)
-	if _, err := f.ReadAt(headerData, offset); err != nil {
+	if _, err := reader.ReadAt(headerData, offset); err != nil {
 		return 0, err
 	}
 	offset += headerSize
@@ -206,7 +205,7 @@ func UnmarshalAt(f *os.File, offset int64, obj proto.Message) (n int64, err erro
 
 	dataSize := int64(header.DataSize)
 	rest := make([]byte, dataSize)
-	if _, err := f.ReadAt(rest, offset); err != nil {
+	if _, err := reader.ReadAt(rest, offset); err != nil {
 		return 0, err
 	}
 

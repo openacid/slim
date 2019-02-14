@@ -319,3 +319,45 @@ func checkCompactedArray(index []uint32, rSArray, sArray *array.CompactedArray, 
 		}
 	}
 }
+
+type testWriterReader struct {
+	b [512]byte
+}
+
+func (t *testWriterReader) WriteAt(b []byte, off int64) (n int, err error) {
+	length := len(b)
+	for i := 0; i < length; i++ {
+		t.b[int64(i)+off] = b[i]
+	}
+	return length, nil
+}
+
+func (t *testWriterReader) ReadAt(b []byte, off int64) (n int, err error) {
+	length := len(b)
+	copy(b, t.b[off:off+int64(length)])
+	return length, nil
+}
+
+func TestWriteAtReadAt(t *testing.T) {
+	rw := &testWriterReader{}
+	index1 := []uint32{10, 20, 30, 40, 50, 60}
+
+	wArr := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	err := wArr.Init(index1, index1)
+	if err != nil {
+		t.Fatalf("failed to init compacted array")
+	}
+
+	_, err = MarshalAt(rw, 10, wArr)
+	if err != nil {
+		t.Fatalf("failed to store compacted array: %v", err)
+	}
+
+	rArr := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	_, err = UnmarshalAt(rw, 10, rArr)
+	if err != nil {
+		t.Fatalf("failed to load data: %v", err)
+	}
+
+	checkCompactedArray(index1, rArr, wArr, t)
+}
