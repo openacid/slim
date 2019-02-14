@@ -1,0 +1,3 @@
+Choosing PR template can be done with URL query.
+
+For now github will only read PR template from `.github/PULL_REQUEST_TEMPLATE.md` only.
