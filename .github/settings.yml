@@ -1,0 +1,7 @@
+_extends: gh-config
+
+repository:
+  name: slim
+  description: Unbelievably space efficient data structures in Golang.
+  homepage: https://openacid.github.io/
+  topics: go, golang, memory, compacted, compress, datastructure, trie, tree
