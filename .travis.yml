@@ -1,0 +1,12 @@
+language: go
+
+# 1.10 must be quoted or it is interpreted as float number and results in 1.1
+go:
+    # - 1.4
+    # - 1.5
+    # - 1.6
+    # - 1.7
+    # - 1.8
+    # - 1.9
+    - "1.10"
+    # - tip
