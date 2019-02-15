@@ -1,5 +1,6 @@
 _extends: gh-config
 
+
 repository:
   name: slim
   description: Unbelievably space efficient data structures in Golang.
