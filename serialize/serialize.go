@@ -11,6 +11,10 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
+const (
+	MaxMarshalledSize int64 = 1024 * 1024 * 1024
+)
+
 /**
  * Compatiblity gurantee:
  *     - do NOT change type of fields
@@ -156,7 +160,6 @@ func MarshalAt(writer io.WriterAt, offset int64, obj proto.Message) (cnt int64, 
 	return int64(nHeader + nData), nil
 }
 
-// UnmarshalAt use os.File.WriteAt() to avoid concurrent writing.
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	dataHeader, err := UnmarshalHeader(reader)
 	if err != nil {
@@ -176,33 +179,24 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	return nil
 }
 
-// UnmarshalAt use os.File.ReadAt() to avoid concurrent reading.
 func UnmarshalAt(reader io.ReaderAt, offset int64, obj proto.Message) (n int64, err error) {
-	headerSize := GetMarshalHeaderSize()
-	headerData := make([]byte, headerSize)
-	if _, err := reader.ReadAt(headerData, offset); err != nil {
-		return 0, err
+
+	// Wrap io.ReaderAt with a offset-self-maintained io.Reader
+	// The 3rd argument specifies right boundary. It is not buffer size related
+	// thus we just give it a big enough value.
+	r := io.NewSectionReader(reader, offset, MaxMarshalledSize)
+
+	err = Unmarshal(r, obj)
+	n, seekErr := r.Seek(0, io.SeekCurrent)
+	if seekErr != nil {
+		// It must be a programming error.
+		// seekErr is not nil only when:
+		// - whence is invalid
+		// - or return value would be a negative int.
+		panic("seekErr must be nil")
 	}
-	offset += headerSize
+	return n, err
 
-	header, err := UnmarshalHeader(bytes.NewBuffer(headerData))
-	if err != nil {
-		return 0, err
-	}
-
-	dataSize := int64(header.DataSize)
-	rest := make([]byte, dataSize)
-	if _, err := reader.ReadAt(rest, offset); err != nil {
-		return 0, err
-	}
-
-	if err := proto.Unmarshal(rest, obj); err != nil {
-		return 0, err
-	}
-
-	n = int64(headerSize) + int64(dataSize)
-
-	return n, nil
 }
 
 func GetMarshalHeaderSize() int64 {
