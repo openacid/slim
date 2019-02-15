@@ -1,5 +1,7 @@
 # slim
 
+[![Build-Status](https://api.travis-ci.org/openacid/slim.svg?branch=master)](https://travis-ci.org/openacid/slim)
+
 A collection of unbelievably memory efficient data structure in Golang
 
 # For Users
