@@ -3,9 +3,10 @@ package serialize
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/openacid/slim/version"
 	"io"
 	"unsafe"
+
+	"github.com/openacid/slim/version"
 
 	proto "github.com/golang/protobuf/proto"
 )
@@ -59,25 +60,14 @@ func makeDefaultDataHeader(dataSize uint64) *DataHeader {
 	return makeDataHeader(version.VERSION, uint64(headerSize), dataSize)
 }
 
-func readFull(reader io.Reader, buf []byte) (cnt int, err error) {
-	n, cnt, toRead := 0, 0, len(buf)
-
-	for n < toRead {
-		cnt, err = reader.Read(buf[n:])
-
-		if err != nil {
-			break
-		}
-		n += cnt
-	}
-
-	return n, err
-}
-
 func UnmarshalHeader(reader io.Reader) (header *DataHeader, err error) {
 	verBuf := make([]byte, version.MAXLEN)
 
-	if _, err := readFull(reader, verBuf); err != nil {
+	// io.ReadFull returns err:
+	//     EOF:              means n = 0
+	//     ErrUnexpectedEOF: means n < len(buf)  underlaying Reader returns EOF
+	//     nil:              means n == len(buf)
+	if _, err := io.ReadFull(reader, verBuf); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +82,7 @@ func UnmarshalHeader(reader io.Reader) (header *DataHeader, err error) {
 	toRead := headerSize - version.MAXLEN - uint64(unsafe.Sizeof(headerSize))
 	buf := make([]byte, toRead)
 
-	if _, err := readFull(reader, buf); err != nil {
+	if _, err := io.ReadFull(reader, buf); err != nil {
 		return nil, err
 	}
 
