@@ -33,28 +33,31 @@ func TestBinaryWriteUint64Length(t *testing.T) {
 }
 
 func TestBytesToString(t *testing.T) {
-	str, err := bytesToString(nil, 0)
-	if err != nil || str != "" {
-		t.Fatalf("failed to handle nil: %s, %v", str, err)
+
+	var str string
+
+	str = bytesToString(nil, 0)
+	if str != "" {
+		t.Fatalf("failed to handle nil: %s", str)
 	}
 
-	str, err = bytesToString([]byte{}, 0)
-	if err != nil || str != "" {
-		t.Fatalf("failed to handle nil: %s, %v", str, err)
+	str = bytesToString([]byte{}, 0)
+	if str != "" {
+		t.Fatalf("failed to handle nil: %s", str)
 	}
 
-	str, err = bytesToString([]byte{'a', 'b', 'c'}, 0)
-	if err != nil || str != "abc" || len(str) != 3 {
-		t.Fatalf("failed to handle abc: %s, %v", str, err)
+	str = bytesToString([]byte{'a', 'b', 'c'}, 0)
+	if str != "abc" || len(str) != 3 {
+		t.Fatalf("failed to handle abc: %s", str)
 	}
 
-	str, err = bytesToString([]byte{'1', '.', '0', '.', '0', 0}, 0)
-	if err != nil || str != "1.0.0" || len(str) != 5 {
-		t.Fatalf("failed to handle 1.0.0'0': %s, %v", str, err)
+	str = bytesToString([]byte{'1', '.', '0', '.', '0', 0}, 0)
+	if str != "1.0.0" || len(str) != 5 {
+		t.Fatalf("failed to handle 1.0.0'0': %s", str)
 	}
 
 	bBuf := []byte{'1', '.', '0', '.', '0', 0}
-	str, _ = bytesToString(bBuf, 0)
+	str = bytesToString(bBuf, 0)
 
 	bBuf[0] = '2'
 	if str != "1.0.0" {
@@ -76,9 +79,9 @@ func TestMakeDataHeader(t *testing.T) {
 		t.Fatalf("wrong header size")
 	}
 
-	verStr, err := bytesToString(header.Version[:], 0)
-	if err != nil || verStr != ver {
-		t.Fatalf("wrong version: %v, %s, expect: %s", err, verStr, ver)
+	verStr := bytesToString(header.Version[:], 0)
+	if verStr != ver {
+		t.Fatalf("wrong version: %s, expect: %s", verStr, ver)
 	}
 
 	header = makeDefaultDataHeader(dataSize)
@@ -95,9 +98,9 @@ func TestMakeDataHeader(t *testing.T) {
 		t.Fatalf("wrong version length: %v", len(header.Version))
 	}
 
-	verStr, err = bytesToString(header.Version[:], 0)
-	if err != nil || verStr != version.VERSION {
-		t.Fatalf("wrong version: %v, %s, expect: %s", err, verStr, version.VERSION)
+	verStr = bytesToString(header.Version[:], 0)
+	if verStr != version.VERSION {
+		t.Fatalf("wrong version: %s, expect: %s", verStr, version.VERSION)
 	}
 }
 
@@ -152,11 +155,7 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 		}
 	}
 
-	rVersion, err := bytesToString(rSHeader.Version[:], 0)
-	if err != nil {
-		t.Fatalf("failed to restore version string")
-	}
-
+	rVersion := bytesToString(rSHeader.Version[:], 0)
 	if rVersion != version.VERSION {
 		t.Fatalf("wrong version string: %v, %v", rVersion, version.VERSION)
 	}

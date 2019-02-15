@@ -25,13 +25,13 @@ type DataHeader struct {
 	DataSize   uint64               // the length in bytes of serialized data size
 }
 
-func bytesToString(buf []byte, delimter byte) (str string, err error) {
+func bytesToString(buf []byte, delimter byte) string {
 	delimPos := bytes.IndexByte(buf, delimter)
 	if delimPos == -1 {
 		delimPos = len(buf)
 	}
 
-	return string(buf[:delimPos]), err
+	return string(buf[:delimPos])
 }
 
 func makeDataHeader(verStr string, headerSize uint64, dataSize uint64) *DataHeader {
@@ -81,10 +81,7 @@ func UnmarshalHeader(reader io.Reader) (header *DataHeader, err error) {
 		return nil, err
 	}
 
-	verStr, err := bytesToString(verBuf, 0)
-	if err != nil {
-		return nil, err
-	}
+	verStr := bytesToString(verBuf, 0)
 
 	var headerSize uint64
 	err = binary.Read(reader, binary.LittleEndian, &headerSize)
