@@ -81,6 +81,10 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/modood/table"
+
 [prune]
   go-tests = true
   unused-packages = true

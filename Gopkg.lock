@@ -14,6 +14,12 @@
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/modood/table"
+  packages = ["."]
+  revision = "499dc7fba710b790913ac68962508e7d36467ba7"
+
+[[projects]]
   name = "github.com/openacid/errors"
   packages = ["."]
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
@@ -28,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5846497707e9a4c54944666fbf7d74dd855042b3baf52caff2c148fdfbb9e369"
+  inputs-digest = "d84e620ec119111c6cdd5a7095105e82e42d4c0d37e37f34de019ac819cf43aa"
   solver-name = "gps-cdcl"
   solver-version = 1
