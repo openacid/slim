@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# it must run by
+#     source init-gopath
+# or
+#     . init-gopath
+
+# Not
+#     ./init-gopath
+
+# Because run it in another process does not modifies its parent shell process env-variables
+
+export GOPATH=$(pwd)
