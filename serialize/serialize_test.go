@@ -218,6 +218,64 @@ func TestMarshalUnMarshal(t *testing.T) {
 	checkCompactedArray(index, rSArray, sArray, t)
 }
 
+type IncomleteReaderWriter struct {
+	Buf []byte
+}
+
+func (rw *IncomleteReaderWriter) Read(p []byte) (n int, err error) {
+	// Read 1 byte per Read()
+	b := rw.Buf[0]
+	rw.Buf = rw.Buf[1:]
+	p[0] = b
+	return 1, nil
+}
+
+func (rw *IncomleteReaderWriter) Write(p []byte) (n int, err error) {
+	rw.Buf = append(rw.Buf, p...)
+	return len(p), nil
+}
+
+func TestUnMarshalFromIncompleteReader(t *testing.T) {
+
+	// Marshal() must work correctly
+	// with an io.Reader:Read(p []byte)
+	// returns n < len(p).
+
+	index := []uint32{10, 20, 30, 40, 50, 60}
+
+	sArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	err := sArray.Init(index, index)
+	if err != nil {
+		t.Fatalf("failed to init compacted array")
+	}
+
+	marshalSize := GetMarshalSize(sArray)
+
+	rw := &IncomleteReaderWriter{}
+
+	// marshal
+
+	cnt, err := Marshal(rw, sArray)
+	if err != nil {
+		t.Fatalf("failed to store compacted array: %v", err)
+	}
+	if cnt != marshalSize {
+		t.Fatalf("byte written %d != expected size %d", cnt, marshalSize)
+	}
+
+	// unmarshal
+
+	rSArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+
+	err = Unmarshal(rw, rSArray)
+	if err != nil {
+		t.Fatalf("failed to load data: %v", err)
+	}
+
+	// check compacted array
+	checkCompactedArray(index, rSArray, sArray, t)
+}
+
 func TestMarshalAtUnMarshalAt(t *testing.T) {
 	index1 := []uint32{10, 20, 30, 40, 50, 60}
 	index2 := []uint32{15, 25, 35, 45, 55, 65}

@@ -168,7 +168,11 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 
 	dataBuf := make([]byte, dataHeader.DataSize)
 
-	if _, err := reader.Read(dataBuf); err != nil {
+	// Repeat reader.Read until encounting an error or read full
+	//
+	// io.Reader:Read() does not guarantee to read all
+	// len(dataBuf)
+	if _, err := io.ReadFull(reader, dataBuf); err != nil {
 		return err
 	}
 
