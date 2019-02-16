@@ -6,6 +6,7 @@ import (
 	"io"
 	"unsafe"
 
+	"github.com/openacid/slim/iohelper"
 	"github.com/openacid/slim/version"
 
 	proto "github.com/golang/protobuf/proto"
@@ -135,29 +136,9 @@ func Marshal(writer io.Writer, obj proto.Message) (cnt int64, err error) {
 }
 
 func MarshalAt(writer io.WriterAt, offset int64, obj proto.Message) (cnt int64, err error) {
-	marshaledData, err := proto.Marshal(obj)
-	if err != nil {
-		return 0, err
-	}
 
-	dataSize := uint64(len(marshaledData))
-	dataHeader := makeDefaultDataHeader(dataSize)
-
-	headerBuf := new(bytes.Buffer)
-	err = marshalHeader(headerBuf, dataHeader)
-	if err != nil {
-		return 0, err
-	}
-
-	nHeader, err := writer.WriteAt(headerBuf.Bytes(), offset)
-	if err != nil {
-		return int64(nHeader), err
-	}
-	offset += int64(nHeader)
-
-	nData, err := writer.WriteAt(marshaledData, offset)
-
-	return int64(nHeader + nData), nil
+	w := iohelper.NewSectionWriter(writer, offset, MaxMarshalledSize)
+	return Marshal(w, obj)
 }
 
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
