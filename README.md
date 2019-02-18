@@ -65,7 +65,7 @@ All dependency packages for running it are already included in `vendor/` dir.
     -   `dep`:
         for dependency management.
     -   `protobuf`:
-        for re-compiling `*.proto` file if on-disk data structure chnages.
+        for re-compiling `*.proto` file if on-disk data structure changes.
 
     Max OS X:
     ```sh
@@ -222,7 +222,7 @@ Or other type of [issue][new-issue].
 - ![][刘保海-img-sml] **[刘保海][]** *what you do*
 - ![][吴义谱-img-sml] **[吴义谱][]** *compacted-array,*
 - ![][张炎泼-img-sml] **[张炎泼][]** *slimtrie design,*
-- ![][李文博-img-sml] **[李文博][]** *trie-compressing,*
+- ![][李文博-img-sml] **[李文博][]** *trie-compressing,* *trie-search,*
 - ![][李树龙-img-sml] **[李树龙][]** *serialization,*
 
 
