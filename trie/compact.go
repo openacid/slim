@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 	"unsafe"
-	"xec/array"
-	"xec/bit"
-	"xec/serialize"
+	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/bit"
+	"github.com/openacid/slim/serialize"
 )
 
 const (

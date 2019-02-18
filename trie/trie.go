@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"xec/xerrors"
+	"github.com/openacid/slim/xerrors"
 )
 
 var ErrDuplicateKeys = errors.New("keys can not be duplicate")
