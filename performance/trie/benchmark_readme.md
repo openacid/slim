@@ -38,9 +38,9 @@ flamegraph visualization is also available to `go tool pprof` in `Go 1.11`.
 1. Install FlameGraph
 
 ```
-git clone https://github.com/brendangregg/FlameGraph.git`
+git clone https://github.com/brendangregg/FlameGraph.git
 
-# copy `FlameGraph/flamegraph.pl` to your `$PATH`, like：
+# copy 'FlameGraph/flamegraph.pl' to your `$PATH`, like：
 cp FlameGraph/flamegraph.pl /usr/local/bin/
 ```
 
