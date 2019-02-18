@@ -6,7 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"xec/array"
+	"github.com/openacid/slim/array"
 
 	proto "github.com/golang/protobuf/proto"
 )

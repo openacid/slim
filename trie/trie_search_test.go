@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"xec/testutil"
+	"github.com/openacid/slim/testutil"
 
 	"github.com/google/btree"
 )

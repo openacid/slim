@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"xec/xerrors"
+	"github.com/openacid/slim/xerrors"
 )
 
 func TestTrie(t *testing.T) {
