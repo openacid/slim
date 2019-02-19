@@ -1,3 +1,4 @@
+// Package array implements functions for the manipulation of compacted array.
 package array
 
 import (
@@ -38,6 +39,9 @@ func (sa *CompactedArray) appendElt(index uint32, elt []byte) {
 var ErrIndexLen = errors.New("the length of index and elts must be equal")
 var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 
+// Init initializes a compacted array from the slice type elts
+// the index parameter must be a non-descending array of type unit32,
+// otherwise, return the ErrIndexNotAscending error
 func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 
 	rElts := reflect.ValueOf(_elts)
@@ -77,6 +81,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 	return nil
 }
 
+// Get returns the value index idx if idx is in array, else return nil
 func (sa *CompactedArray) Get(idx uint32) interface{} {
 	iBm, iBit := bmBit(idx)
 
@@ -99,6 +104,7 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 	return val
 }
 
+// Has returns true if idx is in array, else return false
 func (sa *CompactedArray) Has(idx uint32) bool {
 	iBm, iBit := bmBit(idx)
 
