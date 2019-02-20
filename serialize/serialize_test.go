@@ -34,9 +34,7 @@ func TestBinaryWriteUint64Length(t *testing.T) {
 
 func TestBytesToString(t *testing.T) {
 
-	var str string
-
-	str = bytesToString(nil, 0)
+	var str string = bytesToString(nil, 0)
 	if str != "" {
 		t.Fatalf("failed to handle nil: %s", str)
 	}
@@ -192,7 +190,7 @@ func TestMarshalUnMarshal(t *testing.T) {
 		t.Fatalf("failed to get file info: %s, %v", testDataFn, err)
 	}
 
-	if fInfo.Size() != int64(cnt) {
+	if fInfo.Size() != cnt {
 		t.Fatalf("wrong file size: %d, %d", fInfo.Size(), cnt)
 	}
 

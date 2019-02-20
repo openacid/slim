@@ -69,7 +69,7 @@ func TestNew(t *testing.T) {
 		}
 
 		buf := new(bytes.Buffer)
-		err = binary.Write(buf, binary.LittleEndian, eltsData)
+		binary.Write(buf, binary.LittleEndian, eltsData)
 
 		expElts := buf.Bytes()
 		if expElts == nil {
@@ -209,7 +209,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 
 			sca = []*CompactedArray{}
 
-			index := makeTestIndex(maxIdx, uint32(idxDis))
+			index := makeTestIndex(maxIdx, idxDis)
 			eltCnt := uint32(len(index))
 			elts := makeTestData(eltSize, eltCnt)
 
@@ -228,13 +228,11 @@ func BenchmarkMemOverhead(b *testing.B) {
 
 			totalSize := rss2 - rss1
 			dataAvgSize := uint64(eltSize * eltCnt)
-			caAvgSize := uint64(totalSize / uint64(caCnt))
+			caAvgSize := totalSize / uint64(caCnt)
 			overhead := float64(caAvgSize) / float64(dataAvgSize)
 
 			fmt.Printf("%-10d%-10d%-10d%-10d%-12d%-12d%-12d%-10.3f\n",
 				eltSize, eltCnt, idxDis, caCnt, totalSize, caAvgSize, dataAvgSize, overhead)
-
-			sca = nil
 		}
 	}
 }

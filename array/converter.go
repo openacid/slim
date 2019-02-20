@@ -87,7 +87,7 @@ func (c U32to3ByteConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 	copy(s[:3], b)
 
 	d := binary.LittleEndian.Uint32(s)
-	return size, uint32(d)
+	return size, d
 }
 
 func (c U32to3ByteConv) GetMarshaledEltSize(b []byte) uint32 {

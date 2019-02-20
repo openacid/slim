@@ -33,7 +33,6 @@ func (rw *fooWriterAt) WriteAt(p []byte, offset int64) (n int, err error) {
 		if n < 0 {
 			n = 0
 		}
-		total = len(rw.Buf)
 		err = errBufferTooShort
 	}
 	for i := 0; i < n; i++ {

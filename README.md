@@ -11,8 +11,8 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 [![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
 [![Sourcegraph](https://sourcegraph.com/github.com/openacid/slim/-/badge.svg)](https://sourcegraph.com/github.com/openacid/slim?badge)
 
-Slim provides with in-memory data-structures and coresponding serialization
-APIs for persisting them on-disk or tranport.
+Slim provides with in-memory data-structures and corresponding serialisation
+APIs for persisting them on-disk or transport.
 
 <!-- TODO list data types -->
 <!-- TODO slim.Trie -->
@@ -26,7 +26,7 @@ APIs for persisting them on-disk or tranport.
 
 ## Synoposis
 
-<!-- TODO refine this synoposis -->
+<!-- TODO refine this synopsis -->
 ```go
 package main
 
@@ -56,7 +56,7 @@ All dependency packages for running it are already included in `vendor/` dir.
 
 
 <!-- TODO add FAQ -->
-<!-- TODO add serialization explaination, on-disk data structure etc. -->
+<!-- TODO add serialisation explanation, on-disk data structure etc. -->
 
 ### Prerequisites
 
@@ -84,13 +84,13 @@ All dependency packages for running it are already included in `vendor/` dir.
 
 ## Who are using slim
 
-<span style="display: inline-block; text-align: center;"> <span> ![][baishancloud-favicon] </span> <br/> <span> [baishancloud][] </span> </span>
+<span style="display: inline-block; text-align: centre;"> <span> ![][baishancloud-favicon] </span> <br/> <span> [baishancloud][] </span> </span>
 
 ## Slim internal
 
 ### Built With
 
-- [protobuf][] - Define on-disk data-structure and serialization engine.
+- [protobuf][] - Define on-disk data-structure and serialisation engine.
 - [semver][] - For versioning data-structure.
 - [dep][] - Dependency Management.
 
@@ -126,17 +126,17 @@ All dependency packages for running it are already included in `vendor/` dir.
 -   [x] slimtrie
 -   [ ] bitrie: 1 byte-per-key implementation.
 -   [ ] balanced bitrie: which gives better worst-case performance.
--   [ ] generalized API as a drop-in replacement for map etc.
+-   [ ] generalised API as a drop-in replacement for map etc.
 
 
 ## Feedback
 
 **Feedback and Contributions are greatly appreciated**.
 
-At this stage, the maintainers are most interested in feedback centered on:
+At this stage, the maintainers are most interested in feedback centred on:
 
 -   Do you have a real life scenario that the tool supports well, or doesn't support at all?
--   Do any of the APIs fulfill your needs well?
+-   Do any of the APIs fulfil your needs well?
 
 Let us know by filing an issue, describing what you did or wanted to do, what
 you expected to happen, and what actually happened:
@@ -167,9 +167,9 @@ Or other type of [issue][new-issue].
 
 <!-- ### Tool chain -->
 
-<!-- ### Customized install -->
+<!-- ### Customised install -->
 
-<!-- Alternatively, if you have a customized go develop environment, you could also -->
+<!-- Alternatively, if you have a customised go develop environment, you could also -->
 <!-- clone it: -->
 
 <!-- ```sh -->
@@ -227,7 +227,7 @@ Or other type of [issue][new-issue].
 - ![][吴义谱-img-sml] **[吴义谱][]** *compacted-array,*
 - ![][张炎泼-img-sml] **[张炎泼][]** *slimtrie design,*
 - ![][李文博-img-sml] **[李文博][]** *trie-compressing,* *trie-search,*
-- ![][李树龙-img-sml] **[李树龙][]** *serialization,*
+- ![][李树龙-img-sml] **[李树龙][]** *serialisation,*
 
 
 See also the list of [contributors][] who participated in this project.
