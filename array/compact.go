@@ -40,7 +40,7 @@ var ErrIndexLen = errors.New("the length of index and elts must be equal")
 var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 
 // Init initializes a compacted array from the slice type elts
-// the index parameter must be a non-descending array of type unit32,
+// the index parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
 func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 
@@ -81,7 +81,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 	return nil
 }
 
-// Get returns the value index idx if idx is in array, else return nil
+// Get returns the value indexed by idx if it is in array, else return nil
 func (sa *CompactedArray) Get(idx uint32) interface{} {
 	iBm, iBit := bmBit(idx)
 
