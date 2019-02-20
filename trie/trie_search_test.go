@@ -3,11 +3,11 @@ package trie
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
 	"time"
-	"github.com/openacid/slim/testutil"
 
 	"github.com/google/btree"
 )
@@ -52,7 +52,7 @@ func BenchmarkTrieSearch(b *testing.B) {
 		//_, _, _ = tr.Search(searchKey)
 	}
 
-	if !testutil.ByteSliceEqual(val, testSrc.searchValue) {
+	if !reflect.DeepEqual(val, testSrc.searchValue) {
 		b.Errorf("search value is wrong.")
 	}
 }
