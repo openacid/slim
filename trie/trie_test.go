@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"github.com/openacid/slim/xerrors"
+	"github.com/openacid/errors"
 )
 
 func TestTrie(t *testing.T) {
@@ -285,7 +285,7 @@ func TestTrieNew(t *testing.T) {
 				{'c', 'd', 'e'},
 			},
 			values:      []int{0, 1, 2},
-			expectedErr: xerrors.New(ErrDuplicateKeys, fmt.Sprintf("key: abc")),
+			expectedErr: errors.Wrapf(ErrDuplicateKeys, "key: abc"),
 		},
 		{
 			keys: [][]byte{

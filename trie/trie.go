@@ -6,7 +6,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"github.com/openacid/slim/xerrors"
+
+	"github.com/openacid/errors"
 )
 
 var ErrDuplicateKeys = errors.New("keys can not be duplicate")
@@ -47,7 +48,7 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 		key := keys[i]
 		_, err = root.AddKV(key, valSlice[i], false, false)
 		if err != nil {
-			err = xerrors.New(err, fmt.Sprintf("key: %s", string(key)))
+			err = errors.Wrapf(err, "key: %s", key)
 			return
 		}
 	}
