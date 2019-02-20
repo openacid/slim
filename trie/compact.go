@@ -369,7 +369,7 @@ func (st *CompactedTrie) getStep(idx uint16) uint16 {
 }
 
 func getChildIdx(ch *children, offset uint16) uint16 {
-	chNum := bit.Cnt1Before(uint64(ch.Bitmap), uint32(offset))
+	chNum := bit.PopCnt64Before(uint64(ch.Bitmap), uint32(offset))
 	return ch.Offset + uint16(chNum-1)
 }
 

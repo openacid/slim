@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
 	"github.com/openacid/errors"
 )
 
@@ -304,7 +305,7 @@ func TestTrieNew(t *testing.T) {
 
 	for _, c := range cases {
 		_, err := New(c.keys, c.values)
-		if !reflect.DeepEqual(err, c.expectedErr) {
+		if errors.Cause(err) != errors.Cause(c.expectedErr) {
 			t.Fatalf("new trie: expectedErr: %v, got: %v", c.expectedErr, err)
 		}
 	}

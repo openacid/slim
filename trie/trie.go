@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"sort"
