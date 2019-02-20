@@ -5,7 +5,11 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
 # Slim - space efficient data structures in Golang
 
-[![Build-Status](https://api.travis-ci.org/openacid/slim.svg?branch=master)](https://travis-ci.org/openacid/slim)
+[![Travis-CI](https://api.travis-ci.org/openacid/slim.svg?branch=master)](https://travis-ci.org/openacid/slim)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/ah6hlsojleqg8j9i/branch/master?svg=true)](https://ci.appveyor.com/project/drmingdrmer/slim/branch/master)
+[![GoDoc](https://godoc.org/github.com/openacid/slim?status.svg)](http://godoc.org/github.com/openacid/slim)
+[![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
+[![Sourcegraph](https://sourcegraph.com/github.com/openacid/slim/-/badge.svg)](https://sourcegraph.com/github.com/openacid/slim?badge)
 
 Slim provides with in-memory data-structures and coresponding serialization
 APIs for persisting them on-disk or tranport.
