@@ -3,10 +3,10 @@ package trie
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/openacid/slim/array"
 	"os"
 	"reflect"
 	"testing"
-	"github.com/openacid/slim/array"
 
 	proto "github.com/golang/protobuf/proto"
 )
@@ -24,14 +24,14 @@ just to make it easier to test it as a number of uint64
 */
 type TestIntConv struct{}
 
-func (c TestIntConv) MarshalElt(d interface{}) []byte {
+func (c TestIntConv) Marshal(d interface{}) []byte {
 	b := make([]byte, 8)
 	v := uint64(d.(int))
 	binary.LittleEndian.PutUint64(b, v)
 	return b
 }
 
-func (c TestIntConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+func (c TestIntConv) Unmarshal(b []byte) (uint32, interface{}) {
 
 	size := uint32(8)
 	s := b[:size]
@@ -40,7 +40,7 @@ func (c TestIntConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 	return size, int(d)
 }
 
-func (c TestIntConv) GetMarshaledEltSize(b []byte) uint32 {
+func (c TestIntConv) GetMarshaledSize(b []byte) uint32 {
 	return 8
 }
 

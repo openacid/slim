@@ -14,7 +14,7 @@ import (
 
 func NewU32(index []uint32, elts []uint32) (*CompactedArray, error) {
 
-	ca := CompactedArray{EltConverter: U32Conv{}}
+	ca := CompactedArray{Converter: U32Conv{}}
 	err := ca.Init(index, elts)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func BenchmarkInit(b *testing.B) {
 
 func newByte(eSize uint32, index []uint32, elts [][]byte) (*CompactedArray, error) {
 
-	ca := CompactedArray{EltConverter: ByteConv{EltSize: eSize}}
+	ca := CompactedArray{Converter: ByteConv{EltSize: eSize}}
 	err := ca.Init(index, elts)
 	if err != nil {
 		return nil, err

@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"io"
-	"os"
-	"unsafe"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bit"
 	"github.com/openacid/slim/serialize"
+	"io"
+	"os"
+	"unsafe"
 )
 
 const (
@@ -38,7 +38,7 @@ type ChildConv struct {
 	child *children
 }
 
-func (c ChildConv) MarshalElt(d interface{}) []byte {
+func (c ChildConv) Marshal(d interface{}) []byte {
 	child := d.(*children)
 
 	b := make([]byte, 4)
@@ -48,7 +48,7 @@ func (c ChildConv) MarshalElt(d interface{}) []byte {
 	return b
 }
 
-func (c ChildConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+func (c ChildConv) Unmarshal(b []byte) (uint32, interface{}) {
 
 	c.child.Bitmap = binary.LittleEndian.Uint16(b[:2])
 	c.child.Offset = binary.LittleEndian.Uint16(b[2:4])
@@ -56,7 +56,7 @@ func (c ChildConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 	return uint32(4), c.child
 }
 
-func (c ChildConv) GetMarshaledEltSize(b []byte) uint32 {
+func (c ChildConv) GetMarshaledSize(b []byte) uint32 {
 	return uint32(4)
 }
 
@@ -64,27 +64,27 @@ type StepConv struct {
 	step *uint16
 }
 
-func (c StepConv) MarshalElt(d interface{}) []byte {
+func (c StepConv) Marshal(d interface{}) []byte {
 	b := make([]byte, 2)
 	binary.LittleEndian.PutUint16(b, *(d.(*uint16)))
 	return b
 }
 
-func (c StepConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+func (c StepConv) Unmarshal(b []byte) (uint32, interface{}) {
 	*c.step = binary.LittleEndian.Uint16(b[:2])
 	return uint32(2), c.step
 }
 
-func (c StepConv) GetMarshaledEltSize(b []byte) uint32 {
+func (c StepConv) GetMarshaledSize(b []byte) uint32 {
 	return uint32(2)
 }
 
-func NewCompactedTrie(c array.EltConverter) *CompactedTrie {
+func NewCompactedTrie(c array.Converter) *CompactedTrie {
 	var step uint16 = 0
 	ct := &CompactedTrie{
-		Children: array.CompactedArray{EltConverter: ChildConv{child: &children{}}},
-		Steps:    array.CompactedArray{EltConverter: StepConv{step: &step}},
-		Leaves:   array.CompactedArray{EltConverter: c},
+		Children: array.CompactedArray{Converter: ChildConv{child: &children{}}},
+		Steps:    array.CompactedArray{Converter: StepConv{step: &step}},
+		Leaves:   array.CompactedArray{Converter: c},
 	}
 
 	return ct

@@ -33,7 +33,7 @@ func (kv testKV) Less(than btree.Item) bool {
 	return false
 }
 
-func (c testKVConv) MarshalElt(d interface{}) []byte {
+func (c testKVConv) Marshal(d interface{}) []byte {
 
 	elt := d.(*testKV)
 
@@ -45,7 +45,7 @@ func (c testKVConv) MarshalElt(d interface{}) []byte {
 	return b
 }
 
-func (c testKVConv) UnmarshalElt(b []byte) (uint32, interface{}) {
+func (c testKVConv) Unmarshal(b []byte) (uint32, interface{}) {
 
 	size := uint32(8)
 	s := b[:size]
@@ -64,7 +64,7 @@ func (c testKVConv) UnmarshalElt(b []byte) (uint32, interface{}) {
 	return uint32(8), eltP
 }
 
-func (c testKVConv) GetMarshaledEltSize(b []byte) uint32 {
+func (c testKVConv) GetMarshaledSize(b []byte) uint32 {
 	return uint32(8)
 }
 

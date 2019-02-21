@@ -162,7 +162,7 @@ func TestMarshalUnMarshalHeader(t *testing.T) {
 func TestMarshalUnMarshal(t *testing.T) {
 	index := []uint32{10, 20, 30, 40, 50, 60}
 
-	sArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	sArray := &array.CompactedArray{Converter: array.U32Conv{}}
 	err := sArray.Init(index, index)
 	if err != nil {
 		t.Fatalf("failed to init compacted array")
@@ -205,7 +205,7 @@ func TestMarshalUnMarshal(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	rSArray := &array.CompactedArray{Converter: array.U32Conv{}}
 
 	err = Unmarshal(reader, rSArray)
 	if err != nil {
@@ -241,7 +241,7 @@ func TestUnMarshalFromIncompleteReader(t *testing.T) {
 
 	index := []uint32{10, 20, 30, 40, 50, 60}
 
-	sArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	sArray := &array.CompactedArray{Converter: array.U32Conv{}}
 	err := sArray.Init(index, index)
 	if err != nil {
 		t.Fatalf("failed to init compacted array")
@@ -263,7 +263,7 @@ func TestUnMarshalFromIncompleteReader(t *testing.T) {
 
 	// unmarshal
 
-	rSArray := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	rSArray := &array.CompactedArray{Converter: array.U32Conv{}}
 
 	err = Unmarshal(rw, rSArray)
 	if err != nil {
@@ -278,13 +278,13 @@ func TestMarshalAtUnMarshalAt(t *testing.T) {
 	index1 := []uint32{10, 20, 30, 40, 50, 60}
 	index2 := []uint32{15, 25, 35, 45, 55, 65}
 
-	sArray1 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	sArray1 := &array.CompactedArray{Converter: array.U32Conv{}}
 	err := sArray1.Init(index1, index1)
 	if err != nil {
 		t.Fatalf("failed to init compacted array")
 	}
 
-	sArray2 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	sArray2 := &array.CompactedArray{Converter: array.U32Conv{}}
 	err = sArray2.Init(index2, index2)
 	if err != nil {
 		t.Fatalf("failed to init compacted array")
@@ -319,7 +319,7 @@ func TestMarshalAtUnMarshalAt(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rSArray1 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	rSArray1 := &array.CompactedArray{Converter: array.U32Conv{}}
 	_, err = UnmarshalAt(reader, offset1, rSArray1)
 	if err != nil {
 		t.Fatalf("failed to load data: %v", err)
@@ -327,7 +327,7 @@ func TestMarshalAtUnMarshalAt(t *testing.T) {
 
 	checkCompactedArray(index1, rSArray1, sArray1, t)
 
-	rSArray2 := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	rSArray2 := &array.CompactedArray{Converter: array.U32Conv{}}
 	_, err = UnmarshalAt(reader, offset2, rSArray2)
 	if err != nil {
 		t.Fatalf("failed to load data: %v", err)
@@ -397,7 +397,7 @@ func TestWriteAtReadAt(t *testing.T) {
 	rw := &testWriterReader{}
 	index1 := []uint32{10, 20, 30, 40, 50, 60}
 
-	wArr := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	wArr := &array.CompactedArray{Converter: array.U32Conv{}}
 	err := wArr.Init(index1, index1)
 	if err != nil {
 		t.Fatalf("failed to init compacted array")
@@ -408,7 +408,7 @@ func TestWriteAtReadAt(t *testing.T) {
 		t.Fatalf("failed to store compacted array: %v", err)
 	}
 
-	rArr := &array.CompactedArray{EltConverter: array.U32Conv{}}
+	rArr := &array.CompactedArray{Converter: array.U32Conv{}}
 	_, err = UnmarshalAt(rw, 10, rArr)
 	if err != nil {
 		t.Fatalf("failed to load data: %v", err)

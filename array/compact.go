@@ -21,7 +21,7 @@ type CompactedArray struct {
 
 type CompactedArray struct {
 	prototype.CompactedArray
-	EltConverter
+	Converter
 }
 
 var bmWidth = uint32(64) // how many bits of an uint64 == 2 ^ 6
@@ -71,7 +71,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 
 	sa.Bitmaps = make([]uint64, bmCnt)
 	sa.Offsets = make([]uint32, bmCnt)
-	sa.Elts = make([]byte, 0, nElts*sa.GetMarshaledEltSize(nil))
+	sa.Elts = make([]byte, 0, nElts*sa.GetMarshaledSize(nil))
 
 	var prevIndex uint32
 	for i := 0; i < len(index); i++ {
@@ -80,7 +80,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 		}
 
 		ee := rElts.Index(i).Interface()
-		sa.appendElt(index[i], sa.MarshalElt(ee))
+		sa.appendElt(index[i], sa.Marshal(ee))
 
 		prevIndex = index[i]
 	}
@@ -104,9 +104,9 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 	base := sa.Offsets[iBm]
 	cnt1 := bit.PopCnt64Before(bmWord, iBit)
 
-	stIdx := sa.GetMarshaledEltSize(nil) * (base + cnt1)
+	stIdx := sa.GetMarshaledSize(nil) * (base + cnt1)
 
-	_, val := sa.UnmarshalElt(sa.Elts[stIdx:])
+	_, val := sa.Unmarshal(sa.Elts[stIdx:])
 	return val
 }
 
