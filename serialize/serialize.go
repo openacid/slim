@@ -17,7 +17,7 @@ const (
 )
 
 /**
- * Compatiblity gurantee:
+ * Compatibility guarantee:
  *     - do NOT change type of fields
  *     - do NOT reuse any ever existing names
  *     - do NOT adjust fields order
