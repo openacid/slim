@@ -1,4 +1,4 @@
-// Package pb provides generated Protocol Buffers for cache serialization.
+// Package prototype provides generated Protocol Buffers for cache serialization.
 //
 // Usage:
 //		go generate ./...

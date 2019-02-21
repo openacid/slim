@@ -16,7 +16,7 @@ type testSrcType struct {
 	srcKeys   []string
 	srcValues [][]byte
 
-	root *CompactedTrie
+	root *SlimTrie
 	m    map[string][]byte
 	bt   *btree.BTree
 
@@ -201,7 +201,7 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 
 	t.Squash()
 
-	ct := NewCompactedTrie(testKVConv{keySize: keyLen, valSize: valLen})
+	ct := New16(testKVConv{keySize: keyLen, valSize: valLen})
 	err = ct.Compact(t)
 	if err != nil {
 		panic(fmt.Sprintf("build compacted trie failed: %v", err))
@@ -240,7 +240,7 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 	}
 }
 
-func trieSearchTestKV(ct *CompactedTrie, key string) []byte {
+func trieSearchTestKV(ct *SlimTrie, key string) []byte {
 	_, eq, _ := ct.SearchString(key)
 	//eq := ct.SearchStringEqual(key)
 	if eq == nil {

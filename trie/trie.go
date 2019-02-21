@@ -388,6 +388,4 @@ func (r *Node) removeBranch(br int) {
 	if idx < len(r.Branches) && r.Branches[idx] == br {
 		r.Branches = append(r.Branches[:idx], r.Branches[idx+1:]...)
 	}
-
-	return
 }

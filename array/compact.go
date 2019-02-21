@@ -9,11 +9,11 @@ import (
 	"github.com/openacid/slim/prototype"
 )
 
-// CompactedArray is a space efficient array implementation.
+// Array32 is a space efficient array implementation.
 //
 // Unlike a normal array, it does not allocate space for a element that there is
 // not data in it.
-type CompactedArray struct {
+type Array32 struct {
 	prototype.CompactedArray
 	Converter
 }
@@ -26,18 +26,37 @@ func bmBit(idx uint32) (uint32, uint32) {
 	return c, r
 }
 
-func (sa *CompactedArray) appendElt(index uint32, elt []byte) {
+// New32 creates a CompactedArray and initializes it with a slice of index and a
+// slice of data.
+//
+// The index parameter must be a ascending array of type unit32,
+// otherwise, return the ErrIndexNotAscending error
+func New32(conv Converter, index []uint32, _elts interface{}) (ca *Array32, err error) {
+
+	ca = &Array32{
+		Converter: conv,
+	}
+
+	err = ca.Init(index, _elts)
+	if err != nil {
+		return nil, err
+	}
+
+	return ca, nil
+}
+
+func (a *Array32) appendElt(index uint32, elt []byte) {
 	iBm, iBit := bmBit(index)
 
-	var bmWord = &sa.Bitmaps[iBm]
+	var bmWord = &a.Bitmaps[iBm]
 	if *bmWord == 0 {
-		sa.Offsets[iBm] = sa.Cnt
+		a.Offsets[iBm] = a.Cnt
 	}
 
 	*bmWord |= uint64(1) << iBit
-	sa.Elts = append(sa.Elts, elt...)
+	a.Elts = append(a.Elts, elt...)
 
-	sa.Cnt++
+	a.Cnt++
 }
 
 // ErrIndexLen is returned if number of indexes does not equal the number of
@@ -51,7 +70,7 @@ var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 // Init initializes a compacted array from the slice type elts
 // the index parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
+func (a *Array32) Init(index []uint32, _elts interface{}) error {
 
 	rElts := reflect.ValueOf(_elts)
 	if rElts.Kind() != reflect.Slice {
@@ -71,9 +90,9 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 
 	bmCnt := (capacity + bmWidth - 1) / bmWidth
 
-	sa.Bitmaps = make([]uint64, bmCnt)
-	sa.Offsets = make([]uint32, bmCnt)
-	sa.Elts = make([]byte, 0, nElts*sa.GetMarshaledSize(nil))
+	a.Bitmaps = make([]uint64, bmCnt)
+	a.Offsets = make([]uint32, bmCnt)
+	a.Elts = make([]byte, 0, nElts*a.GetMarshaledSize(nil))
 
 	var prevIndex uint32
 	for i := 0; i < len(index); i++ {
@@ -82,7 +101,7 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 		}
 
 		ee := rElts.Index(i).Interface()
-		sa.appendElt(index[i], sa.Marshal(ee))
+		a.appendElt(index[i], a.Marshal(ee))
 
 		prevIndex = index[i]
 	}
@@ -91,37 +110,37 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 }
 
 // Get returns the value indexed by idx if it is in array, else return nil
-func (sa *CompactedArray) Get(idx uint32) interface{} {
+func (a *Array32) Get(idx uint32) interface{} {
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= uint32(len(sa.Bitmaps)) {
+	if iBm >= uint32(len(a.Bitmaps)) {
 		return nil
 	}
 
-	var bmWord = sa.Bitmaps[iBm]
+	var bmWord = a.Bitmaps[iBm]
 
 	if ((bmWord >> iBit) & 1) == 0 {
 		return nil
 	}
 
-	base := sa.Offsets[iBm]
+	base := a.Offsets[iBm]
 	cnt1 := bit.PopCnt64Before(bmWord, iBit)
 
-	stIdx := uint32(sa.GetMarshaledSize(nil)) * (base + cnt1)
+	stIdx := uint32(a.GetMarshaledSize(nil)) * (base + cnt1)
 
-	_, val := sa.Unmarshal(sa.Elts[stIdx:])
+	_, val := a.Unmarshal(a.Elts[stIdx:])
 	return val
 }
 
 // Has returns true if idx is in array, else return false
-func (sa *CompactedArray) Has(idx uint32) bool {
+func (a *Array32) Has(idx uint32) bool {
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= uint32(len(sa.Bitmaps)) {
+	if iBm >= uint32(len(a.Bitmaps)) {
 		return false
 	}
 
-	var bmWord = sa.Bitmaps[iBm]
+	var bmWord = a.Bitmaps[iBm]
 
 	return (bmWord>>iBit)&1 > 0
 }

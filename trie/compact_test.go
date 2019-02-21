@@ -48,8 +48,8 @@ func wordKey(key []byte) []byte {
 	w := make([]byte, len(key)*2)
 
 	for i, k := range key {
-		w[i*2] = byte((k & 0xf0) >> 4)
-		w[i*2+1] = byte(k & 0x0f)
+		w[i*2] = (k & 0xf0) >> 4
+		w[i*2+1] = k & 0x0f
 	}
 
 	return w
@@ -86,7 +86,7 @@ func TestMaxKeys(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie := NewCompactedTrie(array.U16Conv{})
+	ctrie := New16(array.U16Conv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -141,7 +141,7 @@ func TestMaxNode(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie := NewCompactedTrie(array.U16Conv{})
+	ctrie := New16(array.U16Conv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -240,7 +240,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie := NewCompactedTrie(TestIntConv{})
+		ctrie := New16(TestIntConv{})
 		err := ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -266,7 +266,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = NewCompactedTrie(TestIntConv{})
+		ctrie = New16(TestIntConv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -292,7 +292,7 @@ func TestCompactedTrie(t *testing.T) {
 			}
 		}
 
-		ctrie = NewCompactedTrie(TestIntConv{})
+		ctrie = New16(TestIntConv{})
 		err = ctrie.Compact(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
@@ -338,7 +338,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	var trie, _ = New(key, value)
 
-	ctrie := NewCompactedTrie(TestIntConv{})
+	ctrie := New16(TestIntConv{})
 	err := ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
@@ -452,7 +452,7 @@ func TestCompactedTrieSearch(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie = NewCompactedTrie(TestIntConv{})
+	ctrie = New16(TestIntConv{})
 	err = ctrie.Compact(trie)
 	if err != nil {
 		t.Error("compact trie error:", err)
@@ -487,7 +487,7 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 
 	trie, _ := New(key, value)
 
-	ctrie := NewCompactedTrie(array.U16Conv{})
+	ctrie := New16(array.U16Conv{})
 	err := ctrie.Compact(trie)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -507,7 +507,7 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// unmarshal
-	rCtrie := NewCompactedTrie(array.U16Conv{})
+	rCtrie := New16(array.U16Conv{})
 	err = rCtrie.Unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -545,13 +545,13 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 	trie1, _ := New(key, value1)
 	trie2, _ := New(key, value2)
 
-	ctrie1 := NewCompactedTrie(array.U16Conv{})
+	ctrie1 := New16(array.U16Conv{})
 	err := ctrie1.Compact(trie1)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
 
-	ctrie2 := NewCompactedTrie(array.U16Conv{})
+	ctrie2 := New16(array.U16Conv{})
 	err = ctrie2.Compact(trie2)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -595,7 +595,7 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rCtrie1 := NewCompactedTrie(array.U16Conv{})
+	rCtrie1 := New16(array.U16Conv{})
 	_, err = rCtrie1.UnmarshalAt(reader, offset1)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -603,7 +603,7 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 
 	checkCompactedTrie(ctrie1, rCtrie1, t)
 
-	rCtrie2 := NewCompactedTrie(array.U16Conv{})
+	rCtrie2 := New16(array.U16Conv{})
 	_, err = rCtrie2.UnmarshalAt(reader, offset2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -612,7 +612,7 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 	checkCompactedTrie(ctrie2, rCtrie2, t)
 }
 
-func checkCompactedTrie(ctrie, rCtrie *CompactedTrie, t *testing.T) {
+func checkCompactedTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
 	if !proto.Equal(&(ctrie.Children.CompactedArray), &(rCtrie.Children.CompactedArray)) {
 		t.Fatalf("Children not the same")
 	}

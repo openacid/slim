@@ -30,8 +30,6 @@ func BenchmarkPopCnt64Before(b *testing.B) {
 	var n uint64 = 12334567890
 
 	for i := 0; i < b.N; i++ {
-		a := PopCnt64Before(n+uint64(i), uint32(i)%64)
-		if a == 0 {
-		}
+		PopCnt64Before(n+uint64(i), uint32(i)%64)
 	}
 }

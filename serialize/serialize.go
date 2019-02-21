@@ -1,3 +1,9 @@
+// Package serialize provide general serialize and de-serialize functions.
+//
+// It adds a header for every object to serialize. The header contains version,
+// header length and data length.
+// Thus we de-serializing, total size can be accquired at once, without reading
+// the entire data.
 package serialize
 
 import (

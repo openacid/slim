@@ -1,3 +1,13 @@
+// Package trie provides slimtrie implementation.
+//
+// A slimtrie is a static, compressed Trie implementation.
+// It is created from a standard Trie by removing unnecessary Trie-node.
+// And it uses CompactedArray to store Trie.
+//
+// slimtrie memory overhead is about 6 byte per key, or less.
+//
+// TODO benchmark
+// TODO detail explain.
 package trie
 
 import (
@@ -22,7 +32,7 @@ const (
 	MaxNodeCnt = 65536
 )
 
-// CompactedTrie is a space efficient Trie index.
+// SlimTrie is a space efficient Trie index.
 //
 // The space overhead is about 6 byte per key and is irrelevant to key length.
 //
@@ -38,10 +48,10 @@ const (
 // `Leaves` stores user data.
 //
 // TODO add scenario.
-type CompactedTrie struct {
-	Children array.CompactedArray
-	Steps    array.CompactedArray
-	Leaves   array.CompactedArray
+type SlimTrie struct {
+	Children array.Array32
+	Steps    array.Array32
+	Leaves   array.Array32
 }
 
 type children struct {
@@ -59,7 +69,7 @@ var (
 )
 
 // childConv implements array.Converter and is the CompactedArray adaptor for
-// CompactedTrie.Children .
+// SlimTrie.Children .
 type childConv struct {
 	child *children
 }
@@ -106,22 +116,22 @@ func (c stepConv) GetMarshaledSize(b []byte) int {
 	return 2
 }
 
-// NewCompactedTrie create an empty CompactedTrie.
+// New16 create an empty SlimTrie.
 // Argument c implements a array.Converter to convert user data to serialized
 // bytes and back.
-func NewCompactedTrie(c array.Converter) *CompactedTrie {
+func New16(c array.Converter) *SlimTrie {
 	var step uint16
-	ct := &CompactedTrie{
-		Children: array.CompactedArray{Converter: childConv{child: &children{}}},
-		Steps:    array.CompactedArray{Converter: stepConv{step: &step}},
-		Leaves:   array.CompactedArray{Converter: c},
+	st := &SlimTrie{
+		Children: array.Array32{Converter: childConv{child: &children{}}},
+		Steps:    array.Array32{Converter: stepConv{step: &step}},
+		Leaves:   array.Array32{Converter: c},
 	}
 
-	return ct
+	return st
 }
 
 // Compact compress a standard Trie and store compressed data in it.
-func (st *CompactedTrie) Compact(root *Node) (err error) {
+func (st *SlimTrie) Compact(root *Node) (err error) {
 	if root == nil {
 		return
 	}
@@ -208,7 +218,7 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 	return nil
 }
 
-// Search for a key in CompactedTrie.
+// Search for a key in SlimTrie.
 //
 // `key` is slice of 4-bit word each stored in a byte.
 // the higher 4 bit in byte is removed.
@@ -219,8 +229,8 @@ func (st *CompactedTrie) Compact(root *Node) (err error) {
 // The value of smallest key > `key`. It is nil if `key` is the greatest.
 //
 // A non-nil return value does not mean the `key` exists.
-// An in-existent `key` also could matches partial info stored in CompactedTrie.
-func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
+// An in-existent `key` also could matches partial info stored in SlimTrie.
+func (st *SlimTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -229,7 +239,7 @@ func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 		if uint16(len(key)) == idx {
 			word = LeafWord
 		} else {
-			word = (uint8(key[idx]) & WordMask)
+			word = (key[idx] & WordMask)
 		}
 
 		li, ei, ri, leaf := st.neighborBranches(uint16(eqIdx), word)
@@ -281,7 +291,7 @@ func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 
 // SearchString is similar to Search, except it receives a string to search.
 // A char in the string is split into 2 4-bit word.
-func (st *CompactedTrie) SearchString(key string) (ltVal, eqVal, gtVal interface{}) {
+func (st *SlimTrie) SearchString(key string) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -294,9 +304,9 @@ func (st *CompactedTrie) SearchString(key string) (ltVal, eqVal, gtVal interface
 			word = LeafWord
 		} else {
 			if idx&uint16(1) == uint16(1) {
-				word = (byte(key[idx>>1]) & 0x0f)
+				word = (key[idx>>1] & 0x0f)
 			} else {
-				word = (byte(key[idx>>1]) & 0xf0) >> 4
+				word = (key[idx>>1] & 0xf0) >> 4
 			}
 		}
 
@@ -351,7 +361,7 @@ func (st *CompactedTrie) SearchString(key string) (ltVal, eqVal, gtVal interface
 
 // SearchStringEqual is similar to SearchString, except it returns only 1 value
 // of the matching key, without the left and right value.
-func (st *CompactedTrie) SearchStringEqual(key string) (eqVal interface{}) {
+func (st *SlimTrie) SearchStringEqual(key string) (eqVal interface{}) {
 	eqIdx := int32(0)
 
 	// string to 4-bit words
@@ -363,9 +373,9 @@ func (st *CompactedTrie) SearchStringEqual(key string) (eqVal interface{}) {
 			word = LeafWord
 		} else {
 			if idx&uint16(1) == uint16(1) {
-				word = (byte(key[idx>>1]) & 0x0f)
+				word = (key[idx>>1] & 0x0f)
 			} else {
-				word = (byte(key[idx>>1]) & 0xf0) >> 4
+				word = (key[idx>>1] & 0xf0) >> 4
 			}
 		}
 
@@ -395,7 +405,7 @@ func (st *CompactedTrie) SearchStringEqual(key string) (eqVal interface{}) {
 	return
 }
 
-func (st *CompactedTrie) getChild(idx uint16) *children {
+func (st *SlimTrie) getChild(idx uint16) *children {
 	if !st.Children.Has(uint32(idx)) {
 		return nil
 	}
@@ -406,7 +416,7 @@ func (st *CompactedTrie) getChild(idx uint16) *children {
 	return ch
 }
 
-func (st *CompactedTrie) getStep(idx uint16) uint16 {
+func (st *SlimTrie) getStep(idx uint16) uint16 {
 	step := st.Steps.Get(uint32(idx))
 	if step == nil {
 		return uint16(1)
@@ -419,7 +429,7 @@ func getChildIdx(ch *children, offset uint16) uint16 {
 	return ch.Offset + uint16(chNum-1)
 }
 
-func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
+func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
 	ltIdx, eqIdx, rtIdx = int32(-1), int32(-1), int32(-1)
 	ltLeaf = false
 
@@ -445,7 +455,7 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 		eqIdx = int32(getChildIdx(ch, uint16(word+1)))
 	}
 
-	ltStart := uint8(word) & WordMask
+	ltStart := word & WordMask
 	for i := int8(ltStart) - 1; i >= 0; i-- {
 		if (ch.Bitmap >> uint8(i) & 1) == 1 {
 			ltIdx = int32(getChildIdx(ch, uint16(i+1)))
@@ -469,7 +479,7 @@ func (st *CompactedTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, 
 	return
 }
 
-func (st *CompactedTrie) nextBranch(idx uint16, word byte) (eqIdx int32) {
+func (st *SlimTrie) nextBranch(idx uint16, word byte) (eqIdx int32) {
 	eqIdx = int32(-1)
 
 	isLeaf := st.Leaves.Has(uint32(idx))
@@ -492,7 +502,7 @@ func (st *CompactedTrie) nextBranch(idx uint16, word byte) (eqIdx int32) {
 	return
 }
 
-func (st *CompactedTrie) leftMost(idx uint16) uint16 {
+func (st *SlimTrie) leftMost(idx uint16) uint16 {
 	for {
 		if st.Leaves.Has(uint32(idx)) {
 			return idx
@@ -503,7 +513,7 @@ func (st *CompactedTrie) leftMost(idx uint16) uint16 {
 	}
 }
 
-func (st *CompactedTrie) rightMost(idx uint16) uint16 {
+func (st *SlimTrie) rightMost(idx uint16) uint16 {
 	offset := uint16(unsafe.Sizeof(uint16(0)) * 8)
 	for {
 		if !st.Children.Has(uint32(idx)) {
@@ -515,30 +525,30 @@ func (st *CompactedTrie) rightMost(idx uint16) uint16 {
 	}
 }
 
-// GetMarshalSize returns the serialized length in byte of a CompactedTrie.
-func (ct *CompactedTrie) GetMarshalSize() int64 {
-	cSize := serialize.GetMarshalSize(&ct.Children)
-	sSize := serialize.GetMarshalSize(&ct.Steps)
-	lSize := serialize.GetMarshalSize(&ct.Leaves)
+// GetMarshalSize returns the serialized length in byte of a SlimTrie.
+func (st *SlimTrie) GetMarshalSize() int64 {
+	cSize := serialize.GetMarshalSize(&st.Children)
+	sSize := serialize.GetMarshalSize(&st.Steps)
+	lSize := serialize.GetMarshalSize(&st.Leaves)
 
 	return cSize + sSize + lSize
 }
 
 // Marshal serializes it to byte stream.
-func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
+func (st *SlimTrie) Marshal(writer io.Writer) (cnt int64, err error) {
 	var n int64
 
-	if n, err = serialize.Marshal(writer, &ct.Children); err != nil {
+	if n, err = serialize.Marshal(writer, &st.Children); err != nil {
 		return 0, err
 	}
 	cnt += n
 
-	if n, err = serialize.Marshal(writer, &ct.Steps); err != nil {
+	if n, err = serialize.Marshal(writer, &st.Steps); err != nil {
 		return 0, err
 	}
 	cnt += n
 
-	if n, err = serialize.Marshal(writer, &ct.Leaves); err != nil {
+	if n, err = serialize.Marshal(writer, &st.Leaves); err != nil {
 		return 0, err
 	}
 	cnt += n
@@ -549,10 +559,10 @@ func (ct *CompactedTrie) Marshal(writer io.Writer) (cnt int64, err error) {
 // MarshalAt serializes it to byte stream and write the stream at specified
 // offset.
 // TODO change to io.WriterAt
-func (ct *CompactedTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
+func (st *SlimTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
 
 	buf := new(bytes.Buffer)
-	if cnt, err = ct.Marshal(buf); err != nil {
+	if cnt, err = st.Marshal(buf); err != nil {
 		return 0, err
 	}
 
@@ -563,40 +573,40 @@ func (ct *CompactedTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err err
 	return cnt, nil
 }
 
-// Unmarshal de-serializes and loads CompactedTrie from a byte stream.
-func (ct *CompactedTrie) Unmarshal(reader io.Reader) error {
-	if err := serialize.Unmarshal(reader, &ct.Children); err != nil {
+// Unmarshal de-serializes and loads SlimTrie from a byte stream.
+func (st *SlimTrie) Unmarshal(reader io.Reader) error {
+	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
 		return err
 	}
 
-	if err := serialize.Unmarshal(reader, &ct.Steps); err != nil {
+	if err := serialize.Unmarshal(reader, &st.Steps); err != nil {
 		return err
 	}
 
-	if err := serialize.Unmarshal(reader, &ct.Leaves); err != nil {
+	if err := serialize.Unmarshal(reader, &st.Leaves); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Unmarshal de-serializes and loads CompactedTrie from a byte stream at
+// Unmarshal de-serializes and loads SlimTrie from a byte stream at
 // specified offset.
 // TODO change to io.ReaderAt
-func (ct *CompactedTrie) UnmarshalAt(f *os.File, offset int64) (n int64, err error) {
-	childrenSize, err := serialize.UnmarshalAt(f, offset, &ct.Children)
+func (st *SlimTrie) UnmarshalAt(f *os.File, offset int64) (n int64, err error) {
+	childrenSize, err := serialize.UnmarshalAt(f, offset, &st.Children)
 	if err != nil {
 		return n, err
 	}
 	offset += childrenSize
 
-	stepsSize, err := serialize.UnmarshalAt(f, offset, &ct.Steps)
+	stepsSize, err := serialize.UnmarshalAt(f, offset, &st.Steps)
 	if err != nil {
 		return n, err
 	}
 	offset += stepsSize
 
-	leavesSize, err := serialize.UnmarshalAt(f, offset, &ct.Leaves)
+	leavesSize, err := serialize.UnmarshalAt(f, offset, &st.Leaves)
 	if err != nil {
 		return n, err
 	}

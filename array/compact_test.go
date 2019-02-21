@@ -12,15 +12,9 @@ import (
 	"time"
 )
 
-func NewU32(index []uint32, elts []uint32) (*CompactedArray, error) {
-
-	ca := CompactedArray{Converter: U32Conv{}}
-	err := ca.Init(index, elts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ca, nil
+func NewU32(index []uint32, elts []uint32) (*Array32, error) {
+	ca, err := New32(U32Conv{}, index, elts)
+	return ca, err
 }
 
 func TestNewErrorArgments(t *testing.T) {
@@ -142,15 +136,9 @@ func BenchmarkInit(b *testing.B) {
 
 }
 
-func newByte(eSize int, index []uint32, elts [][]byte) (*CompactedArray, error) {
-
-	ca := CompactedArray{Converter: ByteConv{EltSize: eSize}}
-	err := ca.Init(index, elts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ca, nil
+func newByte(eSize int, index []uint32, elts [][]byte) (*Array32, error) {
+	ca, err := New32(ByteConv{EltSize: eSize}, index, elts)
+	return ca, err
 }
 
 func readRss() uint64 {
@@ -194,7 +182,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 		{8, 1 << 16},
 	}
 
-	var sca []*CompactedArray
+	var sca []*Array32
 	fmt.Printf("%-10s%-10s%-10s%-10s%-12s%-12s%-12s%-10s\n",
 		"eltSize", "eltCount", "idxDis", "caCnt", "totalSize", "caAvgSize", "dataAvgSize", "Overhead")
 
@@ -207,7 +195,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 				break
 			}
 
-			sca = []*CompactedArray{}
+			sca = []*Array32{}
 
 			index := makeTestIndex(maxIdx, idxDis)
 			eltCnt := uint32(len(index))
@@ -216,7 +204,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 			rss1 := readRss()
 
 			caCnt := 1024
-			var ca *CompactedArray
+			var ca *Array32
 			for i := 0; i < caCnt; i++ {
 				ca, _ = newByte(eltSize, index, elts)
 				sca = append(sca, ca)

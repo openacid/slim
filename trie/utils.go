@@ -25,12 +25,7 @@ type testKVConv struct {
 // Less is create to implements google/btree.Item
 func (kv testKV) Less(than btree.Item) bool {
 	anotherKV := than.(*testKV)
-
-	if kv.key < anotherKV.key {
-		return true
-	}
-
-	return false
+	return kv.key < anotherKV.key
 }
 
 func (c testKVConv) Marshal(d interface{}) []byte {
@@ -114,7 +109,7 @@ func splitStringTo4BitWords(s string) []byte {
 	words := make([]byte, lenSrc*2)
 
 	for i := 0; i < lenSrc; i++ {
-		b := byte(s[i])
+		b := s[i]
 		words[2*i] = (b & 0xf0) >> 4
 		words[2*i+1] = b & 0x0f
 	}
