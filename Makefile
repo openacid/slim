@@ -1,4 +1,4 @@
-PKGS := $(shell go list ./...)
+PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/vender/")
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 GO := go
 
