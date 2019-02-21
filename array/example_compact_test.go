@@ -12,14 +12,12 @@ func Example() {
 	err := ca.Init(indexes, eltsData)
 	if err != nil {
 		fmt.Printf("Init compacted array error:%s\n", err)
-		return
+	} else {
+		if ca.Has(indexes[1]) {
+			val := ca.Get(indexes[1])
+			fmt.Printf("get indexed 1 value:%v\n", val)
+		}
 	}
 
-	if ca.Has(indexes[1]) {
-		val := ca.Get(indexes[1])
-		fmt.Printf("get indexed 1 value:%v\n", val)
-		return
-	}
-
-	fmt.Printf("not found indexed 1 elemets")
+	// Output: get indexed 1 value:15
 }
