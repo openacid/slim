@@ -45,9 +45,9 @@ func (c testKVConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c testKVConv) Unmarshal(b []byte) (uint32, interface{}) {
+func (c testKVConv) Unmarshal(b []byte) (int, interface{}) {
 
-	size := uint32(8)
+	size := 8
 	s := b[:size]
 
 	buf := binary.LittleEndian.Uint64(s)
@@ -61,11 +61,11 @@ func (c testKVConv) Unmarshal(b []byte) (uint32, interface{}) {
 	// addr of *testKV
 	eltP := (*testKV)(covP)
 
-	return uint32(8), eltP
+	return 8, eltP
 }
 
-func (c testKVConv) GetMarshaledSize(b []byte) uint32 {
-	return uint32(8)
+func (c testKVConv) GetMarshaledSize(b []byte) int {
+	return 8
 }
 
 func makeStrings(cnt, leng int64) ([]string, error) {

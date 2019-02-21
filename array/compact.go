@@ -8,17 +8,6 @@ import (
 	"github.com/openacid/slim/prototype"
 )
 
-/*
-type CompactedArray struct {
-	Cnt     uint32 // current number of elts
-	EltSize uint32
-
-	Bitmaps []uint64 // bitmaps[] about which index has elt
-	Offsets []uint32 // index offset in `elts` for bitmap[i]
-	Elts    []byte
-}
-*/
-
 type CompactedArray struct {
 	prototype.CompactedArray
 	Converter
@@ -56,9 +45,9 @@ func (sa *CompactedArray) Init(index []uint32, _elts interface{}) error {
 		panic("input is not a slice")
 	}
 
-	nElts := uint32(rElts.Len())
+	nElts := rElts.Len()
 
-	if uint32(len(index)) != nElts {
+	if len(index) != nElts {
 		return ErrIndexLen
 	}
 
@@ -104,7 +93,7 @@ func (sa *CompactedArray) Get(idx uint32) interface{} {
 	base := sa.Offsets[iBm]
 	cnt1 := bit.PopCnt64Before(bmWord, iBit)
 
-	stIdx := sa.GetMarshaledSize(nil) * (base + cnt1)
+	stIdx := uint32(sa.GetMarshaledSize(nil)) * (base + cnt1)
 
 	_, val := sa.Unmarshal(sa.Elts[stIdx:])
 	return val

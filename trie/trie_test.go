@@ -36,11 +36,11 @@ func TestTrie(t *testing.T) {
 				4,
 			},
 			expected: []ExpectType{
-				ExpectType{[]byte{'a', 'b', 'c'}, 0},
-				ExpectType{[]byte{'a', 'b', 'd'}, 1},
-				ExpectType{[]byte{'b', 'c', 'd'}, 2},
-				ExpectType{[]byte{'b', 'c', 'e'}, 3},
-				ExpectType{[]byte{'c', 'd', 'e'}, 4},
+				{[]byte{'a', 'b', 'c'}, 0},
+				{[]byte{'a', 'b', 'd'}, 1},
+				{[]byte{'b', 'c', 'd'}, 2},
+				{[]byte{'b', 'c', 'e'}, 3},
+				{[]byte{'c', 'd', 'e'}, 4},
 			},
 		},
 		{
@@ -59,11 +59,11 @@ func TestTrie(t *testing.T) {
 				4,
 			},
 			expected: []ExpectType{
-				ExpectType{[]byte{'a', 'b', 'c'}, 0},
-				ExpectType{[]byte{'a', 'b', 'c', 'd'}, 1},
-				ExpectType{[]byte{'b', 'c'}, 2},
-				ExpectType{[]byte{'b', 'c', 'd'}, 3},
-				ExpectType{[]byte{'b', 'c', 'd', 'e'}, 4},
+				{[]byte{'a', 'b', 'c'}, 0},
+				{[]byte{'a', 'b', 'c', 'd'}, 1},
+				{[]byte{'b', 'c'}, 2},
+				{[]byte{'b', 'c', 'd'}, 3},
+				{[]byte{'b', 'c', 'd', 'e'}, 4},
 			},
 		},
 	}

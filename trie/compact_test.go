@@ -31,16 +31,16 @@ func (c TestIntConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c TestIntConv) Unmarshal(b []byte) (uint32, interface{}) {
+func (c TestIntConv) Unmarshal(b []byte) (int, interface{}) {
 
-	size := uint32(8)
+	size := 8
 	s := b[:size]
 
 	d := binary.LittleEndian.Uint64(s)
 	return size, int(d)
 }
 
-func (c TestIntConv) GetMarshaledSize(b []byte) uint32 {
+func (c TestIntConv) GetMarshaledSize(b []byte) int {
 	return 8
 }
 
@@ -186,11 +186,11 @@ func TestCompactedTrie(t *testing.T) {
 				4,
 			},
 			expected: []ExpectKeyType{
-				ExpectKeyType{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
-				ExpectKeyType{[]byte{1, 2, 4}, CompactedExpectType{0, 1, 2}},
-				ExpectKeyType{[]byte{2, 3, 4}, CompactedExpectType{1, 2, 3}},
-				ExpectKeyType{[]byte{2, 3, 5}, CompactedExpectType{2, 3, 4}},
-				ExpectKeyType{[]byte{3, 4, 5}, CompactedExpectType{3, 4, nil}},
+				{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
+				{[]byte{1, 2, 4}, CompactedExpectType{0, 1, 2}},
+				{[]byte{2, 3, 4}, CompactedExpectType{1, 2, 3}},
+				{[]byte{2, 3, 5}, CompactedExpectType{2, 3, 4}},
+				{[]byte{3, 4, 5}, CompactedExpectType{3, 4, nil}},
 			},
 		},
 		{
@@ -213,13 +213,13 @@ func TestCompactedTrie(t *testing.T) {
 				6,
 			},
 			expected: []ExpectKeyType{
-				ExpectKeyType{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
-				ExpectKeyType{[]byte{1, 2, 3, 4}, CompactedExpectType{0, 1, 2}},
-				ExpectKeyType{[]byte{2, 3}, CompactedExpectType{1, 2, 3}},
-				ExpectKeyType{[]byte{2, 3, 0}, CompactedExpectType{2, 3, 4}},
-				ExpectKeyType{[]byte{2, 3, 4}, CompactedExpectType{3, 4, 5}},
-				ExpectKeyType{[]byte{2, 3, 4, 5}, CompactedExpectType{4, 5, 6}},
-				ExpectKeyType{[]byte{2, 3, 15}, CompactedExpectType{5, 6, nil}},
+				{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
+				{[]byte{1, 2, 3, 4}, CompactedExpectType{0, 1, 2}},
+				{[]byte{2, 3}, CompactedExpectType{1, 2, 3}},
+				{[]byte{2, 3, 0}, CompactedExpectType{2, 3, 4}},
+				{[]byte{2, 3, 4}, CompactedExpectType{3, 4, 5}},
+				{[]byte{2, 3, 4, 5}, CompactedExpectType{4, 5, 6}},
+				{[]byte{2, 3, 15}, CompactedExpectType{5, 6, nil}},
 			},
 		},
 	}

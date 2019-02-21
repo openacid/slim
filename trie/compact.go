@@ -48,16 +48,16 @@ func (c ChildConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c ChildConv) Unmarshal(b []byte) (uint32, interface{}) {
+func (c ChildConv) Unmarshal(b []byte) (int, interface{}) {
 
 	c.child.Bitmap = binary.LittleEndian.Uint16(b[:2])
 	c.child.Offset = binary.LittleEndian.Uint16(b[2:4])
 
-	return uint32(4), c.child
+	return 4, c.child
 }
 
-func (c ChildConv) GetMarshaledSize(b []byte) uint32 {
-	return uint32(4)
+func (c ChildConv) GetMarshaledSize(b []byte) int {
+	return 4
 }
 
 type StepConv struct {
@@ -70,13 +70,13 @@ func (c StepConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c StepConv) Unmarshal(b []byte) (uint32, interface{}) {
+func (c StepConv) Unmarshal(b []byte) (int, interface{}) {
 	*c.step = binary.LittleEndian.Uint16(b[:2])
-	return uint32(2), c.step
+	return 2, c.step
 }
 
-func (c StepConv) GetMarshaledSize(b []byte) uint32 {
-	return uint32(2)
+func (c StepConv) GetMarshaledSize(b []byte) int {
+	return 2
 }
 
 func NewCompactedTrie(c array.Converter) *CompactedTrie {
@@ -184,7 +184,7 @@ func (st *CompactedTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	for idx := uint16(0); ; {
 		var word byte
 		if uint16(len(key)) == idx {
-			word = byte(LeafWord)
+			word = LeafWord
 		} else {
 			word = (uint8(key[idx]) & WordMask)
 		}

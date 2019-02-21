@@ -142,7 +142,7 @@ func BenchmarkInit(b *testing.B) {
 
 }
 
-func newByte(eSize uint32, index []uint32, elts [][]byte) (*CompactedArray, error) {
+func newByte(eSize int, index []uint32, elts [][]byte) (*CompactedArray, error) {
 
 	ca := CompactedArray{Converter: ByteConv{EltSize: eSize}}
 	err := ca.Init(index, elts)
@@ -160,7 +160,7 @@ func readRss() uint64 {
 	return stats.Alloc
 }
 
-func makeTestData(eltSize, cnt uint32) [][]byte {
+func makeTestData(eltSize int, cnt uint32) [][]byte {
 	eltsData := make([][]byte, cnt)
 
 	for i := uint32(0); i < cnt; i++ {
@@ -185,7 +185,7 @@ func makeTestIndex(maxIdx, idxDis uint32) []uint32 {
 
 func BenchmarkMemOverhead(b *testing.B) {
 	var cases = []struct {
-		eltSize uint32
+		eltSize int
 		maxIdx  uint32
 	}{
 		{1, 1 << 16},
@@ -227,7 +227,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 			var _ []uint64 = sca[0].Bitmaps
 
 			totalSize := rss2 - rss1
-			dataAvgSize := uint64(eltSize * eltCnt)
+			dataAvgSize := uint64(eltSize) * uint64(eltCnt)
 			caAvgSize := totalSize / uint64(caCnt)
 			overhead := float64(caAvgSize) / float64(dataAvgSize)
 
