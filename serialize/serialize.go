@@ -13,22 +13,36 @@ import (
 )
 
 const (
+	// MaxMarshalledSize defines the max marshaled size for an object.
 	MaxMarshalledSize int64 = 1024 * 1024 * 1024
 )
 
-/**
- * Compatibility guarantee:
- *     - do NOT change type of fields
- *     - do NOT reuse any ever existing names
- *     - do NOT adjust fields order
- *     - only append fields
- *	   - only use fixed-size type, e.g. not int, use int32 or int64
- *	   - test Every version of dataHeader ever existed
- */
+// DataHeader defines the header format of a serialised byte stream.
+//
+// It contains version, header size(size of this struct) and data size(size of the user data).
+//
+// To ensure Compatibility:
+//
+//    - do NOT change type of fields
+//    - do NOT reuse any ever existing names
+//    - do NOT adjust fields order
+//    - only append fields
+//      - only use fixed-size type, e.g. not int, use int32 or int64
+//      - test Every version of dataHeader ever existed
+//
 type DataHeader struct {
-	Version    [version.MAXLEN]byte // version.VERSION, major.minor.release
-	HeaderSize uint64               // the length in bytes of dataHeader size
-	DataSize   uint64               // the length in bytes of serialized data size
+	// Version of this serialised data, for compatibility check.
+	// It is in form of <major>.<minor>.<release>;.
+	// As long as version is a string, its max size is 16.
+	//
+	// See: https://semver.org/
+	Version [version.MAXLEN]byte
+
+	// HeaderSize is the serialized size in byte for DataHeader.
+	HeaderSize uint64
+
+	// DataSize is the size in byte of user data.
+	DataSize uint64
 }
 
 func bytesToString(buf []byte, delimter byte) string {
@@ -65,6 +79,8 @@ func makeDefaultDataHeader(dataSize uint64) *DataHeader {
 	return makeDataHeader(version.VERSION, uint64(headerSize), dataSize)
 }
 
+// UnmarshalHeader reads just enough bytes from reader and load the data into a
+// DataHeader object.
 func UnmarshalHeader(reader io.Reader) (header *DataHeader, err error) {
 	verBuf := make([]byte, version.MAXLEN)
 
@@ -105,10 +121,12 @@ func marshalHeader(writer io.Writer, header *DataHeader) (err error) {
 	return binary.Write(writer, binary.LittleEndian, header)
 }
 
-/**
- * the content written to writer may be wrong if there were error during Marshal()
- * So make a temp copy, and copy it to destination if everything is ok
- */
+// Marshal serializes a protobuf object into a io.Writer .
+//
+// It returns number of bytes acutally written, and encountered error.
+//
+// The content written to writer may be wrong if there were error during Marshal().
+// So make a temp copy, and copy it to destination if everything is ok.
 func Marshal(writer io.Writer, obj proto.Message) (cnt int64, err error) {
 	marshaledData, err := proto.Marshal(obj)
 	if err != nil {
@@ -135,12 +153,20 @@ func Marshal(writer io.Writer, obj proto.Message) (cnt int64, err error) {
 	return int64(nHeader + nData), err
 }
 
+// MarshalAt is similar to Marshal except it writes data into io.WriterAt
+// interface instead of io.Writer .
 func MarshalAt(writer io.WriterAt, offset int64, obj proto.Message) (cnt int64, err error) {
 
 	w := iohelper.NewSectionWriter(writer, offset, MaxMarshalledSize)
 	return Marshal(w, obj)
 }
 
+// Unmarshal deserialize data from an io.Reader and load the data into a
+// protobuf object.
+//
+// One must specifies the type of the object before Unmarshal it.
+// TODO: return the number of byte read. Since all other [un]marhshal[at]
+// functions return the number of byte written or read.
 func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	dataHeader, err := UnmarshalHeader(reader)
 	if err != nil {
@@ -164,6 +190,8 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 	return nil
 }
 
+// UnmarshalAt is similar to Unmarshal except it reads from io.ReaderAt thus it
+// is able to specify where to start to read.
 func UnmarshalAt(reader io.ReaderAt, offset int64, obj proto.Message) (n int64, err error) {
 
 	// Wrap io.ReaderAt with a offset-self-maintained io.Reader
@@ -184,10 +212,12 @@ func UnmarshalAt(reader io.ReaderAt, offset int64, obj proto.Message) (n int64, 
 
 }
 
+// GetMarshalHeaderSize returns the serialised size of a DataHeader struct.
 func GetMarshalHeaderSize() int64 {
 	return int64(unsafe.Sizeof(uint64(0))*2 + version.MAXLEN)
 }
 
+// GetMarshalSize calculates the total size for a serialized object.
 func GetMarshalSize(obj proto.Message) int64 {
 	return GetMarshalHeaderSize() + int64(proto.Size(obj))
 }

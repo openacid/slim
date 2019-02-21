@@ -9,12 +9,20 @@ import (
 	"github.com/openacid/errors"
 )
 
+// ErrDuplicateKeys indicates two keys are identical.
 var ErrDuplicateKeys = errors.New("keys can not be duplicate")
+
+// ErrValuesNotSlice is returned if a value to create Trie is not slice type.
 var ErrValuesNotSlice = errors.New("values must be in a slice")
-var ErrRangeNotMatch = errors.New("length of starts and ends not equal")
+
+// ErrKVLenNotMatch means the keys and values to create Trie has different
+// number of elements.
 var ErrKVLenNotMatch = errors.New("length of keys and values not equal")
+
+// ErrKeyOutOfOrder means keys to create Trie are not ascendingly ordered.
 var ErrKeyOutOfOrder = errors.New("keys not ascending sorted")
 
+// Node is a Trie node.
 type Node struct {
 	Children map[int]*Node
 	Branches []int
@@ -28,6 +36,9 @@ type Node struct {
 
 const leafBranch = -1
 
+// New creates a Trie from a serial of ascendingly ordered keys and corresponding values.
+//
+// `values` must be a slice.
 func New(keys [][]byte, values interface{}) (root *Node, err error) {
 
 	valSlice, ok := toSlice(values)
@@ -55,6 +66,8 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 	return
 }
 
+// ToStrings convert a Trie to human readalble representation.
+// TODO add example.
 func (r *Node) ToStrings(cc int) []string {
 
 	var line string
@@ -87,6 +100,7 @@ func (r *Node) ToStrings(cc int) []string {
 	return rst
 }
 
+// Squash compresses a Trie by removing single-branch nodes.
 func (r *Node) Squash() int {
 
 	var cnt int
@@ -99,15 +113,23 @@ func (r *Node) Squash() int {
 				continue
 			}
 			child := n.Children[n.Branches[0]]
-			child.Step += 1
+			child.Step++
 			r.Children[k] = child
-			cnt += 1
+			cnt++
 		}
 	}
 
 	return cnt
 }
 
+// Search for `key` in a Trie.
+//
+// It returns 3 values of:
+// The left sibling value.
+// The matching value.
+// The right sibling value.
+//
+// Any of them could be nil.
 func (r *Node) Search(key []byte) (ltValue, eqValue, gtValue interface{}) {
 
 	var eqNode = r
@@ -240,6 +262,14 @@ func toSlice(arg interface{}) (rst []interface{}, ok bool) {
 	return
 }
 
+// AddKV adds a key-value pair into Trie.
+//
+// The key to add must be greater than any existent key in the Trie.
+//
+// `isStartLeaf` indicates if it should not be removed.
+// `needSquash` indicates whether to compress the Trie after adding.
+//
+// It returns the leaf node representing the added key.
 func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash bool) (leaf *Node, err error) {
 
 	var node = r
@@ -286,7 +316,7 @@ func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash
 		node.Branches = append(node.Branches, br)
 		node = n
 
-		r.NodeCnt += 1
+		r.NodeCnt++
 	}
 
 	leaf = &Node{Value: value, isStartLeaf: isStartLeaf}
@@ -309,10 +339,14 @@ func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash
 	return
 }
 
+// NewRangeTrie creates a range-serach Trie.
+// TODO explain.
 func NewRangeTrie() *Node {
 	return &Node{Children: make(map[int]*Node), Step: 1}
 }
 
+// RemoveUselessLeaves removes leaf nodes and ancestor nodes that reach only
+// these leaf nodes.
 func (r *Node) RemoveUselessLeaves() {
 	// remove leaves which are not start leaf
 

@@ -9,6 +9,10 @@ import (
 	"github.com/openacid/slim/prototype"
 )
 
+// CompactedArray is a space efficient array implementation.
+//
+// Unlike a normal array, it does not allocate space for a element that there is
+// not data in it.
 type CompactedArray struct {
 	prototype.CompactedArray
 	Converter
@@ -36,7 +40,12 @@ func (sa *CompactedArray) appendElt(index uint32, elt []byte) {
 	sa.Cnt++
 }
 
+// ErrIndexLen is returned if number of indexes does not equal the number of
+// datas, when initializing a CompactedArray.
 var ErrIndexLen = errors.New("the length of index and elts must be equal")
+
+// ErrIndexNotAscending means both indexes and datas for initialize a
+// CompactedArray must be in ascending order.
 var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 
 // Init initializes a compacted array from the slice type elts
