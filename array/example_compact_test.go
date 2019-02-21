@@ -8,7 +8,7 @@ func Example() {
 	indexes := []uint32{0, 5, 9, 203, 400}
 	eltsData := []uint32{12, 15, 19, 120, 300}
 
-	ca := CompactedArray{EltConverter: U32Conv{}}
+	ca := CompactedArray{Converter: U32Conv{}}
 	err := ca.Init(indexes, eltsData)
 	if err != nil {
 		fmt.Printf("Init compacted array error:%s\n", err)
