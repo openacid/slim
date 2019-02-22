@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"math/rand"
 	"reflect"
-	"runtime"
 	"testing"
 	"time"
 
@@ -182,111 +180,5 @@ func TestSerialize(t *testing.T) {
 		fmt.Println(serialized)
 		fmt.Println(second)
 		t.Fatalf("second serialized data incorrect")
-	}
-}
-
-func BenchmarkInit(b *testing.B) {
-
-	n := 10240
-	index := make([]uint32, n)
-	elts := make([]uint32, n)
-
-	for i := 0; i < n; i++ {
-		index = append(index, uint32(i))
-		elts = append(elts, uint32(i))
-	}
-
-	for i := 0; i < b.N; i++ {
-		NewU32(index, elts)
-	}
-
-}
-
-func newByte(eSize int, index []uint32, elts [][]byte) (*Array32, error) {
-	ca, err := New(ByteConv{EltSize: eSize}, index, elts)
-	return ca, err
-}
-
-func readRss() uint64 {
-	var stats runtime.MemStats
-	runtime.GC()
-	runtime.ReadMemStats(&stats)
-	return stats.Alloc
-}
-
-func makeTestData(eltSize int, cnt uint32) [][]byte {
-	eltsData := make([][]byte, cnt)
-
-	for i := uint32(0); i < cnt; i++ {
-		eltsData[i] = make([]byte, eltSize)
-	}
-
-	return eltsData
-}
-
-func makeTestIndex(maxIdx, idxDis uint32) []uint32 {
-	index := make([]uint32, 0, maxIdx)
-
-	for i := uint32(0); i < maxIdx; i++ {
-		if i%idxDis == 0 {
-			index = append(index, i)
-
-		}
-	}
-
-	return index
-}
-
-func BenchmarkMemOverhead(b *testing.B) {
-	var cases = []struct {
-		eltSize int
-		maxIdx  uint32
-	}{
-		{1, 1 << 16},
-		{2, 1 << 16},
-		{4, 1 << 16},
-		{8, 1 << 16},
-	}
-
-	var sca []*Array32
-	fmt.Printf("%-10s%-10s%-10s%-10s%-12s%-12s%-12s%-10s\n",
-		"eltSize", "eltCount", "idxDis", "caCnt", "totalSize", "caAvgSize", "dataAvgSize", "Overhead")
-
-	for _, c := range cases {
-		eltSize, maxIdx := c.eltSize, c.maxIdx
-
-		for i := uint32(1); i < 1<<16; i++ {
-			idxDis := uint32(math.Pow((float64(1)+math.Sqrt(5))/2, float64(i)))
-			if idxDis >= maxIdx {
-				break
-			}
-
-			sca = []*Array32{}
-
-			index := makeTestIndex(maxIdx, idxDis)
-			eltCnt := uint32(len(index))
-			elts := makeTestData(eltSize, eltCnt)
-
-			rss1 := readRss()
-
-			caCnt := 1024
-			var ca *Array32
-			for i := 0; i < caCnt; i++ {
-				ca, _ = newByte(eltSize, index, elts)
-				sca = append(sca, ca)
-			}
-			ca = nil
-
-			rss2 := readRss()
-			var _ []uint64 = sca[0].Bitmaps
-
-			totalSize := rss2 - rss1
-			dataAvgSize := uint64(eltSize) * uint64(eltCnt)
-			caAvgSize := totalSize / uint64(caCnt)
-			overhead := float64(caAvgSize) / float64(dataAvgSize)
-
-			fmt.Printf("%-10d%-10d%-10d%-10d%-12d%-12d%-12d%-10.3f\n",
-				eltSize, eltCnt, idxDis, caCnt, totalSize, caAvgSize, dataAvgSize, overhead)
-		}
 	}
 }
