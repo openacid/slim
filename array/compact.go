@@ -111,16 +111,23 @@ func (a *Array32) Init(index []uint32, _elts interface{}) error {
 
 // Get returns the value indexed by idx if it is in array, else return nil
 func (a *Array32) Get(idx uint32) interface{} {
+	v, _ := a.Get2(idx)
+	return v
+}
+
+// Get2 returns the value indexed by `idx` and a bool indicating existence.
+// If `idx` does not present it returns `nil, false`.
+func (a *Array32) Get2(idx uint32) (interface{}, bool) {
 	iBm, iBit := bmBit(idx)
 
 	if iBm >= uint32(len(a.Bitmaps)) {
-		return nil
+		return nil, false
 	}
 
 	var bmWord = a.Bitmaps[iBm]
 
 	if ((bmWord >> iBit) & 1) == 0 {
-		return nil
+		return nil, false
 	}
 
 	base := a.Offsets[iBm]
@@ -129,7 +136,7 @@ func (a *Array32) Get(idx uint32) interface{} {
 	stIdx := uint32(a.GetMarshaledSize(nil)) * (base + cnt1)
 
 	_, val := a.Unmarshal(a.Elts[stIdx:])
-	return val
+	return val, true
 }
 
 // Has returns true if idx is in array, else return false

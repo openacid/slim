@@ -103,18 +103,35 @@ func TestGet(t *testing.T) {
 
 	dataIdx := uint32(0)
 	for ii := uint32(0); ii < idx; ii++ {
-		actBtye := ca.Get(ii)
+
+		actByte := ca.Get(ii)
 		if _, ok := keysMap[ii]; ok {
-			act := actBtye.(uint32)
+			act := actByte.(uint32)
 			if eltsData[dataIdx] != act {
 				t.Fatalf("Get i:%d is not equal expect: %d, act: %d", ii, eltsData[dataIdx], act)
 			}
-
-			dataIdx++
 		} else {
-			if actBtye != nil {
-				t.Fatalf("Get i:%d is not nil expect: nil, act:%d", ii, actBtye)
+			if actByte != nil {
+				t.Fatalf("Get i:%d is not nil expect: nil, act:%d", ii, actByte)
 			}
+		}
+
+		// test Get2
+
+		actByte, found := ca.Get2(ii)
+		_, present := keysMap[ii]
+		if found != present {
+			t.Fatalf("Get i:%d present:%t but:%t", ii, present, found)
+		}
+
+		if found {
+			if eltsData[dataIdx] != actByte.(uint32) {
+				t.Fatalf("Get i:%d is not equal expect: %d, act: %d", ii, eltsData[dataIdx], actByte.(uint32))
+			}
+		}
+
+		if _, ok := keysMap[ii]; ok {
+			dataIdx++
 		}
 	}
 }

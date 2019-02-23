@@ -86,7 +86,7 @@ func (c childConv) Marshal(d interface{}) []byte {
 }
 
 func (c childConv) Unmarshal(b []byte) (int, interface{}) {
-	
+
 	// Optimization: Use a containing struct to store and return it as return
 	// value.
 	// Note that this is not safe with concurrent uses of the `childConv` in
