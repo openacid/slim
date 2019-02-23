@@ -86,6 +86,29 @@ func (c childConv) Marshal(d interface{}) []byte {
 }
 
 func (c childConv) Unmarshal(b []byte) (int, interface{}) {
+	
+	// Optimization: Use a containing struct to store and return it as return
+	// value.
+	// Note that this is not safe with concurrent uses of the `childConv` in
+	// more than one go-routine.
+	//
+	// Avoid creating an object: mem-alloc is expensive
+	//
+	//	   var d interface{}
+	//	   d = &children{
+	//		   Bitmap: binary.LittleEndian.Uint16(b[:2]),
+	//		   Offset: binary.LittleEndian.Uint16(b[2:4]),
+	//	   }
+	//	   return 4, d
+	//
+	// Avoid the following, it is even worse, converting struct `d` to
+	// `interface{}` results in another mem-alloc:
+	//
+	//     d := children{
+	//		   Bitmap: binary.LittleEndian.Uint16(b[:2]),
+	//		   Offset: binary.LittleEndian.Uint16(b[2:4]),
+	//     }
+	//     return 4, d
 
 	c.child.Bitmap = binary.LittleEndian.Uint16(b[:2])
 	c.child.Offset = binary.LittleEndian.Uint16(b[2:4])
