@@ -429,14 +429,11 @@ func (st *SlimTrie) SearchStringEqual(key string) (eqVal interface{}) {
 }
 
 func (st *SlimTrie) getChild(idx uint16) *children {
-	if !st.Children.Has(uint32(idx)) {
-		return nil
+	cval, found := st.Children.Get2(uint32(idx))
+	if found {
+		return cval.(*children)
 	}
-
-	cval := st.Children.Get(uint32(idx))
-	ch := cval.(*children)
-
-	return ch
+	return nil
 }
 
 func (st *SlimTrie) getStep(idx uint16) uint16 {
