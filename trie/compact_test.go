@@ -621,6 +621,9 @@ func checkCompactedTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
 		t.Fatalf("Step not the same")
 	}
 
+	// TODO need to check non-CompactedArray fields, in future there is
+	// user-defined underlaying data structure
+	// if !proto.Equal(&ctrie.Leaves.CompactedArray, &rCtrie.Leaves.CompactedArray) {
 	if !proto.Equal(&ctrie.Leaves, &rCtrie.Leaves) {
 		t.Fatalf("Leaves not the same")
 	}
