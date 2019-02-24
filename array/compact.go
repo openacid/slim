@@ -8,6 +8,13 @@ import (
 	"github.com/openacid/slim/bit"
 	"github.com/openacid/slim/prototype"
 )
+// ErrIndexLen is returned if number of indexes does not equal the number of
+// datas, when initializing a CompactedArray.
+var ErrIndexLen = errors.New("the length of index and elts must be equal")
+
+// ErrIndexNotAscending means both indexes and datas for initialize a
+// CompactedArray must be in ascending order.
+var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 
 // Array32 is a space efficient array implementation.
 //
@@ -59,13 +66,6 @@ func (a *Array32) appendElt(index uint32, elt []byte) {
 	a.Cnt++
 }
 
-// ErrIndexLen is returned if number of indexes does not equal the number of
-// datas, when initializing a CompactedArray.
-var ErrIndexLen = errors.New("the length of index and elts must be equal")
-
-// ErrIndexNotAscending means both indexes and datas for initialize a
-// CompactedArray must be in ascending order.
-var ErrIndexNotAscending = errors.New("index must be an ascending slice")
 
 // Init initializes a compacted array from the slice type elts
 // the index parameter must be a ascending array of type unit32,
