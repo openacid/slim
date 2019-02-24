@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	proto "github.com/golang/protobuf/proto"
 )
 
 func NewU32(index []uint32, elts []uint32) (*Array32, error) {
@@ -133,6 +135,58 @@ func TestGet(t *testing.T) {
 		if _, ok := keysMap[ii]; ok {
 			dataIdx++
 		}
+	}
+}
+
+func TestSerialize(t *testing.T) {
+	// TODO add Marshal function for package array, to Marshal multi versioned array
+
+	// fmt.Printf("%#v\n",  data )
+	serialized := []byte{
+		0x8, 0x4, 0x12, 0x6, 0xa2, 0x4, 0x0, 0x0,
+		0x80, 0x10, 0x1a, 0x4, 0x0, 0x0, 0x0, 0x3,
+		0x22, 0x10, 0xc, 0x0, 0x0, 0x0, 0xf, 0x0,
+		0x0, 0x0, 0x13, 0x0, 0x0, 0x0, 0x78, 0x0,
+		0x0, 0x0,
+	}
+
+	index := []uint32{1, 5, 9, 203}
+	eltsData := []uint32{12, 15, 19, 120}
+
+	arr, err := NewU32(index, eltsData)
+	if err != nil {
+		t.Fatalf("create array failure: %s", err)
+	}
+
+	data, err := proto.Marshal(arr)
+	if err != nil {
+		t.Fatalf("proto.Marshal: %s", err)
+	}
+
+	if !reflect.DeepEqual(serialized, data) {
+		fmt.Println(serialized)
+		fmt.Println(data)
+		t.Fatalf("serialized data incorrect")
+	}
+
+	loaded := &Array32{
+		Converter: U32Conv{},
+	}
+
+	err = proto.Unmarshal(data, loaded)
+	if err != nil {
+		t.Fatalf("proto.Unmarshal: %s", err)
+	}
+
+	second, err := proto.Marshal(loaded)
+	if err != nil {
+		t.Fatalf("proto.Marshal: %s", err)
+	}
+
+	if !reflect.DeepEqual(serialized, second) {
+		fmt.Println(serialized)
+		fmt.Println(second)
+		t.Fatalf("second serialized data incorrect")
 	}
 }
 
