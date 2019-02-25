@@ -4,6 +4,8 @@ package array
 import (
 	"errors"
 	"reflect"
+
+	"github.com/openacid/slim/version"
 )
 
 // ErrIndexLen is returned if number of indexes does not equal the number of
@@ -103,4 +105,9 @@ func (a *Array32) GetBytes(idx uint32, eltsize int) ([]byte, bool) {
 
 	stIdx := uint32(eltsize) * dataIndex
 	return a.Elts[stIdx : stIdx+uint32(eltsize)], true
+}
+
+// GetVersion returns a Version to identify this data type: "a32"
+func (a *Array32) GetVersion() version.Version {
+	return "a32"
 }

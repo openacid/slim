@@ -14,7 +14,7 @@ type Array32Index struct {
 
 // ErrIndexNotAscending means indexes to initialize a Array must be in
 // ascending order.
-var ErrIndexNotAscending = errors.New("index must be an ascending slice")
+var ErrIndexNotAscending = errors.New("index must be an ascending ordered slice")
 
 // bmWidth defines how many bits for a bitmap word
 var bmWidth = uint32(64)

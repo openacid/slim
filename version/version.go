@@ -25,3 +25,9 @@ const (
 	// verion is serialized as a string with a trailing '\0'.
 	MAXLEN = 16
 )
+
+type Version string
+
+type VersionGetter interface {
+	GetVersion() Version
+}
