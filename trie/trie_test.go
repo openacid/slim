@@ -70,7 +70,7 @@ func TestTrie(t *testing.T) {
 
 	for _, c := range cases {
 
-		trie, _ := New(c.key, c.value)
+		trie, _ := NewTrie(c.key, c.value)
 		for _, ex := range c.expected {
 			_, rst, _ := trie.Search(ex.key)
 
@@ -123,7 +123,7 @@ func TestTrieSearch(t *testing.T) {
 		7,
 	}
 
-	var trie, _ = New(key, value)
+	var trie, _ = NewTrie(key, value)
 
 	type ExpectType struct {
 		ltVal interface{}
@@ -304,7 +304,7 @@ func TestTrieNew(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		_, err := New(c.keys, c.values)
+		_, err := NewTrie(c.keys, c.values)
 		if errors.Cause(err) != errors.Cause(c.expectedErr) {
 			t.Fatalf("new trie: expectedErr: %v, got: %v", c.expectedErr, err)
 		}
@@ -382,10 +382,10 @@ func TestRangeTrie(t *testing.T) {
 		},
 	}
 
-	rt := NewRangeTrie()
+	rt := newRangeTrie()
 
 	for _, s := range srcs {
-		_, err := rt.AddKV(s.key, s.value, s.isStart, true)
+		_, err := rt.Append(s.key, s.value, s.isStart, true)
 		if err == ErrTooManyTrieNodes {
 			fmt.Printf("warn: %v\n", err)
 			break
@@ -395,7 +395,7 @@ func TestRangeTrie(t *testing.T) {
 	}
 
 	rt.Squash()
-	rt.RemoveUselessLeaves()
+	rt.removeNonboundaryLeaves()
 
 	type ExpectType struct {
 		ltVal interface{}
@@ -450,4 +450,14 @@ func TestRangeTrie(t *testing.T) {
 			t.Error("key: ", c.key, "expected gt value: ", c.expected.gtVal, "rst: ", gtVal)
 		}
 	}
+}
+
+func TestToStrings(t *testing.T) {
+	// TODO
+	trie, err := NewTrie([][]byte{}, []int{})
+	if err != nil {
+		t.Fatalf("expect no err: %s", err)
+	}
+
+	fmt.Println(trie.toStrings(0))
 }

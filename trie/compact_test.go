@@ -3,17 +3,18 @@ package trie
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/openacid/slim/array"
 	"os"
 	"reflect"
 	"testing"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
+	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/strhelper"
 )
 
 var testDataFn = "data"
 
-type CompactedExpectType struct {
+type searchRst struct {
 	ltVal interface{}
 	eqVal interface{}
 	gtVal interface{}
@@ -79,15 +80,15 @@ func TestMaxKeys(t *testing.T) {
 		}
 	}
 
-	trie, err := New(keys, values)
+	trie, err := NewTrie(keys, values)
 	if err != nil {
 		t.Fatalf("create new trie")
 	}
 
 	trie.Squash()
 
-	ctrie := New16(array.U16Conv{})
-	err = ctrie.Compact(trie)
+	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
@@ -134,21 +135,21 @@ func TestMaxNode(t *testing.T) {
 		values = append(values, uint16(i))
 	}
 
-	trie, err := New(keys, values)
+	trie, err := NewTrie(keys, values)
 	if err != nil {
 		t.Fatalf("create new trie: %v", err)
 	}
 
 	trie.Squash()
 
-	ctrie := New16(array.U16Conv{})
-	err = ctrie.Compact(trie)
+	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
 
 	if ctrie.Children.Cnt != uint32(mx-1) {
-		t.Fatalf("children cnt should be %d", mx-1)
+		t.Fatalf("children cnt should be %d, but: %d", mx-1, ctrie.Children.Cnt)
 	}
 	if ctrie.Steps.Cnt != uint32(0) {
 		t.Fatalf("Steps cnt should be %d", mx)
@@ -158,11 +159,11 @@ func TestMaxNode(t *testing.T) {
 	}
 }
 
-func TestCompactedTrie(t *testing.T) {
+func TestSlimTrie(t *testing.T) {
 
 	type ExpectKeyType struct {
 		key []byte
-		rst CompactedExpectType
+		rst searchRst
 	}
 
 	var cases = []struct {
@@ -186,11 +187,11 @@ func TestCompactedTrie(t *testing.T) {
 				4,
 			},
 			expected: []ExpectKeyType{
-				{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
-				{[]byte{1, 2, 4}, CompactedExpectType{0, 1, 2}},
-				{[]byte{2, 3, 4}, CompactedExpectType{1, 2, 3}},
-				{[]byte{2, 3, 5}, CompactedExpectType{2, 3, 4}},
-				{[]byte{3, 4, 5}, CompactedExpectType{3, 4, nil}},
+				{[]byte{1, 2, 3}, searchRst{nil, 0, 1}},
+				{[]byte{1, 2, 4}, searchRst{0, 1, 2}},
+				{[]byte{2, 3, 4}, searchRst{1, 2, 3}},
+				{[]byte{2, 3, 5}, searchRst{2, 3, 4}},
+				{[]byte{3, 4, 5}, searchRst{3, 4, nil}},
 			},
 		},
 		{
@@ -213,13 +214,13 @@ func TestCompactedTrie(t *testing.T) {
 				6,
 			},
 			expected: []ExpectKeyType{
-				{[]byte{1, 2, 3}, CompactedExpectType{nil, 0, 1}},
-				{[]byte{1, 2, 3, 4}, CompactedExpectType{0, 1, 2}},
-				{[]byte{2, 3}, CompactedExpectType{1, 2, 3}},
-				{[]byte{2, 3, 0}, CompactedExpectType{2, 3, 4}},
-				{[]byte{2, 3, 4}, CompactedExpectType{3, 4, 5}},
-				{[]byte{2, 3, 4, 5}, CompactedExpectType{4, 5, 6}},
-				{[]byte{2, 3, 15}, CompactedExpectType{5, 6, nil}},
+				{[]byte{1, 2, 3}, searchRst{nil, 0, 1}},
+				{[]byte{1, 2, 3, 4}, searchRst{0, 1, 2}},
+				{[]byte{2, 3}, searchRst{1, 2, 3}},
+				{[]byte{2, 3, 0}, searchRst{2, 3, 4}},
+				{[]byte{2, 3, 4}, searchRst{3, 4, 5}},
+				{[]byte{2, 3, 4, 5}, searchRst{4, 5, 6}},
+				{[]byte{2, 3, 15}, searchRst{5, 6, nil}},
 			},
 		},
 	}
@@ -230,25 +231,25 @@ func TestCompactedTrie(t *testing.T) {
 			c.key[i] = wordKey(k)
 		}
 
-		trie, _ := New(c.key, c.value)
+		trie, _ := NewTrie(c.key, c.value)
 		for _, ex := range c.expected {
 			lt, eq, gt := trie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
-		ctrie := New16(TestIntConv{})
-		err := ctrie.Compact(trie)
+		ctrie, _ := NewSlimTrie(TestIntConv{}, nil, nil)
+		err := ctrie.LoadTrie(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			lt, eq, gt := ctrie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			lt, eq, gt := ctrie.searchWords(wordKey(ex.key))
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", wordKey(ex.key), "expected value: ", ex.rst, "rst: ", rst)
@@ -259,22 +260,22 @@ func TestCompactedTrie(t *testing.T) {
 		trie.Squash()
 		for _, ex := range c.expected {
 			lt, eq, gt := trie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
-		ctrie = New16(TestIntConv{})
-		err = ctrie.Compact(trie)
+		ctrie, _ = NewSlimTrie(TestIntConv{}, nil, nil)
+		err = ctrie.LoadTrie(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			lt, eq, gt := ctrie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			lt, eq, gt := ctrie.searchWords(wordKey(ex.key))
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
@@ -285,22 +286,22 @@ func TestCompactedTrie(t *testing.T) {
 		trie.Squash()
 		for _, ex := range c.expected {
 			lt, eq, gt := trie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
-		ctrie = New16(TestIntConv{})
-		err = ctrie.Compact(trie)
+		ctrie, _ = NewSlimTrie(TestIntConv{}, nil, nil)
+		err = ctrie.LoadTrie(trie)
 		if err != nil {
 			t.Error("compact trie error:", err)
 		}
 
 		for _, ex := range c.expected {
-			lt, eq, gt := ctrie.Search(wordKey(ex.key))
-			rst := CompactedExpectType{lt, eq, gt}
+			lt, eq, gt := ctrie.searchWords(wordKey(ex.key))
+			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.rst, rst) {
 				t.Fatal("key: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
@@ -309,167 +310,105 @@ func TestCompactedTrie(t *testing.T) {
 	}
 }
 
-func TestCompactedTrieSearch(t *testing.T) {
-
-	var key = [][]byte{
-		{'a', 'b', 'c'},
-		{'a', 'b', 'c', 'd'},
-		{'a', 'b', 'd'},
-		{'a', 'b', 'd', 'e'},
-		{'b', 'c'},
-		{'b', 'c', 'd'},
-		{'b', 'c', 'd', 'e'},
-		{'c', 'd', 'e'},
+var (
+	searchKeys = []string{
+		"abc",
+		"abcd",
+		"abd",
+		"abde",
+		"bc",
+		"bcd",
+		"bcde",
+		"cde",
 	}
-	var value = []interface{}{
-		0,
-		1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7,
-	}
+	searchValues = []int{0, 1, 2, 3, 4, 5, 6, 7}
+)
 
-	for i, k := range key {
-		key[i] = wordKey(k)
-	}
+func TestNewSlimTrie(t *testing.T) {
 
-	var trie, _ = New(key, value)
-
-	ctrie := New16(TestIntConv{})
-	err := ctrie.Compact(trie)
+	ctrie, _ := NewSlimTrie(TestIntConv{}, nil, nil)
+	err := ctrie.load(searchKeys, searchValues)
 	if err != nil {
 		t.Error("compact trie error:", err)
 	}
 
 	var cases = []struct {
-		key      []byte
-		expected CompactedExpectType
+		key      string
+		expected searchRst
 	}{
-		{
-			[]byte{'a', 'b', 'c'},
-			CompactedExpectType{nil, 0, 1},
-		},
-		{
-			[]byte{'a', 'b', 'd'},
-			CompactedExpectType{1, 2, 3},
-		},
-		{
-			[]byte{'b', 'c', 'd'},
-			CompactedExpectType{4, 5, 6},
-		},
-		{
-			[]byte{'b', 'c', 'e'},
-			CompactedExpectType{6, nil, 7},
-		},
-		{
-			[]byte{'c', 'd', 'e'},
-			CompactedExpectType{6, 7, nil},
-		},
-		{
-			[]byte{'a', 'c', 'b'},
-			CompactedExpectType{3, nil, 4},
-		},
-		{
-			[]byte{'a', 'b'},
-			CompactedExpectType{nil, nil, 0},
-		},
-		{
-			[]byte{'a', 'c'},
-			CompactedExpectType{3, nil, 4},
-		},
-		{
-			[]byte{'a', 'b', 'c', 'd', 'e'},
-			CompactedExpectType{1, nil, 2},
-		},
-		{
-			[]byte{'a', 'b', 'c'},
-			CompactedExpectType{nil, 0, 1},
-		},
+		{"ab", searchRst{nil, nil, 0}},
+		{"abc", searchRst{nil, 0, 1}},
+		{"abcde", searchRst{1, nil, 2}},
+		{"abd", searchRst{1, 2, 3}},
+		{"ac", searchRst{nil, nil, 0}},
+		{"acb", searchRst{nil, nil, 0}},
+		{"acd", searchRst{1, 2, 3}},
+		{"adc", searchRst{nil, 0, 1}},
+		{"bcd", searchRst{4, 5, 6}},
+		{"bce", searchRst{4, 5, 6}},
+		{"c", searchRst{6, nil, 7}},
+		{"cde", searchRst{6, 7, nil}},
+		{"cfe", searchRst{6, 7, nil}},
+		{"cff", searchRst{6, 7, nil}},
 	}
 
 	for _, c := range cases {
 
-		kk := wordKey(c.key)
-		lt, eq, gt := ctrie.Search(kk)
-		rst := CompactedExpectType{lt, eq, gt}
+		lt, eq, gt := ctrie.Search(c.key)
+		rst := searchRst{lt, eq, gt}
 		if !reflect.DeepEqual(c.expected, rst) {
-			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
+			t.Fatal("key: ", c.key, "expected value: ", c.expected, "rst: ", rst)
 		}
-	}
 
-	var squashedCases = []struct {
-		key      []byte
-		expected CompactedExpectType
-	}{
-		{
-			[]byte{'a', 'b'},
-			CompactedExpectType{nil, nil, 0},
-		},
-		{
-			[]byte{'a', 'b', 'c'},
-			CompactedExpectType{nil, 0, 1},
-		},
-		{
-			[]byte{'a', 'd', 'c'},
-			CompactedExpectType{nil, 0, 1},
-		},
-		{
-			[]byte{'a', 'b', 'd'},
-			CompactedExpectType{1, 2, 3},
-		},
-		{
-			[]byte{'a', 'c', 'd'},
-			CompactedExpectType{1, 2, 3},
-		},
-		{
-			[]byte{'c', 'd', 'e'},
-			CompactedExpectType{6, 7, nil},
-		},
-		{
-			[]byte{'c', 'f', 'e'},
-			CompactedExpectType{6, 7, nil},
-		},
-		{
-			[]byte{'c', 'f', 'f'},
-			CompactedExpectType{6, 7, nil},
-		},
-		{
-			[]byte{'c'},
-			CompactedExpectType{6, nil, 7},
-		},
-		{
-			[]byte{'a', 'c'},
-			CompactedExpectType{nil, nil, 0},
-		},
-		{
-			[]byte{'a', 'b', 'c', 'd', 'e'},
-			CompactedExpectType{1, nil, 2},
-		},
-	}
-
-	trie.Squash()
-
-	ctrie = New16(TestIntConv{})
-	err = ctrie.Compact(trie)
-	if err != nil {
-		t.Error("compact trie error:", err)
-	}
-
-	for _, c := range squashedCases {
-
-		kk := wordKey(c.key)
-		lt, eq, gt := ctrie.Search(kk)
-		rst := CompactedExpectType{lt, eq, gt}
+		kk := strhelper.ToBitWords(c.key, 4)
+		lt, eq, gt = ctrie.searchWords(kk)
+		rst = searchRst{lt, eq, gt}
 		if !reflect.DeepEqual(c.expected, rst) {
 			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
 		}
 	}
 }
 
-func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
+func TestSlimTrieSearch(t *testing.T) {
+
+	key := strhelper.SliceToBitWords(searchKeys, 4)
+
+	var trie, _ = NewTrie(key, searchValues)
+
+	ctrie, _ := NewSlimTrie(TestIntConv{}, nil, nil)
+	err := ctrie.LoadTrie(trie)
+	if err != nil {
+		t.Error("compact trie error:", err)
+	}
+
+	var cases = []struct {
+		key      string
+		expected searchRst
+	}{
+		{"abc", searchRst{nil, 0, 1}},
+		{"abd", searchRst{1, 2, 3}},
+		{"bcd", searchRst{4, 5, 6}},
+		{"bce", searchRst{6, nil, 7}},
+		{"cde", searchRst{6, 7, nil}},
+		{"acb", searchRst{3, nil, 4}},
+		{"ab", searchRst{nil, nil, 0}},
+		{"ac", searchRst{3, nil, 4}},
+		{"abcde", searchRst{1, nil, 2}},
+		{"abc", searchRst{nil, 0, 1}},
+	}
+
+	for _, c := range cases {
+
+		kk := strhelper.ToBitWords(c.key, 4)
+		lt, eq, gt := ctrie.searchWords(kk)
+		rst := searchRst{lt, eq, gt}
+		if !reflect.DeepEqual(c.expected, rst) {
+			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
+		}
+	}
+}
+
+func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 	key := [][]byte{
 		{1, 2, 3},
 		{1, 2, 4},
@@ -485,19 +424,19 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 		uint16(4),
 	}
 
-	trie, _ := New(key, value)
+	trie, _ := NewTrie(key, value)
 
-	ctrie := New16(array.U16Conv{})
-	err := ctrie.Compact(trie)
+	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err := ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
 
 	rw := new(bytes.Buffer)
 
-	size := ctrie.GetMarshalSize()
+	size := ctrie.getMarshalSize()
 
-	n, err := ctrie.Marshal(rw)
+	n, err := ctrie.marshal(rw)
 	if err != nil {
 		t.Fatalf("failed to marshal ctrie: %v", err)
 	}
@@ -507,17 +446,17 @@ func TestCompactedTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// unmarshal
-	rCtrie := New16(array.U16Conv{})
-	err = rCtrie.Unmarshal(rw)
+	rCtrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err = rCtrie.unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 
 	// check
-	checkCompactedTrie(ctrie, rCtrie, t)
+	checkSlimTrie(ctrie, rCtrie, t)
 }
 
-func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
+func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	key := [][]byte{
 		{1, 2, 3},
 		{1, 2, 4},
@@ -542,17 +481,17 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 		uint16(14),
 	}
 
-	trie1, _ := New(key, value1)
-	trie2, _ := New(key, value2)
+	trie1, _ := NewTrie(key, value1)
+	trie2, _ := NewTrie(key, value2)
 
-	ctrie1 := New16(array.U16Conv{})
-	err := ctrie1.Compact(trie1)
+	ctrie1, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err := ctrie1.LoadTrie(trie1)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
 
-	ctrie2 := New16(array.U16Conv{})
-	err = ctrie2.Compact(trie2)
+	ctrie2, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	err = ctrie2.LoadTrie(trie2)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
@@ -566,22 +505,22 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 	defer os.Remove(testDataFn)
 
 	offset1 := int64(0)
-	n, err := ctrie1.MarshalAt(writer, offset1)
+	n, err := ctrie1.marshalAt(writer, offset1)
 	if err != nil {
 		t.Fatalf("failed to marshal ctrie: %v", err)
 	}
 
-	size := ctrie1.GetMarshalSize()
+	size := ctrie1.getMarshalSize()
 	if n != size {
 		t.Fatalf("wrong marshal size: %d, %d", n, size)
 	}
 
 	offset2 := offset1 + n
-	n, err = ctrie2.MarshalAt(writer, offset2)
+	n, err = ctrie2.marshalAt(writer, offset2)
 	if err != nil {
 		t.Fatalf("failed to marshal ctrie: %v", err)
 	}
-	size = ctrie1.GetMarshalSize()
+	size = ctrie1.getMarshalSize()
 	if n != size {
 		t.Fatalf("wrong marshal size: %d, %d", n, size)
 	}
@@ -595,24 +534,24 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rCtrie1 := New16(array.U16Conv{})
-	_, err = rCtrie1.UnmarshalAt(reader, offset1)
+	rCtrie1, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	_, err = rCtrie1.unmarshalAt(reader, offset1)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 
-	checkCompactedTrie(ctrie1, rCtrie1, t)
+	checkSlimTrie(ctrie1, rCtrie1, t)
 
-	rCtrie2 := New16(array.U16Conv{})
-	_, err = rCtrie2.UnmarshalAt(reader, offset2)
+	rCtrie2, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	_, err = rCtrie2.unmarshalAt(reader, offset2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 
-	checkCompactedTrie(ctrie2, rCtrie2, t)
+	checkSlimTrie(ctrie2, rCtrie2, t)
 }
 
-func checkCompactedTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
+func checkSlimTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
 	if !proto.Equal(&(ctrie.Children.Array32Storage), &(rCtrie.Children.Array32Storage)) {
 		t.Fatalf("Children not the same")
 	}

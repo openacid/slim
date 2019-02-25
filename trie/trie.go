@@ -2,11 +2,11 @@ package trie
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/openacid/errors"
+	"github.com/openacid/slim/typehelper"
 )
 
 // ErrDuplicateKeys indicates two keys are identical.
@@ -36,12 +36,12 @@ type Node struct {
 
 const leafBranch = -1
 
-// New creates a Trie from a serial of ascendingly ordered keys and corresponding values.
+// NewTrie creates a Trie from a serial of ascendingly ordered keys and corresponding values.
 //
 // `values` must be a slice.
-func New(keys [][]byte, values interface{}) (root *Node, err error) {
+func NewTrie(keys [][]byte, values interface{}) (root *Node, err error) {
 
-	valSlice, ok := toSlice(values)
+	valSlice, ok := typehelper.ToSlice(values)
 	if !ok {
 		err = ErrValuesNotSlice
 		return
@@ -56,7 +56,7 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 
 	for i := 0; i < len(keys); i++ {
 		key := keys[i]
-		_, err = root.AddKV(key, valSlice[i], false, false)
+		_, err = root.Append(key, valSlice[i], false, false)
 		if err != nil {
 			err = errors.Wrapf(err, "key: %s", key)
 			return
@@ -66,9 +66,9 @@ func New(keys [][]byte, values interface{}) (root *Node, err error) {
 	return
 }
 
-// ToStrings convert a Trie to human readalble representation.
+// toStrings convert a Trie to human readalble representation.
 // TODO add example.
-func (r *Node) ToStrings(cc int) []string {
+func (r *Node) toStrings(cc int) []string {
 
 	var line string
 	if cc == leafBranch {
@@ -82,7 +82,7 @@ func (r *Node) ToStrings(cc int) []string {
 	if len(r.Branches) > 0 {
 
 		for _, b := range r.Branches {
-			subtrie := r.Children[b].ToStrings(b)
+			subtrie := r.Children[b].toStrings(b)
 			indent := strings.Repeat(" ", len(line))
 			for _, s := range subtrie {
 				if len(rst) == 0 {
@@ -248,21 +248,7 @@ func (r *Node) rightMost() *Node {
 	}
 }
 
-func toSlice(arg interface{}) (rst []interface{}, ok bool) {
-	s := reflect.ValueOf(arg)
-	if s.Kind() != reflect.Slice {
-		return
-	}
-	l := s.Len()
-	rst = make([]interface{}, l)
-	for i := 0; i < l; i++ {
-		rst[i] = s.Index(i).Interface()
-	}
-	ok = true
-	return
-}
-
-// AddKV adds a key-value pair into Trie.
+// Append adds a key-value pair into Trie.
 //
 // The key to add must be greater than any existent key in the Trie.
 //
@@ -270,7 +256,7 @@ func toSlice(arg interface{}) (rst []interface{}, ok bool) {
 // `needSquash` indicates whether to compress the Trie after adding.
 //
 // It returns the leaf node representing the added key.
-func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash bool) (leaf *Node, err error) {
+func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquash bool) (leaf *Node, err error) {
 
 	var node = r
 	var j int
@@ -339,15 +325,15 @@ func (r *Node) AddKV(key []byte, value interface{}, isStartLeaf bool, needSquash
 	return
 }
 
-// NewRangeTrie creates a range-serach Trie.
+// newRangeTrie creates a range-serach Trie.
 // TODO explain.
-func NewRangeTrie() *Node {
+func newRangeTrie() *Node {
 	return &Node{Children: make(map[int]*Node), Step: 1}
 }
 
-// RemoveUselessLeaves removes leaf nodes and ancestor nodes that reach only
+// removeNonboundaryLeaves removes leaf nodes and ancestor nodes that reach only
 // these leaf nodes.
-func (r *Node) RemoveUselessLeaves() {
+func (r *Node) removeNonboundaryLeaves() {
 	// remove leaves which are not start leaf
 
 	leaf := r.Children[leafBranch]
@@ -367,7 +353,7 @@ func (r *Node) RemoveUselessLeaves() {
 			continue
 		}
 
-		n.RemoveUselessLeaves()
+		n.removeNonboundaryLeaves()
 
 		if len(n.Branches) == 0 {
 			delete(r.Children, k)

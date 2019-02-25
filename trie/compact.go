@@ -21,6 +21,7 @@ import (
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bit"
 	"github.com/openacid/slim/serialize"
+	"github.com/openacid/slim/strhelper"
 )
 
 const (
@@ -139,10 +140,10 @@ func (c stepConv) GetMarshaledSize(b []byte) int {
 	return 2
 }
 
-// New16 create an empty SlimTrie.
+// NewSlimTrie create an empty SlimTrie.
 // Argument c implements a array.Converter to convert user data to serialized
 // bytes and back.
-func New16(c array.Converter) *SlimTrie {
+func NewSlimTrie(c array.Converter, keys []string, values interface{}) (*SlimTrie, error) {
 	var step uint16
 	st := &SlimTrie{
 		Children: array.Array32{Converter: childConv{child: &children{}}},
@@ -150,11 +151,36 @@ func New16(c array.Converter) *SlimTrie {
 		Leaves:   array.Array32{Converter: c},
 	}
 
-	return st
+	if keys != nil {
+		return st, st.load(keys, values)
+	}
+
+	return st, nil
 }
 
-// Compact compress a standard Trie and store compressed data in it.
-func (st *SlimTrie) Compact(root *Node) (err error) {
+// load Loads keys and values and builds a SlimTrie.
+//
+// values must be a slice of data-type which is compatible with
+// SlimTrie.Leaves.Converter .
+func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
+	ks := strhelper.SliceToBitWords(keys, 4)
+	return st.loadBytes(ks, values)
+}
+
+func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
+
+	trie, err := NewTrie(keys, values)
+	if err != nil {
+		return err
+	}
+
+	trie.Squash()
+	st.LoadTrie(trie)
+	return nil
+}
+
+// LoadTrie compress a standard Trie and store compressed data in it.
+func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 	if root == nil {
 		return
 	}
@@ -241,7 +267,7 @@ func (st *SlimTrie) Compact(root *Node) (err error) {
 	return nil
 }
 
-// Search for a key in SlimTrie.
+// searchWords for a key in SlimTrie.
 //
 // `key` is slice of 4-bit word each stored in a byte.
 // the higher 4 bit in byte is removed.
@@ -253,7 +279,7 @@ func (st *SlimTrie) Compact(root *Node) (err error) {
 //
 // A non-nil return value does not mean the `key` exists.
 // An in-existent `key` also could matches partial info stored in SlimTrie.
-func (st *SlimTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
+func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -312,9 +338,16 @@ func (st *SlimTrie) Search(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	return
 }
 
-// SearchString is similar to Search, except it receives a string to search.
-// A char in the string is split into 2 4-bit word.
-func (st *SlimTrie) SearchString(key string) (ltVal, eqVal, gtVal interface{}) {
+// Search for a key in SlimTrie.
+//
+// It returns values of 3 values:
+// The value of greatest key < `key`. It is nil if `key` is the smallest.
+// The value of `key`. It is nil if there is not a matching.
+// The value of smallest key > `key`. It is nil if `key` is the greatest.
+//
+// A non-nil return value does not mean the `key` exists.
+// An in-existent `key` also could matches partial info stored in SlimTrie.
+func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
@@ -382,9 +415,17 @@ func (st *SlimTrie) SearchString(key string) (ltVal, eqVal, gtVal interface{}) {
 
 // just return equal value for trie.Search benchmark
 
-// SearchStringEqual is similar to SearchString, except it returns only 1 value
-// of the matching key, without the left and right value.
-func (st *SlimTrie) SearchStringEqual(key string) (eqVal interface{}) {
+// Get the value of the specified key from SlimTrie.
+//
+// If the key exist in SlimTrie, it returns the correct value.
+// If the key does NOT exist in SlimTrie, it could also return some value.
+//
+// Because SlimTrie is a "index" but not a "kv-map", it does not stores complete
+// info of all keys.
+// SlimTrie tell you "WHERE IT POSSIBLY BE", rather than "IT IS JUST THERE".
+//
+// TODO a complete kv-map example
+func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 	eqIdx := int32(0)
 
 	// string to 4-bit words
@@ -499,27 +540,27 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 	return
 }
 
-func (st *SlimTrie) nextBranch(idx uint16, word byte) (eqIdx int32) {
-	eqIdx = int32(-1)
-
-	isLeaf := st.Leaves.Has(uint32(idx))
+func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
 
 	if word == LeafWord {
+		isLeaf := st.Leaves.Has(uint32(idx))
 		if isLeaf {
-			eqIdx = int32(idx)
+			return int32(idx)
+		} else {
+			return -1
 		}
 	}
 
 	ch := st.getChild(idx)
 	if ch == nil {
-		return
+		return -1
 	}
 
 	if (ch.Bitmap >> word & 1) == 1 {
-		eqIdx = int32(getChildIdx(ch, uint16(word+1)))
+		return int32(getChildIdx(ch, uint16(word+1)))
 	}
 
-	return
+	return -1
 }
 
 func (st *SlimTrie) leftMost(idx uint16) uint16 {
@@ -545,8 +586,8 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 	}
 }
 
-// GetMarshalSize returns the serialized length in byte of a SlimTrie.
-func (st *SlimTrie) GetMarshalSize() int64 {
+// getMarshalSize returns the serialized length in byte of a SlimTrie.
+func (st *SlimTrie) getMarshalSize() int64 {
 	cSize := serialize.GetMarshalSize(&st.Children)
 	sSize := serialize.GetMarshalSize(&st.Steps)
 	lSize := serialize.GetMarshalSize(&st.Leaves)
@@ -554,8 +595,8 @@ func (st *SlimTrie) GetMarshalSize() int64 {
 	return cSize + sSize + lSize
 }
 
-// Marshal serializes it to byte stream.
-func (st *SlimTrie) Marshal(writer io.Writer) (cnt int64, err error) {
+// marshal serializes it to byte stream.
+func (st *SlimTrie) marshal(writer io.Writer) (cnt int64, err error) {
 	var n int64
 
 	if n, err = serialize.Marshal(writer, &st.Children); err != nil {
@@ -576,13 +617,13 @@ func (st *SlimTrie) Marshal(writer io.Writer) (cnt int64, err error) {
 	return cnt, nil
 }
 
-// MarshalAt serializes it to byte stream and write the stream at specified
+// marshalAt serializes it to byte stream and write the stream at specified
 // offset.
 // TODO change to io.WriterAt
-func (st *SlimTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
+func (st *SlimTrie) marshalAt(f *os.File, offset int64) (cnt int64, err error) {
 
 	buf := new(bytes.Buffer)
-	if cnt, err = st.Marshal(buf); err != nil {
+	if cnt, err = st.marshal(buf); err != nil {
 		return 0, err
 	}
 
@@ -593,8 +634,8 @@ func (st *SlimTrie) MarshalAt(f *os.File, offset int64) (cnt int64, err error) {
 	return cnt, nil
 }
 
-// Unmarshal de-serializes and loads SlimTrie from a byte stream.
-func (st *SlimTrie) Unmarshal(reader io.Reader) error {
+// unmarshal de-serializes and loads SlimTrie from a byte stream.
+func (st *SlimTrie) unmarshal(reader io.Reader) error {
 	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
 		return err
 	}
@@ -613,7 +654,7 @@ func (st *SlimTrie) Unmarshal(reader io.Reader) error {
 // Unmarshal de-serializes and loads SlimTrie from a byte stream at
 // specified offset.
 // TODO change to io.ReaderAt
-func (st *SlimTrie) UnmarshalAt(f *os.File, offset int64) (n int64, err error) {
+func (st *SlimTrie) unmarshalAt(f *os.File, offset int64) (n int64, err error) {
 	childrenSize, err := serialize.UnmarshalAt(f, offset, &st.Children)
 	if err != nil {
 		return n, err

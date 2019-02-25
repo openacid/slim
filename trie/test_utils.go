@@ -195,15 +195,15 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 
 	vals := makeKVElts(srcKeys, srcVals)
 
-	t, err := New(keys, vals)
+	t, err := NewTrie(keys, vals)
 	if err != nil {
 		panic(fmt.Sprintf("build trie failed: %v", err))
 	}
 
 	t.Squash()
 
-	ct := New16(testKVConv{keySize: keyLen, valSize: valLen})
-	err = ct.Compact(t)
+	ct, _ := NewSlimTrie(testKVConv{keySize: keyLen, valSize: valLen}, nil, nil)
+	err = ct.LoadTrie(t)
 	if err != nil {
 		panic(fmt.Sprintf("build compacted trie failed: %v", err))
 	}
@@ -244,7 +244,7 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 func trieSearchTestKV(ct *SlimTrie, key string) []byte {
 
 	//_, eq, _ := ct.SearchString(key)
-	eq := ct.SearchStringEqual(key)
+	eq := ct.Get(key)
 	if eq == nil {
 		return nil
 	}
