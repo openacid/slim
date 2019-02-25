@@ -8,7 +8,7 @@ import (
 
 // ErrIndexLen is returned if number of indexes does not equal the number of
 // datas, when initializing a Array.
-var ErrIndexLen = errors.New("the length of index and elts must be equal")
+var ErrIndexLen = errors.New("the length of indexes and elts must be equal")
 
 // Array32 is a space efficient array implementation.
 //
@@ -19,18 +19,24 @@ type Array32 struct {
 	Converter
 }
 
+// NewU32 creates a Array32 instance with uint32 element.
+func NewU32(indexes []uint32, elts []uint32) (*Array32, error) { return New32(U32Conv{}, indexes, elts) }
+
+// NewU32 creates a Array32 instance with uint16 element.
+func NewU16(indexes []uint32, elts []uint16) (*Array32, error) { return New32(U16Conv{}, indexes, elts) }
+
 // New32 creates a Array and initializes it with a slice of index and a
 // slice of data.
 //
-// The index parameter must be a ascending array of type unit32,
+// The indexes parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func New32(conv Converter, index []uint32, _elts interface{}) (ca *Array32, err error) {
+func New32(conv Converter, indexes []uint32, _elts interface{}) (ca *Array32, err error) {
 
 	ca = &Array32{
 		Converter: conv,
 	}
 
-	err = ca.Init(index, _elts)
+	err = ca.Init(indexes, _elts)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +45,9 @@ func New32(conv Converter, index []uint32, _elts interface{}) (ca *Array32, err 
 }
 
 // Init initializes a compacted array from the slice type elts
-// the index parameter must be a ascending array of type unit32,
+// the indexes parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func (a *Array32) Init(index []uint32, _elts interface{}) error {
+func (a *Array32) Init(indexes []uint32, _elts interface{}) error {
 
 	rElts := reflect.ValueOf(_elts)
 	if rElts.Kind() != reflect.Slice {
@@ -50,11 +56,11 @@ func (a *Array32) Init(index []uint32, _elts interface{}) error {
 
 	nElts := rElts.Len()
 
-	if len(index) != nElts {
+	if len(indexes) != nElts {
 		return ErrIndexLen
 	}
 
-	err := a.InitIndexBitmap(index)
+	err := a.InitIndexBitmap(indexes)
 	if err != nil {
 		return err
 	}

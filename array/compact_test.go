@@ -14,11 +14,6 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
-func NewU32(index []uint32, elts []uint32) (*Array32, error) {
-	ca, err := New32(U32Conv{}, index, elts)
-	return ca, err
-}
-
 func TestNewErrorArgments(t *testing.T) {
 	var index []uint32
 	eltsData := []uint32{12, 15, 19, 120, 300}
