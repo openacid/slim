@@ -28,13 +28,13 @@ func TestNewErrorArgments(t *testing.T) {
 	index = []uint32{1, 5, 9, 203}
 	_, err = NewU32(index, eltsData)
 	if err == nil {
-		t.Fatalf("wrong idenx length new CompactedArray must error")
+		t.Fatalf("new with wrong index length must error")
 	}
 
 	index = []uint32{1, 5, 5, 203, 400}
 	_, err = NewU32(index, eltsData)
 	if err == nil {
-		t.Fatalf("not sorted index new CompactedArray must error")
+		t.Fatalf("new with unsorted index must error")
 	}
 }
 
