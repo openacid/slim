@@ -613,17 +613,17 @@ func TestCompactedTrieMarshalAtUnmarshalAt(t *testing.T) {
 }
 
 func checkCompactedTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
-	if !proto.Equal(&(ctrie.Children.CompactedArray), &(rCtrie.Children.CompactedArray)) {
+	if !proto.Equal(&(ctrie.Children.Array32Storage), &(rCtrie.Children.Array32Storage)) {
 		t.Fatalf("Children not the same")
 	}
 
-	if !proto.Equal(&(ctrie.Steps.CompactedArray), &(rCtrie.Steps.CompactedArray)) {
+	if !proto.Equal(&(ctrie.Steps.Array32Storage), &(rCtrie.Steps.Array32Storage)) {
 		t.Fatalf("Step not the same")
 	}
 
-	// TODO need to check non-CompactedArray fields, in future there is
+	// TODO need to check non-Array32Storage fields, in future there is
 	// user-defined underlaying data structure
-	// if !proto.Equal(&ctrie.Leaves.CompactedArray, &rCtrie.Leaves.CompactedArray) {
+	// if !proto.Equal(&ctrie.Leaves.Array32Storage, &rCtrie.Leaves.Array32Storage) {
 	if !proto.Equal(&ctrie.Leaves, &rCtrie.Leaves) {
 		t.Fatalf("Leaves not the same")
 	}

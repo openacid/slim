@@ -6,4 +6,4 @@
 // It just read the comment line starts with "//go:generate" and run.
 package prototype
 
-//go:generate protoc --proto_path=./proto --go_out=. proto/compacted_array.proto
+//go:generate protoc --proto_path=. --go_out=. array.proto

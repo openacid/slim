@@ -9,7 +9,7 @@ import (
 
 // Array32Index implements sparsely distributed index with bitmap.
 type Array32Index struct {
-	prototype.CompactedArray
+	prototype.Array32Storage
 }
 
 // ErrIndexNotAscending means indexes to initialize a Array must be in
