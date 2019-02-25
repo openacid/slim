@@ -203,7 +203,7 @@ func BenchmarkInit(b *testing.B) {
 }
 
 func newByte(eSize int, index []uint32, elts [][]byte) (*Array32, error) {
-	ca, err := New32(ByteConv{EltSize: eSize}, index, elts)
+	ca, err := New(ByteConv{EltSize: eSize}, index, elts)
 	return ca, err
 }
 

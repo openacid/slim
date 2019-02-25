@@ -13,7 +13,7 @@ func Example() {
 	indexes := []uint32{0, 5, 9}
 	elts := []uint32{12, 15, 19}
 
-	arr, err := New32(U32Conv{}, indexes, elts)
+	arr, err := New(U32Conv{}, indexes, elts)
 	if err != nil {
 		fmt.Printf("Init compacted array error:%s\n", err)
 		return

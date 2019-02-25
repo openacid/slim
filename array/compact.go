@@ -20,17 +20,17 @@ type Array32 struct {
 }
 
 // NewU32 creates a Array32 instance with uint32 element.
-func NewU32(indexes []uint32, elts []uint32) (*Array32, error) { return New32(U32Conv{}, indexes, elts) }
+func NewU32(indexes []uint32, elts []uint32) (*Array32, error) { return New(U32Conv{}, indexes, elts) }
 
 // NewU32 creates a Array32 instance with uint16 element.
-func NewU16(indexes []uint32, elts []uint16) (*Array32, error) { return New32(U16Conv{}, indexes, elts) }
+func NewU16(indexes []uint32, elts []uint16) (*Array32, error) { return New(U16Conv{}, indexes, elts) }
 
-// New32 creates a Array and initializes it with a slice of index and a
+// New creates a Array and initializes it with a slice of index and a
 // slice of data.
 //
 // The indexes parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func New32(conv Converter, indexes []uint32, _elts interface{}) (ca *Array32, err error) {
+func New(conv Converter, indexes []uint32, _elts interface{}) (ca *Array32, err error) {
 
 	ca = &Array32{
 		Converter: conv,
