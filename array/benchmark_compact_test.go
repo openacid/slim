@@ -2,13 +2,14 @@ package array
 
 import (
 	"fmt"
-	"math"
+	"math/rand"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func newByteArray32(eSize int, index []uint32, elts [][]byte) (*Array32, error) {
-	return New32(ByteConv{EltSize: eSize}, index, elts)
+	return New(ByteConv{EltSize: eSize}, index, elts)
 }
 
 func readRss() uint64 {
@@ -46,46 +47,52 @@ func calcMem(caCnt int, indexes []uint32, eltSize int, elts [][]byte) uint64 {
 	return rss2 - rss1
 }
 
-func makeDiscrete(max uint32) []uint32 {
-	dis := make([]uint32, 0)
+func makeIndexes(maxIdx uint32, factor float64) []uint32 {
+	rnd := rand.New(rand.NewSource(time.Now().Unix()))
 
-	for i := uint32(1); i < max; i++ {
-
-		d := uint32(math.Pow((float64(1)+math.Sqrt(7))/2, float64(i)))
-		if d >= max {
-			break
-		}
-
-		dis = append(dis, d)
-	}
-
-	return dis
-}
-
-func makeDisIndexes(maxIdx, idxDis uint32) []uint32 {
-	index := make([]uint32, 0, maxIdx)
+	indexes := make([]uint32, 0)
 
 	for i := uint32(0); i < maxIdx; i++ {
-		if i%idxDis == 0 {
-			index = append(index, i)
-
+		if rnd.Float64() < factor {
+			indexes = append(indexes, i)
 		}
 	}
 
-	return index
+	return indexes
 }
 
-func calcMemOverHead(indexes []uint32, eltSize int) float64 {
-	caCnt := 1024
+func calcMemOverHead(factor float64, maxIdx uint32, eltSize int) (uint32, float64) {
+	cnt := 1024
+
+	indexes := makeIndexes(maxIdx, factor)
 	eltCnt := uint32(len(indexes))
 
 	elts := makeData(eltSize, eltCnt)
-	totalSize := calcMem(caCnt, indexes, eltSize, elts)
+	actSize := calcMem(cnt, indexes, eltSize, elts)
 
 	dataAvgSize := uint64(eltSize) * uint64(eltCnt)
-	caAvgSize := totalSize / uint64(caCnt)
+	actAvgSize := actSize / uint64(cnt)
 
-	return float64(caAvgSize) / float64(dataAvgSize)
+	overHead := float64(actAvgSize)/float64(dataAvgSize) - 1
+
+	return eltCnt, overHead
+}
+
+func benchMemOverHead(eltSize int, maxIdx uint32) func(*testing.B) {
+	return func(B *testing.B) {
+		factor := []float64{1.0, 0.5, 0.2, 0.1, 0.005, 0.001}
+
+		fmt.Printf("%12s%12s%12s%12s\n", "eltSize", "eltCount", "loadFactor", "Overhead")
+
+		for _, f := range factor {
+
+			eltCnt, overHead := calcMemOverHead(f, maxIdx, eltSize)
+
+			oh := fmt.Sprintf("+%d", int(overHead*100))
+
+			fmt.Printf("%12d%12d%12.3f%12s\n", eltSize, eltCnt, f, oh)
+		}
+	}
 }
 
 func BenchmarkMemOverhead(b *testing.B) {
@@ -99,19 +106,7 @@ func BenchmarkMemOverhead(b *testing.B) {
 		{8, 1 << 16},
 	}
 
-	fmt.Printf("%-10s%-10s%-10s%-10s\n", "eltSize", "eltCount", "idxDis", "Overhead")
-
 	for _, c := range cases {
-		eltSize, maxIdx := c.eltSize, c.maxIdx
-
-		for _, idxDis := range makeDiscrete(maxIdx) {
-
-			indexes := makeDisIndexes(maxIdx, idxDis)
-			overhead := calcMemOverHead(indexes, eltSize)
-
-			eltCnt := uint32(len(indexes))
-
-			fmt.Printf("%-10d%-10d%-10d%-10.3f\n", eltSize, eltCnt, idxDis, overhead)
-		}
+		b.Run("", benchMemOverHead(c.eltSize, c.maxIdx))
 	}
 }
