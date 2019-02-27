@@ -23,6 +23,15 @@ type run struct {
 	valLen uint32
 }
 
+var runs = []run{
+	{1, 1024, 2},
+	{10, 1024, 2},
+	{100, 1024, 2},
+	{1000, 1024, 2},
+	{1000, 512, 2},
+	{1000, 256, 2},
+}
+
 // testSrcType defines benchmark data source.
 type testSrcType struct {
 	srcKeys   []string
@@ -36,21 +45,6 @@ type testSrcType struct {
 	searchValue []byte
 }
 
-var (
-	btreeDegree = 2
-
-	testSrc *testSrcType
-
-	runs = []run{
-		{1, 1024, 2},
-		{10, 1024, 2},
-		{100, 1024, 2},
-		{1000, 1024, 2},
-		{1000, 512, 2},
-		{1000, 256, 2},
-	}
-)
-
 // testKV defines a key-value struct to be used as a value in SlimTrie in test.
 type testKV struct {
 	key string
@@ -61,11 +55,7 @@ type testKV struct {
 func (kv testKV) Less(than btree.Item) bool {
 	anotherKV := than.(*testKV)
 
-	if kv.key < anotherKV.key {
-		return true
-	}
-
-	return false
+	return kv.key < anotherKV.key
 }
 
 // testKVConv implements array.Converter to be a converter of testKV.
@@ -178,7 +168,7 @@ func splitStringTo4BitWords(s string) []byte {
 	words := make([]byte, lenSrc*2)
 
 	for i := 0; i < lenSrc; i++ {
-		b := byte(s[i])
+		b := s[i]
 		words[2*i] = (b & 0xf0) >> 4
 		words[2*i+1] = b & 0x0f
 	}
