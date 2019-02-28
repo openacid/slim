@@ -16,8 +16,11 @@ type Array32Index struct {
 // ascending order.
 var ErrIndexNotAscending = errors.New("index must be an ascending ordered slice")
 
-// bmWidth defines how many bits for a bitmap word
-var bmWidth = uint32(64)
+const (
+	// bmWidth defines how many bits for a bitmap word
+	bmWidth = uint32(64)
+	bmMask = uint32(63)
+)
 
 // bmBit calculates bitamp word index and the bit index in the word.
 func bmBit(idx uint32) (uint32, uint32) {
@@ -75,15 +78,17 @@ func (a *Array32Index) GetEltIndex(idx uint32) (uint32, bool) {
 
 // Has returns true if idx is in array, else return false
 func (a *Array32Index) Has(idx uint32) bool {
-	iBm, iBit := bmBit(idx)
+	iBm := idx / bmWidth
 
 	if iBm >= uint32(len(a.Bitmaps)) {
 		return false
 	}
 
+	iBit := idx & bmMask
+
 	var bmWord = a.Bitmaps[iBm]
 
-	return (bmWord>>iBit)&1 > 0
+	return (bmWord>>iBit)&1 != 0
 }
 
 // appendIndex add a index into index bitmap.
