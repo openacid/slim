@@ -8,6 +8,14 @@ import (
 )
 
 // Array32Index implements sparsely distributed index with bitmap.
+//
+// Performance note
+//
+// Has():          9~10 ns / call; 1 memory accesses
+// GetEltIndex(): 10~20 ns / call; 2 memory accesses
+//
+// Most time is spent on Bitmaps and Offsets access:
+// L1 or L2 cache assess costs 0.5 ns and 7 ns.
 type Array32Index struct {
 	prototype.Array32Storage
 }
@@ -19,7 +27,7 @@ var ErrIndexNotAscending = errors.New("index must be an ascending ordered slice"
 const (
 	// bmWidth defines how many bits for a bitmap word
 	bmWidth = uint32(64)
-	bmMask = uint32(63)
+	bmMask  = uint32(63)
 )
 
 // bmBit calculates bitamp word index and the bit index in the word.
@@ -76,19 +84,10 @@ func (a *Array32Index) GetEltIndex(idx uint32) (uint32, bool) {
 	return base + cnt1, true
 }
 
-// Has returns true if idx is in array, else return false
+// Has returns true if idx is in array, else return false.
 func (a *Array32Index) Has(idx uint32) bool {
 	iBm := idx / bmWidth
-
-	if iBm >= uint32(len(a.Bitmaps)) {
-		return false
-	}
-
-	iBit := idx & bmMask
-
-	var bmWord = a.Bitmaps[iBm]
-
-	return (bmWord>>iBit)&1 != 0
+	return iBm < uint32(len(a.Bitmaps)) && ((a.Bitmaps[iBm]>>(idx&bmMask))&1) != 0
 }
 
 // appendIndex add a index into index bitmap.
