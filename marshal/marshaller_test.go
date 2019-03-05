@@ -162,6 +162,126 @@ func TestU16(t *testing.T) {
 	}
 }
 
+func TestI64(t *testing.T) {
+
+	cases := []struct {
+		input    int64
+		want     string
+		wantsize int
+	}{
+		{0, "\x00\x00\x00\x00\x00\x00\x00\x00", 8},
+		{1, "\x01\x00\x00\x00\x00\x00\x00\x00", 8},
+		{0x1234, "\x34\x12\x00\x00\x00\x00\x00\x00", 8},
+		{int64(-1), "\xff\xff\xff\xff\xff\xff\xff\xff", 8},
+	}
+
+	m := I64{}
+
+	for i, c := range cases {
+		rst := m.Marshal(c.input)
+		if string(rst) != c.want {
+			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
+				i+1, c.input, []byte(c.want), rst)
+		}
+
+		n := m.GetMarshaledSize(rst)
+		if c.wantsize != n {
+			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+
+		n, i64 := m.Unmarshal(rst)
+		if c.input != i64 {
+			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.input, i64)
+		}
+		if c.wantsize != n {
+			t.Fatalf("%d-th: unmarshalled size: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+	}
+}
+
+func TestI32(t *testing.T) {
+
+	cases := []struct {
+		input    int32
+		want     string
+		wantsize int
+	}{
+		{0, "\x00\x00\x00\x00", 4},
+		{1, "\x01\x00\x00\x00", 4},
+		{0x1234, "\x34\x12\x00\x00", 4},
+		{int32(-1), "\xff\xff\xff\xff", 4},
+	}
+
+	m := I32{}
+
+	for i, c := range cases {
+		rst := m.Marshal(c.input)
+		if string(rst) != c.want {
+			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
+				i+1, c.input, []byte(c.want), rst)
+		}
+
+		n := m.GetMarshaledSize(rst)
+		if c.wantsize != n {
+			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+
+		n, i32 := m.Unmarshal(rst)
+		if c.input != i32 {
+			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.input, i32)
+		}
+		if c.wantsize != n {
+			t.Fatalf("%d-th: unmarshalled size: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+	}
+}
+
+func TestI16(t *testing.T) {
+
+	cases := []struct {
+		input    int16
+		want     string
+		wantsize int
+	}{
+		{0, "\x00\x00", 2},
+		{1, "\x01\x00", 2},
+		{0x1234, "\x34\x12", 2},
+		{int16(-1), "\xff\xff", 2},
+	}
+
+	m := I16{}
+
+	for i, c := range cases {
+		rst := m.Marshal(c.input)
+		if string(rst) != c.want {
+			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
+				i+1, c.input, []byte(c.want), rst)
+		}
+
+		n := m.GetMarshaledSize(rst)
+		if c.wantsize != n {
+			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+
+		n, i16 := m.Unmarshal(rst)
+		if c.input != i16 {
+			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.input, i16)
+		}
+		if c.wantsize != n {
+			t.Fatalf("%d-th: unmarshalled size: input: %v; want: %v; actual: %v",
+				i+1, c.input, c.wantsize, n)
+		}
+	}
+}
+
 func TestGetMarshaller(t *testing.T) {
 
 	cases := []struct {

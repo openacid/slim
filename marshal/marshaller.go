@@ -168,3 +168,81 @@ func (c U16) Unmarshal(b []byte) (int, interface{}) {
 func (c U16) GetMarshaledSize(b []byte) int {
 	return 2
 }
+
+// I64 converts int64 to slice of 4 bytes and back.
+type I64 struct{}
+
+// Marshal converts int64 to slice of 8 bytes.
+func (c I64) Marshal(d interface{}) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(d.(int64)))
+	return b
+}
+
+// Unmarshal converts slice of 4 bytes to int64.
+// It returns number bytes consumed and an int64.
+func (c I64) Unmarshal(b []byte) (int, interface{}) {
+
+	size := int(8)
+	s := b[:size]
+
+	d := binary.LittleEndian.Uint64(s)
+	return size, int64(d)
+}
+
+// GetMarshaledSize returns 8.
+func (c I64) GetMarshaledSize(b []byte) int {
+	return 8
+}
+
+// I32 converts int32 to slice of 4 bytes and back.
+type I32 struct{}
+
+// Marshal converts int32 to slice of 4 bytes.
+func (c I32) Marshal(d interface{}) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(d.(int32)))
+	return b
+}
+
+// Unmarshal converts slice of 4 bytes to int32.
+// It returns number bytes consumed and an int32.
+func (c I32) Unmarshal(b []byte) (int, interface{}) {
+
+	size := int(4)
+	s := b[:size]
+
+	d := binary.LittleEndian.Uint32(s)
+	return size, int32(d)
+}
+
+// GetMarshaledSize returns 4.
+func (c I32) GetMarshaledSize(b []byte) int {
+	return 4
+}
+
+// I16 converts int16 to slice of 4 bytes and back.
+type I16 struct{}
+
+// Marshal converts int16 to slice of 4 bytes.
+func (c I16) Marshal(d interface{}) []byte {
+	b := make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, uint16(d.(int16)))
+	return b
+}
+
+// Unmarshal converts slice of 2 bytes to int16.
+// It returns number bytes consumed and an int16.
+func (c I16) Unmarshal(b []byte) (int, interface{}) {
+
+	size := int(2)
+	s := b[:size]
+
+	d := binary.LittleEndian.Uint16(s)
+	return size, int16(d)
+}
+
+// GetMarshaledSize returns 2.
+func (c I16) GetMarshaledSize(b []byte) int {
+	return 2
+}

@@ -1,5 +1,5 @@
 # `grep -v` does not work on travis. No time to find out why -- xp 2019 Feb 22
-PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vender\|prototype\)")
+PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\)")
 
 # PKGS := github.com/openacid/slim/array \
 #         github.com/openacid/slim/bit \
@@ -9,6 +9,9 @@ PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vender\|pro
 #         github.com/openacid/slim/version
 
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
+
+# gofmt check vendor dir. we need to skip vendor manually
+GOFILES := $(shell find $(SRCDIRS) -not -path "*/vendor/*" -name "*.go")
 GO := go
 
 check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
@@ -50,4 +53,4 @@ errcheck:
 
 gofmt:
 	@echo Checking code is gofmted
-	@test -z "$(shell gofmt -s -l -d -e $(SRCDIRS) | tee /dev/stderr)"
+	@test -z "$(shell gofmt -s -l -d -e $(GOFILES) | tee /dev/stderr)"
