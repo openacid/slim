@@ -16,7 +16,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"unsafe"
 
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bit"
@@ -487,7 +486,7 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 
 func getChildIdx(ch *children, offset uint16) uint16 {
 	chNum := bit.PopCnt64Before(uint64(ch.Bitmap), uint32(offset))
-	return ch.Offset + uint16(chNum-1)
+	return ch.Offset + uint16(chNum)
 }
 
 func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
@@ -513,13 +512,13 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 	}
 
 	if (ch.Bitmap >> word & 1) == 1 {
-		eqIdx = int32(getChildIdx(ch, uint16(word+1)))
+		eqIdx = int32(getChildIdx(ch, uint16(word)))
 	}
 
 	ltStart := word & WordMask
 	for i := int8(ltStart) - 1; i >= 0; i-- {
 		if (ch.Bitmap >> uint8(i) & 1) == 1 {
-			ltIdx = int32(getChildIdx(ch, uint16(i+1)))
+			ltIdx = int32(getChildIdx(ch, uint16(i)))
 			ltLeaf = false
 			break
 		}
@@ -532,7 +531,7 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 
 	for i := rtStart; i < LeafWord; i++ {
 		if (ch.Bitmap >> i & 1) == 1 {
-			rtIdx = int32(getChildIdx(ch, uint16(i+1)))
+			rtIdx = int32(getChildIdx(ch, uint16(i)))
 			break
 		}
 	}
@@ -557,7 +556,7 @@ func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
 	}
 
 	if (ch.Bitmap >> word & 1) == 1 {
-		return int32(getChildIdx(ch, uint16(word+1)))
+		return int32(getChildIdx(ch, uint16(word)))
 	}
 
 	return -1
@@ -575,14 +574,19 @@ func (st *SlimTrie) leftMost(idx uint16) uint16 {
 }
 
 func (st *SlimTrie) rightMost(idx uint16) uint16 {
-	offset := uint16(unsafe.Sizeof(uint16(0)) * 8)
 	for {
+		// TODO performance: just call getChild directly
 		if !st.Children.Has(uint32(idx)) {
 			return idx
 		}
 
 		ch := st.getChild(idx)
-		idx = getChildIdx(ch, offset)
+
+		// count number of all children
+		// TODO use bit.PopCntXX without before.
+		chNum := bit.PopCnt64Before(uint64(ch.Bitmap), 64)
+		idx = ch.Offset + uint16(chNum-1)
+
 	}
 }
 
