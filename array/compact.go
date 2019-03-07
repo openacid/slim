@@ -32,13 +32,13 @@ func NewU16(indexes []uint32, elts []uint16) (*Array32, error) { return New(U16C
 //
 // The indexes parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func New(conv Converter, indexes []uint32, _elts interface{}) (ca *Array32, err error) {
+func New(conv Converter, indexes []uint32, elts interface{}) (ca *Array32, err error) {
 
 	ca = &Array32{
 		Converter: conv,
 	}
 
-	err = ca.Init(indexes, _elts)
+	err = ca.Init(indexes, elts)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +49,9 @@ func New(conv Converter, indexes []uint32, _elts interface{}) (ca *Array32, err 
 // Init initializes a compacted array from the slice type elts
 // the indexes parameter must be a ascending array of type unit32,
 // otherwise, return the ErrIndexNotAscending error
-func (a *Array32) Init(indexes []uint32, _elts interface{}) error {
+func (a *Array32) Init(indexes []uint32, elts interface{}) error {
 
-	rElts := reflect.ValueOf(_elts)
+	rElts := reflect.ValueOf(elts)
 	if rElts.Kind() != reflect.Slice {
 		panic("input is not a slice")
 	}

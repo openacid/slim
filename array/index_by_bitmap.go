@@ -20,6 +20,10 @@ type Array32Index struct {
 	prototype.Array32Storage
 }
 
+func (a *Array32Index) GetStorage() *prototype.Array32Storage {
+	return &a.Array32Storage
+}
+
 // ErrIndexNotAscending means indexes to initialize a Array must be in
 // ascending order.
 var ErrIndexNotAscending = errors.New("index must be an ascending ordered slice")
