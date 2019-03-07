@@ -425,26 +425,24 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 //
 // TODO a complete kv-map example
 func (st *SlimTrie) Get(key string) (eqVal interface{}) {
+
+	var word byte
 	eqIdx := int32(0)
 
 	// string to 4-bit words
 	lenWords := 2 * uint16(len(key))
 
 	for idx := uint16(0); ; {
-		var word byte
 		if lenWords == idx {
 			break
 		}
 
-		if idx&uint16(1) == uint16(1) {
-			word = (key[idx>>1] & 0x0f)
-		} else {
-			word = (key[idx>>1] & 0xf0) >> 4
-		}
+		// Get a 4-bit word from 8-bit words.
+		// Use arithmetic to avoid branch missing.
+		shift := 4 - (idx&1)*4
+		word = ((key[idx>>1] >> shift) & 0x0f)
 
-		ei := st.nextBranch(uint16(eqIdx), word)
-
-		eqIdx = ei
+		eqIdx = st.nextBranch(uint16(eqIdx), word)
 		if eqIdx == -1 {
 			break
 		}
@@ -480,8 +478,10 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 	return *(step.(*uint16))
 }
 
-func getChildIdx(ch *children, offset uint16) uint16 {
-	chNum := bit.PopCnt64Before(uint64(ch.Bitmap), uint32(offset))
+// getChildIdx returns the id of the specified child.
+// This function does not check if the specified child `offset` exists or not.
+func getChildIdx(ch *children, word uint16) uint16 {
+	chNum := bit.PopCnt64Before(uint64(ch.Bitmap), uint32(word))
 	return ch.Offset + uint16(chNum)
 }
 
