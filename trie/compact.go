@@ -433,23 +433,19 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 	for idx := uint16(0); ; {
 		var word byte
 		if lenWords == idx {
-			word = LeafWord
+			break
+		}
+
+		if idx&uint16(1) == uint16(1) {
+			word = (key[idx>>1] & 0x0f)
 		} else {
-			if idx&uint16(1) == uint16(1) {
-				word = (key[idx>>1] & 0x0f)
-			} else {
-				word = (key[idx>>1] & 0xf0) >> 4
-			}
+			word = (key[idx>>1] & 0xf0) >> 4
 		}
 
 		ei := st.nextBranch(uint16(eqIdx), word)
 
 		eqIdx = ei
 		if eqIdx == -1 {
-			break
-		}
-
-		if word == LeafWord {
 			break
 		}
 
@@ -540,15 +536,6 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 }
 
 func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
-
-	if word == LeafWord {
-		isLeaf := st.Leaves.Has(uint32(idx))
-		if isLeaf {
-			return int32(idx)
-		} else {
-			return -1
-		}
-	}
 
 	ch := st.getChild(idx)
 	if ch == nil {
