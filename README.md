@@ -3,7 +3,7 @@ based on the a great readme template
 https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 -->
 
-# Slim - space efficient data structures in Golang
+# Slim - surprisingly space efficient data types in Golang
 
 [![Travis-CI](https://api.travis-ci.org/openacid/slim.svg?branch=master)](https://travis-ci.org/openacid/slim)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/ah6hlsojleqg8j9i/branch/master?svg=true)](https://ci.appveyor.com/project/drmingdrmer/slim/branch/master)
@@ -11,36 +11,171 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 [![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
 [![Sourcegraph](https://sourcegraph.com/github.com/openacid/slim/-/badge.svg)](https://sourcegraph.com/github.com/openacid/slim?badge)
 
-Slim provides with in-memory data-structures and corresponding serialisation
-APIs for persisting them on-disk or transport.
+
+Slim is collection of surprisingly space efficient data types, with
+corresponding serialisation APIs to persisting them on-disk or for transport:
+
+-   `SlimIndex`: is a common index structure, building on top of `SlimTrie`.
+
+    [![GoDoc](https://godoc.org/github.com/openacid/slim/index?status.svg)](http://godoc.org/github.com/openacid/slim/index)
+
+-   `SlimTrie` is the underlying index data structure, evolved from [trie][].
+
+    [![GoDoc](https://godoc.org/github.com/openacid/slim/trie?status.svg)](http://godoc.org/github.com/openacid/slim/trie)
+
+    **Features**:
+
+    -   **Minimised**:
+        requires only **6 byte per key**(even smaller than a 8-byte pointer!!).
+
+    -   **Stable**:
+        memory consumption is stable in various scenario.
+        The Worst case converges to average consumption tightly.
+        See benchmark.
+
+    -   **Unlimited key size**:
+        You can have **VERY** long key, without bothering yourself with any
+        waste of memory(and money).
+        Do not waste your life writing another prefix compression`:)`.
+        ([aws-s3][] limits key size to 1024 bytes).
+        Memory consumption only relates to key count, **not to key size**.
+
+    -   **Ordered**:
+        like [btree][], keys are stored in alphabetic order, but faster to access.
+        Range-scan is supported!(under development)
+
+    -   **Fast**:
+        time complexity for a get is `O(log(n) + k); n: key count; k: key size`.
+        With comparison to [btree][], which is `O(log(n) * k)`(tree-like).
+        And golang-map is `O(k)`(hash-table-like).
+
+    -   **Ready for transport**:
+        `SlimTrie` has no gap between its in-memory layout and its on-disk
+        layout or transport presentation.
+        Unlike other data-structure such as the popular [red-black-tree][],
+        which is design for in-memory use only and requires additional work to
+        persisting it or transport it.
+
+    -   **Loosely coupled design**:
+        index logic and data storage is completely separated.
+        Piece of cake using `SlimTrie` to index huge data.
+
+
+<!-- TODO array -->
 
 <!-- TODO list data types -->
-<!-- TODO slim.Trie -->
 <!-- TODO other data types -->
 
 <!-- TODO toc -->
 
+## Memory overhead benchmark
+
+Comparison of `SlimTrie` and native golang-map.
+
+- Key size: 512 byte, different key count:
+
+| Key count | Key size | SlimTrie: byte/key | Map: byte/key |
+| --:       | --:      | --:                | --:           |
+| 13107     | 512      |  7.3               | 542.2         |
+| 16384     | 512      |  7.0               | 554.5         |
+| 21845     | 512      |  7.2               | 544.9         |
+
+- Key count: 16384, different key size:
+
+| Key count | Key size | SlimTrie: byte/key | Map: byte/key |
+| --:       | --:      | --:                | --:           |
+| 16384     | 512      | 7.0                | 554.5         |
+| 16384     | 1024     | 7.0                | 1066.5        |
+
+**SlimTrie memory does not increase when key become longer**.
+
+## Performance benchmark: get
+
+Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [btree][] by google.
+
+**Smaller is better**.
+
+![benchmark-get-png][]
+
+| Key count | Key size | SlimTrie | Map  | Btree |
+| ---:      | ---:     | ---:     | ---: | ---:  |
+| 1         | 1024     | 86.3     | 5.0  | 36.9  |
+| 10        | 1024     | 90.7     | 59.7 | 99.5  |
+| 100       | 1024     | 123.3    | 60.1 | 240.6 |
+| 1000      | 1024     | 157.0    | 63.5 | 389.6 |
+| 1000      | 512      | 152.6    | 40.0 | 363.0 |
+| 1000      | 256      | 152.3    | 28.8 | 332.3 |
+
+See: [benchmark-get-md][].
+
+It is about **60% faster** than the [btree][] by google.
+
 ## Status
 
--   `1.0.0`(Current):
+-   `0.1.0`(Current): index structure.
 
-## Synoposis
+## Synopsis
 
-<!-- TODO refine this synopsis -->
+### Use SlimIndex to index external data
+
 ```go
 package main
+import (
+        "fmt"
+        "strings"
+        "github.com/openacid/slim/index"
+)
 
-import "fmt"
-import "github.com/openacid/slim/bit"
+type Data string
+
+func (d Data) Read(offset int64, key string) (string, bool) {
+        kv := strings.Split(string(d)[offset:], ",")[0:2]
+        if kv[0] == key {
+                return kv[1], true
+        }
+        return "", false
+}
 
 func main() {
-	fmt.Println("Hello", bit.PopCnt64Before(3, 2))
+        // `data` is a sample external data.
+        // In order to let SlimIndex be able to read data, `data` should have
+        // a `Read` method:
+        //     Read(offset int64, key string) (string, bool)
+        data := Data("Aaron,1,Agatha,1,Al,2,Albert,3,Alexander,5,Alison,8")
+
+        // keyOffsets is a prebuilt index that stores key and its offset in data accordingly.
+        keyOffsets := []index.OffsetIndexItem{
+                {Key: "Aaron",     Offset: 0},
+                {Key: "Agatha",    Offset: 8},
+                {Key: "Al",        Offset: 17},
+                {Key: "Albert",    Offset: 22},
+                {Key: "Alexander", Offset: 31},
+                {Key: "Alison",    Offset: 43},
+        }
+
+        // Create an index
+        st, err := index.NewSlimIndex(keyOffsets, data)
+        if err != nil {
+                fmt.Println(err)
+        }
+
+        // Lookup by SlimIndex
+        v, found := st.Get2("Alison")
+        fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "Alison", found, v)
+
+        v, found = st.Get2("foo")
+        fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "foo", found, v)
+
+        // Output:
+        // key: "Alison"
+        //   found: true
+        //   value: "8"
+        // key: "foo"
+        //   found: false
+        //   value: ""
 }
 ```
 
-<!-- ## Performance and benchmark -->
-
-<!-- TODO  -->
 
 <!-- ## FAQ -->
 
@@ -52,7 +187,7 @@ func main() {
 go get github.com/openacid/slim
 ```
 
-All dependency packages for running it are already included in `vendor/` dir.
+All dependency packages are included in `vendor/` dir.
 
 
 <!-- TODO add FAQ -->
@@ -60,9 +195,9 @@ All dependency packages for running it are already included in `vendor/` dir.
 
 ### Prerequisites
 
--   **For users** (who'd like to build cool stuff based on `slim`):
+-   **For users** (who'd like to build cool stuff with `slim`):
 
-    **You do NOT need to install anything else before using it**.
+    **Nothing**.
 
 -   **For contributors** (who'd like to make `slim` better):
 
@@ -73,8 +208,7 @@ All dependency packages for running it are already included in `vendor/` dir.
 
     Max OS X:
     ```sh
-    brew install dep
-    brew install protobuf
+    brew install dep protobuf
     ```
 
     On other platforms you can read more:
@@ -84,15 +218,15 @@ All dependency packages for running it are already included in `vendor/` dir.
 
 ## Who are using slim
 
-<span style="display: inline-block; text-align: centre;"> <span> ![][baishancloud-favicon] </span> <br/> <span> [baishancloud][] </span> </span>
+<span> <span> ![][baishancloud-favicon] </span> <span> [baishancloud][] </span> </span>
 
-## Slim internal
+<!-- ## Slim internal -->
 
-### Built With
+<!-- ### Built With -->
 
-- [protobuf][] - Define on-disk data-structure and serialisation engine.
-- [semver][] - For versioning data-structure.
-- [dep][] - Dependency Management.
+<!-- - [protobuf][] - Define on-disk data-structure and serialisation engine. -->
+<!-- - [dep][] - Dependency Management. -->
+<!-- - [semver][] - For versioning data-structure. -->
 
 <!-- ### Directory Layout -->
 
@@ -123,19 +257,23 @@ All dependency packages for running it are already included in `vendor/` dir.
 
 ## Roadmap
 
--   [x] slimtrie
--   [ ] bitrie: 1 byte-per-key implementation.
--   [ ] balanced bitrie: which gives better worst-case performance.
--   [ ] generalised API as a drop-in replacement for map etc.
+-   [x] **2019 Mar 08**: SlimIndex, SlimTrie
+-   [ ] Marshalling support
+-   [ ] SlimArray
 
 
-## Feedback
+<!-- -   [ ] bitrie: 1 byte-per-key implementation. -->
+<!-- -   [ ] balanced bitrie: which gives better worst-case performance. -->
+<!-- -   [ ] generalised API as a drop-in replacement for map etc. -->
+
+
+## Feedback and contributions
 
 **Feedback and Contributions are greatly appreciated**.
 
 At this stage, the maintainers are most interested in feedback centred on:
 
--   Do you have a real life scenario that the tool supports well, or doesn't support at all?
+-   Do you have a real life scenario that `slim` supports well, or doesn't support at all?
 -   Do any of the APIs fulfil your needs well?
 
 Let us know by filing an issue, describing what you did or wanted to do, what
@@ -223,11 +361,11 @@ Or other type of [issue][new-issue].
 <!-- ordered by unicode of author's name -->
 <!-- leave 3 to 5 major jobs you have done in this project -->
 
-- ![][刘保海-img-sml] **[刘保海][]** *what you do*
-- ![][吴义谱-img-sml] **[吴义谱][]** *compacted-array,*
-- ![][张炎泼-img-sml] **[张炎泼][]** *slimtrie design,*
-- ![][李文博-img-sml] **[李文博][]** *trie-compressing,* *trie-search,*
-- ![][李树龙-img-sml] **[李树龙][]** *serialisation,*
+- ![][刘保海-img-sml] **[刘保海][]** *marshalling*
+- ![][吴义谱-img-sml] **[吴义谱][]** *array*
+- ![][张炎泼-img-sml] **[张炎泼][]** *slimtrie design*
+- ![][李文博-img-sml] **[李文博][]** *trie-compressing, trie-search*
+- ![][李树龙-img-sml] **[李树龙][]** *marshalling*
 
 
 See also the list of [contributors][] who participated in this project.
@@ -288,3 +426,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [feature-request]:  https://github.com/openacid/slim/issues/new?labels=feature&template=feature_request.md
 
 [new-issue]: https://github.com/openacid/slim/issues/new/choose
+
+<!-- benchmark -->
+
+[benchmark-get-png]: docs/trie/charts/search_existing.png
+[benchmark-get-md]: docs/trie/benchmark_result.md
+
+<!-- links to other resource -->
+
+<!-- reference -->
+
+[trie]: https://en.wikipedia.org/wiki/Trie
+[btree]: https://github.com/google/btree
+[aws-s3]: https://aws.amazon.com/s3/
+[red-black-tree]: https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
