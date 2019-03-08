@@ -1,10 +1,10 @@
-package trie_test
+package index_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/openacid/slim/trie"
+	"github.com/openacid/slim/index"
 )
 
 type testIndexData string
@@ -21,7 +21,7 @@ func TestSlimIndex(t *testing.T) {
 
 	data := testIndexData("Aaron,1,Agatha,1,Al,2,Albert,3,Alexander,5,Alison,8")
 
-	index := []trie.OffsetIndexItem{
+	keyOffsets := []index.OffsetIndexItem{
 		{Key: "Aaron", Offset: 0},
 		{Key: "Agatha", Offset: 8},
 		{Key: "Al", Offset: 17},
@@ -30,7 +30,7 @@ func TestSlimIndex(t *testing.T) {
 		{Key: "Alison", Offset: 43},
 	}
 
-	st, err := trie.NewSlimIndex(index, data)
+	st, err := index.NewSlimIndex(keyOffsets, data)
 	if err != nil {
 		t.Fatalf("expect no error but: %s", err)
 	}

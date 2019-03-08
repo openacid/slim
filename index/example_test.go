@@ -1,10 +1,10 @@
-package trie_test
+package index_test
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/openacid/slim/trie"
+	"github.com/openacid/slim/index"
 )
 
 type Data string
@@ -32,8 +32,8 @@ func Example() {
 	//     Read(offset int64, key string) (string, bool)
 	data := Data("Aaron,1,Agatha,1,Al,2,Albert,3,Alexander,5,Alison,8")
 
-	// `index` is a prebuilt index that stores key and its offset in data accordingly.
-	index := []trie.OffsetIndexItem{
+	// keyOffsets is a prebuilt index that stores key and its offset in data accordingly.
+	keyOffsets := []index.OffsetIndexItem{
 		{Key: "Aaron", Offset: 0},
 		{Key: "Agatha", Offset: 8},
 		{Key: "Al", Offset: 17},
@@ -42,9 +42,9 @@ func Example() {
 		{Key: "Alison", Offset: 43},
 	}
 
-	// Create a index `trie.SlimIndex`, which is simply a container of SlimTrie
+	// Create a index `index.SlimIndex`, which is simply a container of SlimTrie
 	// and its data.
-	st, err := trie.NewSlimIndex(index, data)
+	st, err := index.NewSlimIndex(keyOffsets, data)
 	if err != nil {
 		fmt.Println(err)
 	}
