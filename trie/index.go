@@ -7,9 +7,9 @@ import "github.com/openacid/slim/marshal"
 // A data letting SlimIndex to index it should implement this interface.
 type DataReader interface {
 	// Read value at offset, of `key`.
-	// Because SlimIndex does not store complete info of a key(to reduce memory
-	// consumption).
-	// Thus the offset SlimIndex returns might not be correct for a abscent key.
+	// Because the internal SlimTrie does not store complete info of a key(to
+	// reduce memory consumption).
+	// Thus the offset SlimTrie returns might not be correct for a abscent key.
 	// It is data providers' responsibility to check if the record at `offset`
 	// has the exact `key`.
 	Read(offset int64, key string) (string, bool)
@@ -25,7 +25,7 @@ type OffsetIndexItem struct {
 	Offset int64
 }
 
-// SlimIndex provides a commonly used index structure, it contains an SlimTrie
+// SlimIndex provides a commonly used index structure, it contains a SlimTrie
 // instance as index and data provider `DataReader`.
 type SlimIndex struct {
 	SlimTrie
@@ -53,9 +53,9 @@ func NewSlimIndex(index []OffsetIndexItem, dr DataReader) (*SlimIndex, error) {
 	return &SlimIndex{*st, dr}, nil
 }
 
-// Get returns the value of `key` which is found in `SlimIndex.DataReader`, and
-// a bool value indicate if the `key` is found or not.
-func (si *SlimIndex) Get(key string) (string, bool) {
+// Get2 returns the value of `key` which is found in `SlimIndex.DataReader`, and
+// a bool value indicating if the `key` is found or not.
+func (si *SlimIndex) Get2(key string) (string, bool) {
 	o := si.SlimTrie.Get(key)
 	if o == nil {
 		return "", false

@@ -2,7 +2,7 @@
 //
 // A slimtrie is a static, compressed Trie implementation.
 // It is created from a standard Trie by removing unnecessary Trie-node.
-// And it uses CompactedArray to store Trie.
+// And it uses SlimArray to store Trie.
 //
 // slimtrie memory overhead is about 6 byte per key, or less.
 //
@@ -38,10 +38,10 @@ const (
 //
 // It does not store full key information, but only just enough info for
 // locating a record.
-// That's why user must re-validate the record key after reading it from other
-// storage.
+// That's why an end user must re-validate the record key after reading it from
+// other storage.
 //
-// It stores three parts of information in three CompactedArray:
+// It stores three parts of information in three SlimArray:
 //
 // `Children` stores node branches and children position.
 // `Steps` stores the number of words to skip between a node and its parent.
@@ -68,7 +68,7 @@ var (
 	ErrTrieBranchValueOverflow = errors.New("compacted trie branch value must <=0x0f")
 )
 
-// childConv implements array.Converter and is the CompactedArray adaptor for
+// childConv implements array.Converter and is the SlimArray adaptor for
 // SlimTrie.Children .
 type childConv struct {
 	child *children
@@ -422,8 +422,6 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 // Because SlimTrie is a "index" but not a "kv-map", it does not stores complete
 // info of all keys.
 // SlimTrie tell you "WHERE IT POSSIBLY BE", rather than "IT IS JUST THERE".
-//
-// TODO a complete kv-map example
 func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 
 	var word byte

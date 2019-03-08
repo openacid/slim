@@ -50,10 +50,10 @@ func Example() {
 	}
 
 	// Lookup
-	v, found := st.Get("Alison")
+	v, found := st.Get2("Alison")
 	fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "Alison", found, v)
 
-	v, found = st.Get("foo")
+	v, found = st.Get2("foo")
 	fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "foo", found, v)
 
 	// Output:

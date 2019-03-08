@@ -53,7 +53,7 @@ func TestSlimIndex(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		rst, found := st.Get(c.input)
+		rst, found := st.Get2(c.input)
 		if rst != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, rst)
