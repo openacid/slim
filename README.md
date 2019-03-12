@@ -26,15 +26,15 @@ corresponding serialisation APIs to persisting them on-disk or for transport:
     **Features**:
 
     -   **Minimised**:
-        requires only **6 byte per key**(even smaller than a 8-byte pointer!!).
+        requires only **6 bytes per key**(even less than an 8-byte pointer!!).
 
     -   **Stable**:
-        memory consumption is stable in various scenario.
+        memory consumption is stable in various scenarios.
         The Worst case converges to average consumption tightly.
         See benchmark.
 
     -   **Unlimited key size**:
-        You can have **VERY** long key, without bothering yourself with any
+        You can have **VERY** long keys, without bothering yourself with any
         waste of memory(and money).
         Do not waste your life writing another prefix compression`:)`.
         ([aws-s3][] limits key size to 1024 bytes).
@@ -53,8 +53,8 @@ corresponding serialisation APIs to persisting them on-disk or for transport:
         `SlimTrie` has no gap between its in-memory layout and its on-disk
         layout or transport presentation.
         Unlike other data-structure such as the popular [red-black-tree][],
-        which is design for in-memory use only and requires additional work to
-        persisting it or transport it.
+        which is designed for in-memory use only and requires additional work to
+        persist or transport it.
 
     -   **Loosely coupled design**:
         index logic and data storage is completely separated.
