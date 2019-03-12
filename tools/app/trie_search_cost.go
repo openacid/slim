@@ -9,18 +9,57 @@ import (
 	"os"
 
 	"github.com/openacid/slim/trie"
+	"github.com/openacid/slim/trie/benchmark"
 )
 
 func main() {
-	trieCostTb := trie.MakeTrieSearchBench()
+	keyCntLenSearch()
+	keyCntIncrSearch()
+}
 
-	chart := trieCostTb.OutputToChart()
+func keyCntLenSearch() {
+	var runs = []benchmark.Config{
+		{KeyCnt: 1, KeyLen: 1024, ValLen: 2},
+		{KeyCnt: 10, KeyLen: 1024, ValLen: 2},
+		{KeyCnt: 100, KeyLen: 1024, ValLen: 2},
+		{KeyCnt: 1000, KeyLen: 1024, ValLen: 2},
+		{KeyCnt: 1000, KeyLen: 512, ValLen: 2},
+		{KeyCnt: 1000, KeyLen: 256, ValLen: 2},
+	}
+
+	trieCostTb := trie.MakeTrieSearchBench(runs)
+
+	chart := trie.OutputToChart(
+		"cost of trie search with existing & inexistent key",
+		trieCostTb)
 
 	fmt.Println(chart)
 
 	resultFn := "trie_search_cost.chart"
 	writeToFile(resultFn, chart)
 	fmt.Println("result also wirte to", resultFn)
+}
+
+func keyCntIncrSearch() {
+	kl := uint32(256)
+	vl := uint32(2)
+	var runs = []benchmark.Config{
+		{KeyCnt: 1, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 10, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 100, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 1000, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 2000, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 5000, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 10000, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 15000, KeyLen: kl, ValLen: vl},
+		{KeyCnt: 20000, KeyLen: kl, ValLen: vl},
+	}
+	trieCostTb := trie.MakeTrieSearchBench(runs)
+	chart := trie.OutputToChart(
+		"search benchmark - key count",
+		trieCostTb)
+
+	fmt.Println(chart)
 }
 
 // writeToFile wirte a string body to file.

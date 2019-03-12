@@ -14,22 +14,16 @@ import (
 
 	"github.com/google/btree"
 	"github.com/modood/table"
+	"github.com/openacid/slim/trie/benchmark"
 )
 
-// run defines the variable inputs struct in one benchmark.
-type run struct {
-	keyCnt int64
-	keyLen uint32
-	valLen uint32
-}
-
-var runs = []run{
-	{1, 1024, 2},
-	{10, 1024, 2},
-	{100, 1024, 2},
-	{1000, 1024, 2},
-	{1000, 512, 2},
-	{1000, 256, 2},
+var runs = []benchmark.Config{
+	{KeyCnt: 1, KeyLen: 1024, ValLen: 2},
+	{KeyCnt: 10, KeyLen: 1024, ValLen: 2},
+	{KeyCnt: 100, KeyLen: 1024, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 1024, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 512, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 256, ValLen: 2},
 }
 
 // testSrcType defines benchmark data source.
@@ -99,27 +93,11 @@ func (c testKVConv) GetMarshaledSize(b []byte) int {
 	return 8
 }
 
-// TrieSearchCost show the key search result with a constructed data.
-// Used to transfer benchmark result currently.
-// TrieSearchCost also defines the column titles when output to a chart.
-type TrieSearchCost struct {
-	KeyCnt                int64
-	KeyLen                uint32
-	ExsitingKeyNsPerOp    int64
-	NonexsitentKeyNsPerOp int64
-}
+// OutputToChart output the benchmark result to a chart.
+func OutputToChart(header string, body []*benchmark.SearchResult) string {
 
-// TrieSearchTable defines the row content when output TrieSearchCost to a chart.
-type TrieSearchTable struct {
-	Header string
-	Body   []*TrieSearchCost
-}
-
-// OutputToChart output the TrieSearchTable to a chart, and return a string result.
-func (tb *TrieSearchTable) OutputToChart() string {
-
-	body := table.Table(tb.Body)
-	return fmt.Sprintf("%s:\n%s\n", tb.Header, body)
+	b := table.Table(body)
+	return fmt.Sprintf("%s:\n%s\n", header, b)
 }
 
 func makeStrings(cnt, leng int64) ([]string, error) {
@@ -331,15 +309,15 @@ func sortedArraySearch(keys []string, values [][]byte, searchKey string) []byte 
 	return nil
 }
 
-// MakeTrieSearchBench benchmark the trie search with existing and nonexistent key, return the
-// result as a constructed data `TrieSearchTable`. Then you can get the benchmark result without
+// MakeTrieSearchBench benchmark the trie search with existing and nonexistent
+// key, return a slice of `TrieSearchCost`.
 // `go test ...` conveniently.
-func MakeTrieSearchBench() *TrieSearchTable {
+func MakeTrieSearchBench(runs []benchmark.Config) []*benchmark.SearchResult {
 
-	var trieSearchCostList = make([]*TrieSearchCost, len(runs))
+	var spents = make([]*benchmark.SearchResult, len(runs))
 
 	for i, r := range runs {
-		testSrc := makeTestSrc(r.keyCnt, r.keyLen, r.valLen)
+		testSrc := makeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
 
 		tr := testSrc.root
 
@@ -350,16 +328,13 @@ func MakeTrieSearchBench() *TrieSearchTable {
 		searchKey := fmt.Sprintf("%snot found", testSrc.searchKey)
 		nonexistentRst := testing.Benchmark(makeTrieBenchFunc(tr, searchKey))
 
-		trieSearchCostList[i] = &TrieSearchCost{
-			KeyCnt:                r.keyCnt,
-			KeyLen:                r.keyLen,
+		spents[i] = &benchmark.SearchResult{
+			KeyCnt:                r.KeyCnt,
+			KeyLen:                r.KeyLen,
 			ExsitingKeyNsPerOp:    existingRst.NsPerOp(),
 			NonexsitentKeyNsPerOp: nonexistentRst.NsPerOp(),
 		}
 	}
 
-	return &TrieSearchTable{
-		Header: "cost of trie search with existing & existent key",
-		Body:   trieSearchCostList,
-	}
+	return spents
 }
