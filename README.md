@@ -33,19 +33,19 @@ corresponding serialisation APIs to persisting them on-disk or for transport:
         The Worst case converges to average consumption tightly.
         See benchmark.
 
-    -   **Unlimited key size**:
+    -   **Unlimited key length**:
         You can have **VERY** long keys, without bothering yourself with any
         waste of memory(and money).
         Do not waste your life writing another prefix compression`:)`.
-        ([aws-s3][] limits key size to 1024 bytes).
-        Memory consumption only relates to key count, **not to key size**.
+        ([aws-s3][] limits key length to 1024 bytes).
+        Memory consumption only relates to key count, **not to key length**.
 
     -   **Ordered**:
         like [btree][], keys are stored in alphabetic order, but faster to access.
         Range-scan is supported!(under development)
 
     -   **Fast**:
-        time complexity for a get is `O(log(n) + k); n: key count; k: key size`.
+        time complexity for a get is `O(log(n) + k); n: key count; k: key length`.
         With comparison to [btree][], which is `O(log(n) * k)`(tree-like).
         And golang-map is `O(k)`(hash-table-like).
 
@@ -72,20 +72,24 @@ corresponding serialisation APIs to persisting them on-disk or for transport:
 
 Comparison of `SlimTrie` and native golang-map.
 
-- Key size: 512 byte, different key count:
+- Key length: 512 byte, different key count:
 
-| Key count | Key size | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:      | --:                | --:           |
-| 13107     | 512      |  7.3               | 542.2         |
-| 16384     | 512      |  7.0               | 554.5         |
-| 21845     | 512      |  7.2               | 544.9         |
+| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
+| --:       | --:        | --:                | --:           |
+| 13107     | 512        |  7.3               | 542.2         |
+| 16384     | 512        |  7.0               | 554.5         |
+| 21845     | 512        |  7.2               | 544.9         |
 
-- Key count: 16384, different key size:
+- Key count: 16384, different key length:
 
-| Key count | Key size | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:      | --:                | --:           |
-| 16384     | 512      | 7.0                | 554.5         |
-| 16384     | 1024     | 7.0                | 1066.5        |
+| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
+| --:       | --:        | --:                | --:           |
+| 16384     | 512        | 7.0                | 554.5         |
+| 16384     | 1024       | 7.0                | 1066.5        |
+
+Memory overhead per key is stable with different key length(`k`) and key count(`n`):
+
+![benchmark-mem-kn-png][]
 
 **SlimTrie memory does not increase when key become longer**.
 
@@ -97,18 +101,22 @@ Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [b
 
 ![benchmark-get-png][]
 
-| Key count | Key size | SlimTrie | Map  | Btree |
-| ---:      | ---:     | ---:     | ---: | ---:  |
-| 1         | 1024     | 86.3     | 5.0  | 36.9  |
-| 10        | 1024     | 90.7     | 59.7 | 99.5  |
-| 100       | 1024     | 123.3    | 60.1 | 240.6 |
-| 1000      | 1024     | 157.0    | 63.5 | 389.6 |
-| 1000      | 512      | 152.6    | 40.0 | 363.0 |
-| 1000      | 256      | 152.3    | 28.8 | 332.3 |
+| Key count | Key length | SlimTrie | Map  | Btree |
+| ---:      | ---:       | ---:     | ---: | ---:  |
+| 1         | 1024       | 86.3     | 5.0  | 36.9  |
+| 10        | 1024       | 90.7     | 59.7 | 99.5  |
+| 100       | 1024       | 123.3    | 60.1 | 240.6 |
+| 1000      | 1024       | 157.0    | 63.5 | 389.6 |
+| 1000      | 512        | 152.6    | 40.0 | 363.0 |
+| 1000      | 256        | 152.3    | 28.8 | 332.3 |
+
+It is about **2.6 times faster** than the [btree][] by google.
+
+Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
+
+![benchmark-get-kn-png][]
 
 See: [benchmark-get-md][].
-
-It is about **60% faster** than the [btree][] by google.
 
 ## Status
 
@@ -430,7 +438,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- benchmark -->
 
 [benchmark-get-png]: docs/trie/charts/search_existing.png
+[benchmark-get-kn-png]: docs/trie/charts/search_k_n.png
 [benchmark-get-md]: docs/trie/benchmark_result.md
+
+[benchmark-mem-kn-png]: docs/trie/charts/mem_usage_k_n.png
 
 <!-- links to other resource -->
 
