@@ -56,4 +56,6 @@ gofmt:
 	@test -z "$(shell gofmt -s -l -d -e $(GOFILES) | tee /dev/stderr)"
 
 toc:
+	# brew install nodejs
+	# npm install -g doctoc
 	doctoc --title ' ' --github README.md
