@@ -13,7 +13,26 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
 
 Slim is collection of surprisingly space efficient data types, with
-corresponding serialisation APIs to persisting them on-disk or for transport:
+corresponding serialisation APIs to persisting them on-disk or for transport.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+ 
+
+- [Memory overhead](#memory-overhead)
+- [Performance benchmark](#performance-benchmark)
+- [Status](#status)
+- [Synopsis](#synopsis)
+  - [Use SlimIndex to index external data](#use-slimindex-to-index-external-data)
+- [Getting started](#getting-started)
+- [Who are using slim](#who-are-using-slim)
+- [Roadmap](#roadmap)
+- [Feedback and contributions](#feedback-and-contributions)
+- [Authors](#authors)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 -   `SlimIndex`: is a common index structure, building on top of `SlimTrie`.
 
@@ -68,7 +87,7 @@ corresponding serialisation APIs to persisting them on-disk or for transport:
 
 <!-- TODO toc -->
 
-## Memory overhead benchmark
+## Memory overhead
 
 Comparison of `SlimTrie` and native golang-map.
 
@@ -93,7 +112,7 @@ Memory overhead per key is stable with different key length(`k`) and key count(`
 
 **SlimTrie memory does not increase when key become longer**.
 
-## Performance benchmark: get
+## Performance benchmark
 
 Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [btree][] by google.
 
@@ -189,7 +208,7 @@ func main() {
 
 ## Getting started
 
-### Install
+**Install**
 
 ```sh
 go get github.com/openacid/slim
@@ -201,7 +220,7 @@ All dependency packages are included in `vendor/` dir.
 <!-- TODO add FAQ -->
 <!-- TODO add serialisation explanation, on-disk data structure etc. -->
 
-### Prerequisites
+**Prerequisites**
 
 -   **For users** (who'd like to build cool stuff with `slim`):
 
