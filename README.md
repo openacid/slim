@@ -19,6 +19,7 @@ corresponding serialisation APIs to persisting them on-disk or for transport.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
  
 
+- [Why slim](#why-slim)
 - [Memory overhead](#memory-overhead)
 - [Performance benchmark](#performance-benchmark)
 - [Status](#status)
@@ -33,6 +34,17 @@ corresponding serialisation APIs to persisting them on-disk or for transport.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Why slim
+
+As data on internet keeps increasing exponentially,
+the capacity gap between memory and disk becomes greater.
+
+Most of the time, a data itself does not need to be loaded into expensive main memory.
+Only the much more important information, WHERE-A-DATA-IS, deserve a seat in
+main memory.
+
+This is what `slim` does, keeps as little information as possible in main
+memory, as a minimised index of huge amount external data.
 
 -   `SlimIndex`: is a common index structure, building on top of `SlimTrie`.
 
