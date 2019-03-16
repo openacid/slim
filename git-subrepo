@@ -835,6 +835,9 @@ fetch_remote()
     local dir="$4"
 
     local localtag=refs/tags/_gitsubrepo/$prefix
+    # git tag does not allow leading dot. E.g.: "refs/tags/_gitsubrepo/a/.b"
+    localtag="${localtag//./-}"
+
     local mes="$url $ref -> $localtag"
 
     dd "Start fetching $mes"
