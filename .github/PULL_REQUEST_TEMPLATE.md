@@ -1,53 +1,43 @@
 # Description
 
-Please include a summary of the change and which issue is fixed. Please also
-include relevant motivation and context. List any dependencies that are required
-for this change.
+<!-- Please include a summary of the change.
+     Please also include relevant motivation and context.
+     List any dependencies that are required for this change.
+-->
 
 Fixes # (issue)
 
 ## Type of change
 
-Please delete options that are not relevant.
+<!-- Please delete options that are not relevant. -->
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-- [ ] Refactoring
-- [ ] Document changes
-- [ ] Test changes
+- **Bug fix**         <!-- non-breaking change which fixes an issue -->
+- **New feature**     <!-- non-breaking change which adds functionality -->
+- **Breaking change** <!-- fix or feature that would cause existing functionality to not work as expected -->
+- **Refactoring**
+- **Document changes**
+- **Test changes**
 
 
 ## How to reproduce it (if it is a bug-fix PR)
 
+- Env: x86-64, CentOS-7.4, kernel-3.10.0, GO-1.10.1, etc.
+
+- Step-1:
+- Step-2:
+
+
 ## The solution (to fix a bug, implement a new feature etc.)
 
-# How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Provide
-instructions so we can reproduce. Please also list any relevant details for your
-test configuration
-
-- [ ] Test A
-- [ ] Test B
-
-**Test Configuration**:
-* Firmware version:
-* Hardware:
-* OS:
-* Language:
-* Toolchain:
-* SDK:
 
 # Checklist:
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-
+- [ ] **Style**:       My code follows the **style guidelines** of this project
+- [ ] **Self-review**: I have performed a **self-review** of my own code
+- [ ] **Comment**:     I have **commented my code**, particularly in hard-to-understand areas
+- [ ] **Doc**:         I have made corresponding changes to the **documentation**
+- [ ] **No-warnings**: My changes generate **no new warnings**
+- [ ] **Add-test**:    I have added **tests** that prove my fix is effective or that my feature works
+- [ ] **Pass**:        New and existing **unit tests pass** locally with my changes
+- [ ] **Dep**:         Any **dependent** changes have been merged and published in downstream modules
