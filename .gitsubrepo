@@ -4,8 +4,11 @@
 [ base: ]
 
 git-subrepo                      baishancloud/git-subrepo master git-subrepo
+
+.github/CODE_OF_CONDUCT.md       openacid/gh-config       master .github/CODE_OF_CONDUCT.md
 .github/ISSUE_TEMPLATE           openacid/gh-config       master .github/ISSUE_TEMPLATE
 .github/PULL_REQUEST_TEMPLATE.md openacid/gh-config       master .github/PULL_REQUEST_TEMPLATE.md
+
 .travis.yml                      openacid/gh-config       master travis/travis-go.yml
 
 

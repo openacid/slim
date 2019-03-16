@@ -58,4 +58,4 @@ gofmt:
 toc:
 	# brew install nodejs
 	# npm install -g doctoc
-	doctoc --title ' ' --github README.md
+	doctoc --title '' --github README.md
