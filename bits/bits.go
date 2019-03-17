@@ -1,5 +1,5 @@
-// Package bit provides efficient bitwise operations on integer numbers.
-package bit
+// Package bits provides efficient bitwise operations on integer numbers.
+package bits
 
 const (
 	m64_1 uint64 = 0x5555555555555555 // binary: 0101...

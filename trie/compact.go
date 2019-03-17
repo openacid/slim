@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/openacid/slim/array"
-	"github.com/openacid/slim/bit"
+	"github.com/openacid/slim/bits"
 	"github.com/openacid/slim/serialize"
 	"github.com/openacid/slim/strhelper"
 )
@@ -479,7 +479,7 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 // getChildIdx returns the id of the specified child.
 // This function does not check if the specified child `offset` exists or not.
 func getChildIdx(ch *children, word uint16) uint16 {
-	chNum := bit.PopCnt64Before(uint64(ch.Bitmap), uint32(word))
+	chNum := bits.PopCnt64Before(uint64(ch.Bitmap), uint32(word))
 	return ch.Offset + uint16(chNum)
 }
 
@@ -568,8 +568,8 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 		ch := st.getChild(idx)
 
 		// count number of all children
-		// TODO use bit.PopCntXX without before.
-		chNum := bit.PopCnt64Before(uint64(ch.Bitmap), 64)
+		// TODO use bits.PopCntXX without before.
+		chNum := bits.PopCnt64Before(uint64(ch.Bitmap), 64)
 		idx = ch.Offset + uint16(chNum-1)
 
 	}

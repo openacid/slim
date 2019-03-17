@@ -1,10 +1,10 @@
-package bit_test
+package bits_test
 
 import (
 	gobits "math/bits"
 	"testing"
 
-	"github.com/openacid/slim/bit"
+	"github.com/openacid/slim/bits"
 )
 
 func TestPopCnt64Before(t *testing.T) {
@@ -30,7 +30,7 @@ func TestPopCnt64Before(t *testing.T) {
 	}
 	for _, c := range cases {
 		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bit.PopCnt64Before(n, iBit)
+		actN := bits.PopCnt64Before(n, iBit)
 		if actN != expN {
 			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
 		}
@@ -60,7 +60,7 @@ func TestPopCnt32Before(t *testing.T) {
 	}
 	for _, c := range cases {
 		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bit.PopCnt32Before(n, iBit)
+		actN := bits.PopCnt32Before(n, iBit)
 		if actN != expN {
 			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
 		}
@@ -89,7 +89,7 @@ func TestPopCnt16Before(t *testing.T) {
 	}
 	for _, c := range cases {
 		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bit.PopCnt16Before(n, iBit)
+		actN := bits.PopCnt16Before(n, iBit)
 		if actN != expN {
 			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
 		}
@@ -117,7 +117,7 @@ func TestPopCnt8Before(t *testing.T) {
 	}
 	for _, c := range cases {
 		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bit.PopCnt8Before(n, iBit)
+		actN := bits.PopCnt8Before(n, iBit)
 		if actN != expN {
 			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
 		}
@@ -129,7 +129,7 @@ func BenchmarkPopCnt64Before(b *testing.B) {
 	var n uint64 = 12334567890
 
 	for i := 0; i < b.N; i++ {
-		bit.PopCnt64Before(n+uint64(i), uint32(i)%64)
+		bits.PopCnt64Before(n+uint64(i), uint32(i)%64)
 	}
 }
 
@@ -138,21 +138,21 @@ func BenchmarkPopCnt32Before(b *testing.B) {
 	var n uint32 = 123345678
 
 	for i := 0; i < b.N; i++ {
-		bit.PopCnt32Before(n+uint32(i), uint32(i)%32)
+		bits.PopCnt32Before(n+uint32(i), uint32(i)%32)
 	}
 }
 
 func BenchmarkPopCnt16(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
-		bit.PopCnt16Before(uint16(i), uint32(i)%16)
+		bits.PopCnt16Before(uint16(i), uint32(i)%16)
 	}
 }
 
 func BenchmarkPopCnt8(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
-		bit.PopCnt8Before(uint8(i), uint32(i)%8)
+		bits.PopCnt8Before(uint8(i), uint32(i)%8)
 	}
 }
 
