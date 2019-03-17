@@ -84,8 +84,8 @@ func (a *Array32Index) GetEltIndex(idx uint32) (uint32, bool) {
 	}
 
 	base := a.Offsets[iBm]
-	cnt1 := bits.OnesCount64Before(bmWord, iBit)
-	return base + cnt1, true
+	cnt1 := bits.OnesCount64Before(bmWord, uint(iBit))
+	return base + uint32(cnt1), true
 }
 
 // Has returns true if idx is in array, else return false.

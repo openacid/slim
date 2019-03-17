@@ -52,18 +52,18 @@ const (
 //
 // This algorithm has more introduction in:
 // https://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
-func OnesCount64Before(n uint64, iBit uint32) uint32 {
+func OnesCount64Before(n uint64, iBit uint) int {
 	n = n & ((uint64(1) << iBit) - 1)
 
 	n -= (n >> 1) & m64_1                // put count of each 2 bits into those 2 bits
 	n = (n & m64_2) + ((n >> 2) & m64_2) // put count of each 4 bits into those 4 bits
 	n = (n + (n >> 4)) & m64_4           // put count of each 8 bits into thoes 8 bits
 
-	return uint32((n * h64_8) >> 56) // returns left 8 bits of x + (x << 8) + (x << 16) + (x<<24) + ...
+	return int((n * h64_8) >> 56) // returns left 8 bits of x + (x << 8) + (x << 16) + (x<<24) + ...
 }
 
 // OnesCount32Before is similar to OnesCount64Before, except it accepts a uint32 `n`
-func OnesCount32Before(n uint32, iBit uint32) int {
+func OnesCount32Before(n uint32, iBit uint) int {
 	n = n & ((uint32(1) << iBit) - 1)
 
 	n -= (n >> 1) & m32_1
@@ -76,7 +76,7 @@ func OnesCount32Before(n uint32, iBit uint32) int {
 // OnesCount16Before is similar to OnesCount64Before, except it accepts a uint16 `n`
 // instead of a uint64 `n`.
 // It is about 2.5% faster than `OnesCount64Before(uint16(i), iBit)`.
-func OnesCount16Before(n uint16, iBit uint32) int {
+func OnesCount16Before(n uint16, iBit uint) int {
 	n = n & ((uint16(1) << iBit) - 1)
 
 	n -= (n >> 1) & m16_1
@@ -89,7 +89,7 @@ func OnesCount16Before(n uint16, iBit uint32) int {
 
 // OnesCount8Before is similar to OnesCount64Before, except it accepts a uint8 `n`
 // It is about 5% faster than `OnesCount64Before(uint16(i), iBit)`.
-func OnesCount8Before(n uint8, iBit uint32) int {
+func OnesCount8Before(n uint8, iBit uint) int {
 	n = n & ((uint8(1) << iBit) - 1)
 
 	n -= (n >> 1) & m8_1

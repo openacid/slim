@@ -10,8 +10,8 @@ import (
 func TestOnesCount64Before(t *testing.T) {
 	var cases = []struct {
 		n    uint64
-		iBit uint32
-		expN uint32
+		iBit uint
+		expN int
 	}{
 		{0, 0, 0},                    // 0b00
 		{1, 0, 0},                    // 0b01
@@ -40,7 +40,7 @@ func TestOnesCount64Before(t *testing.T) {
 func TestOnesCount32Before(t *testing.T) {
 	var cases = []struct {
 		n    uint32
-		iBit uint32
+		iBit uint
 		expN int
 	}{
 		{0, 0, 0},            // 0b00
@@ -70,7 +70,7 @@ func TestOnesCount32Before(t *testing.T) {
 func TestOnesCount16Before(t *testing.T) {
 	var cases = []struct {
 		n    uint16
-		iBit uint32
+		iBit uint
 		expN int
 	}{
 		{0, 0, 0},        // 0b00
@@ -99,7 +99,7 @@ func TestOnesCount16Before(t *testing.T) {
 func TestOnesCount8Before(t *testing.T) {
 	var cases = []struct {
 		n    uint8
-		iBit uint32
+		iBit uint
 		expN int
 	}{
 		{0, 0, 0},    // 0b00
@@ -129,7 +129,7 @@ func BenchmarkOnesCount64Before(b *testing.B) {
 	var n uint64 = 12334567890
 
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount64Before(n+uint64(i), uint32(i)%64)
+		bits.OnesCount64Before(n+uint64(i), uint(i)%64)
 	}
 }
 
@@ -138,21 +138,21 @@ func BenchmarkOnesCount32Before(b *testing.B) {
 	var n uint32 = 123345678
 
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount32Before(n+uint32(i), uint32(i)%32)
+		bits.OnesCount32Before(n+uint32(i), uint(i)%32)
 	}
 }
 
 func BenchmarkOnesCount16Before(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount16Before(uint16(i), uint32(i)%16)
+		bits.OnesCount16Before(uint16(i), uint(i)%16)
 	}
 }
 
 func BenchmarkOnesCount8Before(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount8Before(uint8(i), uint32(i)%8)
+		bits.OnesCount8Before(uint8(i), uint(i)%8)
 	}
 }
 

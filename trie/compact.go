@@ -479,7 +479,7 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 // getChildIdx returns the id of the specified child.
 // This function does not check if the specified child `offset` exists or not.
 func getChildIdx(ch *children, word uint16) uint16 {
-	chNum := bits.OnesCount64Before(uint64(ch.Bitmap), uint32(word))
+	chNum := bits.OnesCount64Before(uint64(ch.Bitmap), uint(word))
 	return ch.Offset + uint16(chNum)
 }
 
