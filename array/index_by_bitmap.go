@@ -84,7 +84,7 @@ func (a *Array32Index) GetEltIndex(idx uint32) (uint32, bool) {
 	}
 
 	base := a.Offsets[iBm]
-	cnt1 := bits.PopCnt64Before(bmWord, iBit)
+	cnt1 := bits.OnesCount64Before(bmWord, iBit)
 	return base + cnt1, true
 }
 

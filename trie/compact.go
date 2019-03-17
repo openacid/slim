@@ -479,7 +479,7 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 // getChildIdx returns the id of the specified child.
 // This function does not check if the specified child `offset` exists or not.
 func getChildIdx(ch *children, word uint16) uint16 {
-	chNum := bits.PopCnt64Before(uint64(ch.Bitmap), uint32(word))
+	chNum := bits.OnesCount64Before(uint64(ch.Bitmap), uint32(word))
 	return ch.Offset + uint16(chNum)
 }
 
@@ -569,7 +569,7 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 
 		// count number of all children
 		// TODO use bits.PopCntXX without before.
-		chNum := bits.PopCnt64Before(uint64(ch.Bitmap), 64)
+		chNum := bits.OnesCount64Before(uint64(ch.Bitmap), 64)
 		idx = ch.Offset + uint16(chNum-1)
 
 	}
