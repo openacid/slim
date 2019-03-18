@@ -66,9 +66,9 @@ func NewSlimIndex(index []OffsetIndexItem, dr DataReader) (*SlimIndex, error) {
 	return &SlimIndex{*st, dr}, nil
 }
 
-// Get2 returns the value of `key` which is found by `SlimIndex.DataReader`, and
+// Get returns the value of `key` which is found by `SlimIndex.DataReader`, and
 // a bool value indicating if the `key` is found or not.
-func (si *SlimIndex) Get2(key string) (string, bool) {
+func (si *SlimIndex) Get(key string) (string, bool) {
 	o := si.SlimTrie.Get(key)
 	if o == nil {
 		return "", false

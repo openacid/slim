@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/openacid/slim/trie"
 	"github.com/openacid/slim/trie/benchmark"
 )
 
@@ -27,9 +26,9 @@ func keyCntLenSearch() {
 		{KeyCnt: 1000, KeyLen: 256, ValLen: 2},
 	}
 
-	trieCostTb := trie.MakeTrieSearchBench(runs)
+	trieCostTb := benchmark.MakeTrieSearchBench(runs)
 
-	chart := trie.OutputToChart(
+	chart := benchmark.OutputToChart(
 		"cost of trie search with existing & inexistent key",
 		trieCostTb)
 
@@ -41,8 +40,8 @@ func keyCntLenSearch() {
 }
 
 func keyCntIncrSearch() {
-	kl := uint32(256)
-	vl := uint32(2)
+	kl := int(256)
+	vl := int(2)
 	var runs = []benchmark.Config{
 		{KeyCnt: 1, KeyLen: kl, ValLen: vl},
 		{KeyCnt: 10, KeyLen: kl, ValLen: vl},
@@ -54,8 +53,8 @@ func keyCntIncrSearch() {
 		{KeyCnt: 15000, KeyLen: kl, ValLen: vl},
 		{KeyCnt: 20000, KeyLen: kl, ValLen: vl},
 	}
-	trieCostTb := trie.MakeTrieSearchBench(runs)
-	chart := trie.OutputToChart(
+	trieCostTb := benchmark.MakeTrieSearchBench(runs)
+	chart := benchmark.OutputToChart(
 		"search benchmark - key count",
 		trieCostTb)
 

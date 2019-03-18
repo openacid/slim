@@ -12,13 +12,13 @@ package trie
 
 import (
 	"bytes"
-	"encoding/binary"
-	"errors"
 	"io"
 	"os"
 
+	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bits"
+	"github.com/openacid/slim/marshal"
 	"github.com/openacid/slim/serialize"
 	"github.com/openacid/slim/strhelper"
 )
@@ -49,14 +49,9 @@ const (
 //
 // TODO add scenario.
 type SlimTrie struct {
-	Children array.Array32
-	Steps    array.Array32
-	Leaves   array.Array32
-}
-
-type children struct {
-	Bitmap uint16
-	Offset uint16
+	Children array.ArrayU32
+	Steps    array.ArrayU16
+	Leaves   array.Array
 }
 
 var (
@@ -68,87 +63,19 @@ var (
 	ErrTrieBranchValueOverflow = errors.New("compacted trie branch value must <=0x0f")
 )
 
-// childConv implements array.Converter and is the SlimArray adaptor for
-// SlimTrie.Children .
-type childConv struct {
-	child *children
-}
-
-// Marshal
-func (c childConv) Marshal(d interface{}) []byte {
-	child := d.(*children)
-
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint16(b[:2], child.Bitmap)
-	binary.LittleEndian.PutUint16(b[2:4], child.Offset)
-
-	return b
-}
-
-func (c childConv) Unmarshal(b []byte) (int, interface{}) {
-
-	// Optimization: Use a containing struct to store and return it as return
-	// value.
-	// Note that this is not safe with concurrent uses of the `childConv` in
-	// more than one go-routine.
-	//
-	// Avoid creating an object: mem-alloc is expensive
-	//
-	//	   var d interface{}
-	//	   d = &children{
-	//		   Bitmap: binary.LittleEndian.Uint16(b[:2]),
-	//		   Offset: binary.LittleEndian.Uint16(b[2:4]),
-	//	   }
-	//	   return 4, d
-	//
-	// Avoid the following, it is even worse, converting struct `d` to
-	// `interface{}` results in another mem-alloc:
-	//
-	//     d := children{
-	//		   Bitmap: binary.LittleEndian.Uint16(b[:2]),
-	//		   Offset: binary.LittleEndian.Uint16(b[2:4]),
-	//     }
-	//     return 4, d
-
-	c.child.Bitmap = binary.LittleEndian.Uint16(b[:2])
-	c.child.Offset = binary.LittleEndian.Uint16(b[2:4])
-
-	return 4, c.child
-}
-
-func (c childConv) GetMarshaledSize(b []byte) int {
-	return 4
-}
-
-type stepConv struct {
-	step *uint16
-}
-
-func (c stepConv) Marshal(d interface{}) []byte {
-	b := make([]byte, 2)
-	binary.LittleEndian.PutUint16(b, *(d.(*uint16)))
-	return b
-}
-
-func (c stepConv) Unmarshal(b []byte) (int, interface{}) {
-	*c.step = binary.LittleEndian.Uint16(b[:2])
-	return 2, c.step
-}
-
-func (c stepConv) GetMarshaledSize(b []byte) int {
-	return 2
-}
-
 // NewSlimTrie create an empty SlimTrie.
-// Argument c implements a array.Converter to convert user data to serialized
+// Argument m implements a marshal.Marshaler to convert user data to serialized
 // bytes and back.
-func NewSlimTrie(c array.Converter, keys []string, values interface{}) (*SlimTrie, error) {
-	var step uint16
+// Leave it to nil if element in values are size fixed type.
+//	   int is not of fixed size.
+//	   struct { X int64; Y int32; } hax fixed size.
+func NewSlimTrie(m marshal.Marshaler, keys []string, values interface{}) (*SlimTrie, error) {
 	st := &SlimTrie{
-		Children: array.Array32{Converter: childConv{child: &children{}}},
-		Steps:    array.Array32{Converter: stepConv{step: &step}},
-		Leaves:   array.Array32{Converter: c},
+		Children: array.ArrayU32{},
+		Steps:    array.ArrayU16{},
+		Leaves:   array.Array{},
 	}
+	st.Leaves.EltMarshaler = m
 
 	if keys != nil {
 		return st, st.load(keys, values)
@@ -159,8 +86,8 @@ func NewSlimTrie(c array.Converter, keys []string, values interface{}) (*SlimTri
 
 // load Loads keys and values and builds a SlimTrie.
 //
-// values must be a slice of data-type which is compatible with
-// SlimTrie.Leaves.Converter .
+// values must be a slice of data-type of fixed size or compatible with
+// SlimTrie.Leaves.Marshaler.
 func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
 	ks := strhelper.SliceToBitWords(keys, 4)
 	return st.loadBytes(ks, values)
@@ -174,8 +101,8 @@ func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
 	}
 
 	trie.Squash()
-	st.LoadTrie(trie)
-	return nil
+	err = st.LoadTrie(trie)
+	return err
 }
 
 // LoadTrie compress a standard Trie and store compressed data in it.
@@ -184,14 +111,15 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 		return
 	}
 
-	childIndex, childData := []uint32{}, []*children{}
-	stepIndex, stepData := []uint32{}, []*uint16{}
-	leafIndex, leafData := []uint32{}, []interface{}{}
+	childIndex, childData := []int32{}, []uint32{}
+	stepIndex := []int32{}
+	stepElts := []uint16{}
+	leafIndex, leafData := []int32{}, []interface{}{}
 
 	tq := make([]*Node, 0, 256)
 	tq = append(tq, root)
 
-	for nID := uint32(0); ; {
+	for nID := int32(0); ; {
 		if len(tq) == 0 {
 			break
 		}
@@ -214,7 +142,7 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 
 		if node.Step > 1 {
 			stepIndex = append(stepIndex, nID)
-			stepData = append(stepData, &node.Step)
+			stepElts = append(stepElts, node.Step)
 
 		}
 
@@ -230,12 +158,7 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 				bitmap |= uint16(1) << (uint16(b) & WordMask)
 			}
 
-			ch := &children{
-				Bitmap: bitmap,
-				Offset: offset,
-			}
-
-			childData = append(childData, ch)
+			childData = append(childData, (uint32(offset)<<16)+uint32(bitmap))
 		}
 
 		for _, b := range brs {
@@ -253,14 +176,14 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 		return err
 	}
 
-	err = st.Steps.Init(stepIndex, stepData)
+	err = st.Steps.Init(stepIndex, stepElts)
 	if err != nil {
 		return err
 	}
 
 	err = st.Leaves.Init(leafIndex, leafData)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failure init leaves")
 	}
 
 	return nil
@@ -320,18 +243,18 @@ func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
 
 	if ltIdx != -1 {
 		if ltLeaf {
-			ltVal = st.Leaves.Get(uint32(ltIdx))
+			ltVal, _ = st.Leaves.Get(ltIdx)
 		} else {
 			rmIdx := st.rightMost(uint16(ltIdx))
-			ltVal = st.Leaves.Get(uint32(rmIdx))
+			ltVal, _ = st.Leaves.Get(int32(rmIdx))
 		}
 	}
 	if gtIdx != -1 {
 		fmIdx := st.leftMost(uint16(gtIdx))
-		gtVal = st.Leaves.Get(uint32(fmIdx))
+		gtVal, _ = st.Leaves.Get(int32(fmIdx))
 	}
 	if eqIdx != -1 {
-		eqVal = st.Leaves.Get(uint32(eqIdx))
+		eqVal, _ = st.Leaves.Get(eqIdx)
 	}
 
 	return
@@ -395,18 +318,18 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 
 	if ltIdx != -1 {
 		if ltLeaf {
-			ltVal = st.Leaves.Get(uint32(ltIdx))
+			ltVal, _ = st.Leaves.Get(ltIdx)
 		} else {
 			rmIdx := st.rightMost(uint16(ltIdx))
-			ltVal = st.Leaves.Get(uint32(rmIdx))
+			ltVal, _ = st.Leaves.Get(int32(rmIdx))
 		}
 	}
 	if gtIdx != -1 {
 		fmIdx := st.leftMost(uint16(gtIdx))
-		gtVal = st.Leaves.Get(uint32(fmIdx))
+		gtVal, _ = st.Leaves.Get(int32(fmIdx))
 	}
 	if eqIdx != -1 {
-		eqVal = st.Leaves.Get(uint32(eqIdx))
+		eqVal, _ = st.Leaves.Get(eqIdx)
 	}
 
 	return
@@ -454,40 +377,40 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 	}
 
 	if eqIdx != -1 {
-		eqVal = st.Leaves.Get(uint32(eqIdx))
+		eqVal, _ = st.Leaves.Get(eqIdx)
 	}
 
 	return
 }
 
-func (st *SlimTrie) getChild(idx uint16) *children {
-	cval, found := st.Children.Get2(uint32(idx))
+func (st *SlimTrie) getChild(idx uint16) (bitmap uint16, offset uint16, found bool) {
+	cval, found := st.Children.Get(int32(idx))
 	if found {
-		return cval.(*children)
+		return uint16(cval), uint16(cval >> 16), true
 	}
-	return nil
+	return 0, 0, false
 }
 
 func (st *SlimTrie) getStep(idx uint16) uint16 {
-	step := st.Steps.Get(uint32(idx))
-	if step == nil {
-		return uint16(1)
+	step, found := st.Steps.Get(int32(idx))
+	if found {
+		return step
 	}
-	return *(step.(*uint16))
+	return uint16(1)
 }
 
 // getChildIdx returns the id of the specified child.
 // This function does not check if the specified child `offset` exists or not.
-func getChildIdx(ch *children, word uint16) uint16 {
-	chNum := bits.OnesCount64Before(uint64(ch.Bitmap), uint(word))
-	return ch.Offset + uint16(chNum)
+func getChildIdx(bm uint16, of uint16, word uint16) uint16 {
+	chNum := bits.OnesCount64Before(uint64(bm), uint(word))
+	return of + uint16(chNum)
 }
 
 func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
 	ltIdx, eqIdx, rtIdx = int32(-1), int32(-1), int32(-1)
 	ltLeaf = false
 
-	isLeaf := st.Leaves.Has(uint32(idx))
+	isLeaf := st.Leaves.Has(int32(idx))
 
 	if word == LeafWord {
 		if isLeaf {
@@ -500,19 +423,19 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 		}
 	}
 
-	ch := st.getChild(idx)
-	if ch == nil {
+	bm, of, found := st.getChild(idx)
+	if !found {
 		return
 	}
 
-	if (ch.Bitmap >> word & 1) == 1 {
-		eqIdx = int32(getChildIdx(ch, uint16(word)))
+	if (bm >> word & 1) == 1 {
+		eqIdx = int32(getChildIdx(bm, of, uint16(word)))
 	}
 
 	ltStart := word & WordMask
 	for i := int8(ltStart) - 1; i >= 0; i-- {
-		if (ch.Bitmap >> uint8(i) & 1) == 1 {
-			ltIdx = int32(getChildIdx(ch, uint16(i)))
+		if (bm >> uint8(i) & 1) == 1 {
+			ltIdx = int32(getChildIdx(bm, of, uint16(i)))
 			ltLeaf = false
 			break
 		}
@@ -524,8 +447,8 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 	}
 
 	for i := rtStart; i < LeafWord; i++ {
-		if (ch.Bitmap >> i & 1) == 1 {
-			rtIdx = int32(getChildIdx(ch, uint16(i)))
+		if (bm >> i & 1) == 1 {
+			rtIdx = int32(getChildIdx(bm, of, uint16(i)))
 			break
 		}
 	}
@@ -535,13 +458,13 @@ func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx
 
 func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
 
-	ch := st.getChild(idx)
-	if ch == nil {
+	bm, of, found := st.getChild(idx)
+	if !found {
 		return -1
 	}
 
-	if (ch.Bitmap >> word & 1) == 1 {
-		return int32(getChildIdx(ch, uint16(word)))
+	if (bm >> word & 1) == 1 {
+		return int32(getChildIdx(bm, of, uint16(word)))
 	}
 
 	return -1
@@ -549,28 +472,25 @@ func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
 
 func (st *SlimTrie) leftMost(idx uint16) uint16 {
 	for {
-		if st.Leaves.Has(uint32(idx)) {
+		if st.Leaves.Has(int32(idx)) {
 			return idx
 		}
 
-		ch := st.getChild(idx)
-		idx = ch.Offset
+		_, idx, _ = st.getChild(idx)
 	}
 }
 
 func (st *SlimTrie) rightMost(idx uint16) uint16 {
 	for {
-		// TODO performance: just call getChild directly
-		if !st.Children.Has(uint32(idx)) {
+		bm, of, found := st.getChild(idx)
+		if !found {
 			return idx
 		}
 
-		ch := st.getChild(idx)
-
 		// count number of all children
 		// TODO use bits.PopCntXX without before.
-		chNum := bits.OnesCount64Before(uint64(ch.Bitmap), 64)
-		idx = ch.Offset + uint16(chNum-1)
+		chNum := bits.OnesCount64Before(uint64(bm), 64)
+		idx = of + uint16(chNum-1)
 
 	}
 }

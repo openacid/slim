@@ -51,6 +51,9 @@ func (c testKVConv) Unmarshal(b []byte) (int, interface{}) {
 	return int(c.EltSize), elt
 }
 
+func (c testKVConv) GetSize(d interface{}) int {
+	return int(c.EltSize)
+}
 func (c testKVConv) GetMarshaledSize(b []byte) int {
 	return int(c.EltSize)
 }

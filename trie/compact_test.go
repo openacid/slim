@@ -3,13 +3,15 @@ package trie
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/kr/pretty"
 	"github.com/openacid/errors"
-	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/marshal"
 	"github.com/openacid/slim/strhelper"
 )
 
@@ -42,6 +44,9 @@ func (c TestIntConv) Unmarshal(b []byte) (int, interface{}) {
 	return size, int(d)
 }
 
+func (c TestIntConv) GetSize(d interface{}) int {
+	return 8
+}
 func (c TestIntConv) GetMarshaledSize(b []byte) int {
 	return 8
 }
@@ -88,7 +93,7 @@ func TestMaxKeys(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -97,10 +102,10 @@ func TestMaxKeys(t *testing.T) {
 	if ctrie.Children.Cnt != 1+16+256+4096 {
 		t.Fatalf("children cnt should be %d", 1+16+256+4096)
 	}
-	if ctrie.Steps.Cnt != uint32(0) {
+	if ctrie.Steps.Cnt != int32(0) {
 		t.Fatalf("Steps cnt should be %d", mx)
 	}
-	if ctrie.Leaves.Cnt != uint32(mx) {
+	if ctrie.Leaves.Cnt != int32(mx) {
 		t.Fatalf("leaves cnt should be %d", mx)
 	}
 }
@@ -143,19 +148,19 @@ func TestMaxNode(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
 
-	if ctrie.Children.Cnt != uint32(mx-1) {
+	if ctrie.Children.Cnt != int32(mx-1) {
 		t.Fatalf("children cnt should be %d, but: %d", mx-1, ctrie.Children.Cnt)
 	}
-	if ctrie.Steps.Cnt != uint32(0) {
+	if ctrie.Steps.Cnt != int32(0) {
 		t.Fatalf("Steps cnt should be %d", mx)
 	}
-	if ctrie.Leaves.Cnt != uint32(mx) {
+	if ctrie.Leaves.Cnt != int32(mx) {
 		t.Fatalf("leaves cnt should be %d", mx)
 	}
 }
@@ -245,7 +250,7 @@ func TestSlimTrie(t *testing.T) {
 		ctrie, _ := NewSlimTrie(TestIntConv{}, nil, nil)
 		err := ctrie.LoadTrie(trie)
 		if err != nil {
-			t.Error("compact trie error:", err)
+			t.Fatalf("compact trie error: %+v", err)
 		}
 
 		for _, ex := range c.expected {
@@ -323,13 +328,33 @@ var (
 		"cde",
 	}
 	searchValues = []int{0, 1, 2, 3, 4, 5, 6, 7}
+
+	searchCases = []struct {
+		key      string
+		expected searchRst
+	}{
+		{"ab", searchRst{nil, nil, 0}},
+		{"abc", searchRst{nil, 0, 1}},
+		{"abcde", searchRst{1, nil, 2}},
+		{"abd", searchRst{1, 2, 3}},
+		{"ac", searchRst{nil, nil, 0}},
+		{"acb", searchRst{nil, nil, 0}},
+		{"acd", searchRst{1, 2, 3}},
+		{"adc", searchRst{nil, 0, 1}},
+		{"bcd", searchRst{4, 5, 6}},
+		{"bce", searchRst{4, 5, 6}},
+		{"c", searchRst{6, nil, 7}},
+		{"cde", searchRst{6, 7, nil}},
+		{"cfe", searchRst{6, 7, nil}},
+		{"cff", searchRst{6, 7, nil}},
+	}
 )
 
 func TestNewSlimTrieWithKVs(t *testing.T) {
 
 	st, err := NewSlimTrie(TestIntConv{}, []string{"ab", "cd"}, []int{1, 2})
 	if err != nil {
-		t.Error("expect no error but:", err)
+		t.Fatalf("expect no error but: %v", err)
 	}
 
 	v := st.Get("ab")
@@ -350,27 +375,7 @@ func TestNewSlimTrie(t *testing.T) {
 		t.Error("compact trie error:", err)
 	}
 
-	var cases = []struct {
-		key      string
-		expected searchRst
-	}{
-		{"ab", searchRst{nil, nil, 0}},
-		{"abc", searchRst{nil, 0, 1}},
-		{"abcde", searchRst{1, nil, 2}},
-		{"abd", searchRst{1, 2, 3}},
-		{"ac", searchRst{nil, nil, 0}},
-		{"acb", searchRst{nil, nil, 0}},
-		{"acd", searchRst{1, 2, 3}},
-		{"adc", searchRst{nil, 0, 1}},
-		{"bcd", searchRst{4, 5, 6}},
-		{"bce", searchRst{4, 5, 6}},
-		{"c", searchRst{6, nil, 7}},
-		{"cde", searchRst{6, 7, nil}},
-		{"cfe", searchRst{6, 7, nil}},
-		{"cff", searchRst{6, 7, nil}},
-	}
-
-	for _, c := range cases {
+	for _, c := range searchCases {
 
 		lt, eq, gt := ctrie.Search(c.key)
 		rst := searchRst{lt, eq, gt}
@@ -496,7 +501,7 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	trie, _ := NewTrie(key, value)
 
-	ctrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err := ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -516,7 +521,7 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 	}
 
 	// unmarshal
-	rCtrie, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	rCtrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err = rCtrie.unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -554,13 +559,13 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	trie1, _ := NewTrie(key, value1)
 	trie2, _ := NewTrie(key, value2)
 
-	ctrie1, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	ctrie1, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err := ctrie1.LoadTrie(trie1)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
 
-	ctrie2, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	ctrie2, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	err = ctrie2.LoadTrie(trie2)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -604,7 +609,7 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rCtrie1, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	rCtrie1, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	_, err = rCtrie1.unmarshalAt(reader, offset1)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -612,7 +617,7 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 
 	checkSlimTrie(ctrie1, rCtrie1, t)
 
-	rCtrie2, _ := NewSlimTrie(array.U16Conv{}, nil, nil)
+	rCtrie2, _ := NewSlimTrie(marshal.U16{}, nil, nil)
 	_, err = rCtrie2.unmarshalAt(reader, offset2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -621,18 +626,73 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	checkSlimTrie(ctrie2, rCtrie2, t)
 }
 
+func TestSlimTrieBinaryCompatible(t *testing.T) {
+
+	// Made from:
+	// st, err := NewSlimTrie(TestIntConv{}, searchKeys, searchValues)
+	// b := &bytes.Buffer{}
+	// _, err := st.marshal(b)
+	// fmt.Printf("%#v\n", b.Bytes())
+	marshalled := []byte{0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x27, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x0, 0x8, 0x7, 0x12, 0x2, 0xef, 0x1, 0x1a, 0x1, 0x0, 0x22,
+		0x1c, 0x40, 0x0, 0x1, 0x0, 0xe, 0x0, 0x2, 0x0, 0x18, 0x0, 0x5, 0x0, 0x40,
+		0x0, 0x7, 0x0, 0x40, 0x0, 0x8, 0x0, 0x40, 0x0, 0x9, 0x0, 0x40, 0x0, 0xa,
+		0x0, 0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x19, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x0, 0x8, 0x7, 0x12, 0x2, 0x9c, 0xf, 0x1a, 0x1, 0x0, 0x22,
+		0xe, 0x4, 0x0, 0x3, 0x0, 0x5, 0x0, 0x2, 0x0, 0x2, 0x0, 0x2, 0x0, 0x2, 0x0,
+		0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4b, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x8, 0x8, 0x12, 0x2, 0xf8, 0xf, 0x1a, 0x1, 0x0, 0x22, 0x40,
+		0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x0}
+
+	st1, err := NewSlimTrie(TestIntConv{}, searchKeys, searchValues)
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
+	}
+
+	b := bytes.NewBuffer(marshalled)
+	st2, err := NewSlimTrie(TestIntConv{}, nil, nil)
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
+	}
+	err = st2.unmarshal(b)
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
+	}
+
+	if !reflect.DeepEqual(st1, st2) {
+		fmt.Println(pretty.Diff(st1, st2))
+		t.Fatalf("unmarshaled is different")
+	}
+
+	for _, c := range searchCases {
+
+		lt, eq, gt := st2.Search(c.key)
+		rst := searchRst{lt, eq, gt}
+		if !reflect.DeepEqual(c.expected, rst) {
+			t.Fatal("key: ", c.key, "expected value: ", c.expected, "rst: ", rst)
+		}
+	}
+}
+
 func checkSlimTrie(ctrie, rCtrie *SlimTrie, t *testing.T) {
-	if !proto.Equal(&(ctrie.Children.Array32Storage), &(rCtrie.Children.Array32Storage)) {
+	if !proto.Equal(&(ctrie.Children.Array32), &(rCtrie.Children.Array32)) {
 		t.Fatalf("Children not the same")
 	}
 
-	if !proto.Equal(&(ctrie.Steps.Array32Storage), &(rCtrie.Steps.Array32Storage)) {
+	if !proto.Equal(&(ctrie.Steps.Array32), &(rCtrie.Steps.Array32)) {
 		t.Fatalf("Step not the same")
 	}
 
-	// TODO need to check non-Array32Storage fields, in future there is
+	// TODO need to check non-Array32 fields, in future there is
 	// user-defined underlaying data structure
-	// if !proto.Equal(&ctrie.Leaves.Array32Storage, &rCtrie.Leaves.Array32Storage) {
+	// if !proto.Equal(&ctrie.Leaves.Array32, &rCtrie.Leaves.Array32) {
 	if !proto.Equal(&ctrie.Leaves, &rCtrie.Leaves) {
 		t.Fatalf("Leaves not the same")
 	}
