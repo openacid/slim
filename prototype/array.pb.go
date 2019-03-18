@@ -18,66 +18,66 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type Array32Storage struct {
+type Array32 struct {
 	// compatiblity gurantee:
 	//     reserved field number: 1, 2, 3, 4
 	//     reserved field name: Cnt, Bitmaps, Offsets, Elts
 	//
-	Cnt                  uint32   `protobuf:"varint,1,opt,name=Cnt,proto3" json:"Cnt,omitempty"`
+	Cnt                  int32    `protobuf:"varint,1,opt,name=Cnt,proto3" json:"Cnt,omitempty"`
 	Bitmaps              []uint64 `protobuf:"varint,2,rep,packed,name=Bitmaps,proto3" json:"Bitmaps,omitempty"`
-	Offsets              []uint32 `protobuf:"varint,3,rep,packed,name=Offsets,proto3" json:"Offsets,omitempty"`
+	Offsets              []int32  `protobuf:"varint,3,rep,packed,name=Offsets,proto3" json:"Offsets,omitempty"`
 	Elts                 []byte   `protobuf:"bytes,4,opt,name=Elts,proto3" json:"Elts,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Array32Storage) Reset()         { *m = Array32Storage{} }
-func (m *Array32Storage) String() string { return proto.CompactTextString(m) }
-func (*Array32Storage) ProtoMessage()    {}
-func (*Array32Storage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_array_8f197c61c8740174, []int{0}
+func (m *Array32) Reset()         { *m = Array32{} }
+func (m *Array32) String() string { return proto.CompactTextString(m) }
+func (*Array32) ProtoMessage()    {}
+func (*Array32) Descriptor() ([]byte, []int) {
+	return fileDescriptor_array_7797c25f6abb7d2e, []int{0}
 }
-func (m *Array32Storage) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Array32Storage.Unmarshal(m, b)
+func (m *Array32) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Array32.Unmarshal(m, b)
 }
-func (m *Array32Storage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Array32Storage.Marshal(b, m, deterministic)
+func (m *Array32) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Array32.Marshal(b, m, deterministic)
 }
-func (dst *Array32Storage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Array32Storage.Merge(dst, src)
+func (dst *Array32) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Array32.Merge(dst, src)
 }
-func (m *Array32Storage) XXX_Size() int {
-	return xxx_messageInfo_Array32Storage.Size(m)
+func (m *Array32) XXX_Size() int {
+	return xxx_messageInfo_Array32.Size(m)
 }
-func (m *Array32Storage) XXX_DiscardUnknown() {
-	xxx_messageInfo_Array32Storage.DiscardUnknown(m)
+func (m *Array32) XXX_DiscardUnknown() {
+	xxx_messageInfo_Array32.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Array32Storage proto.InternalMessageInfo
+var xxx_messageInfo_Array32 proto.InternalMessageInfo
 
-func (m *Array32Storage) GetCnt() uint32 {
+func (m *Array32) GetCnt() int32 {
 	if m != nil {
 		return m.Cnt
 	}
 	return 0
 }
 
-func (m *Array32Storage) GetBitmaps() []uint64 {
+func (m *Array32) GetBitmaps() []uint64 {
 	if m != nil {
 		return m.Bitmaps
 	}
 	return nil
 }
 
-func (m *Array32Storage) GetOffsets() []uint32 {
+func (m *Array32) GetOffsets() []int32 {
 	if m != nil {
 		return m.Offsets
 	}
 	return nil
 }
 
-func (m *Array32Storage) GetElts() []byte {
+func (m *Array32) GetElts() []byte {
 	if m != nil {
 		return m.Elts
 	}
@@ -85,20 +85,20 @@ func (m *Array32Storage) GetElts() []byte {
 }
 
 func init() {
-	proto.RegisterType((*Array32Storage)(nil), "Array32Storage")
+	proto.RegisterType((*Array32)(nil), "Array32")
 }
 
-func init() { proto.RegisterFile("array.proto", fileDescriptor_array_8f197c61c8740174) }
+func init() { proto.RegisterFile("array.proto", fileDescriptor_array_7797c25f6abb7d2e) }
 
-var fileDescriptor_array_8f197c61c8740174 = []byte{
-	// 138 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_array_7797c25f6abb7d2e = []byte{
+	// 131 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0x2c, 0x2a, 0x4a,
-	0xac, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x57, 0xca, 0xe2, 0xe2, 0x73, 0x04, 0x71, 0x8d, 0x8d,
-	0x82, 0x4b, 0xf2, 0x8b, 0x12, 0xd3, 0x53, 0x85, 0x04, 0xb8, 0x98, 0x9d, 0xf3, 0x4a, 0x24, 0x18,
-	0x15, 0x18, 0x35, 0x78, 0x83, 0x40, 0x4c, 0x21, 0x09, 0x2e, 0x76, 0xa7, 0xcc, 0x92, 0xdc, 0xc4,
-	0x82, 0x62, 0x09, 0x26, 0x05, 0x66, 0x0d, 0x96, 0x20, 0x18, 0x17, 0x24, 0xe3, 0x9f, 0x96, 0x56,
-	0x9c, 0x5a, 0x52, 0x2c, 0xc1, 0xac, 0xc0, 0xac, 0xc1, 0x1b, 0x04, 0xe3, 0x0a, 0x09, 0x71, 0xb1,
-	0xb8, 0xe6, 0x94, 0x14, 0x4b, 0xb0, 0x28, 0x30, 0x6a, 0xf0, 0x04, 0x81, 0xd9, 0x4e, 0xdc, 0x51,
-	0x9c, 0x60, 0x4b, 0x4b, 0x2a, 0x0b, 0x52, 0x93, 0xd8, 0xc0, 0x4c, 0x63, 0x40, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x41, 0xac, 0x2c, 0xe0, 0x8e, 0x00, 0x00, 0x00,
+	0xac, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x57, 0x4a, 0xe6, 0x62, 0x77, 0x04, 0x71, 0x8d, 0x8d,
+	0x84, 0x04, 0xb8, 0x98, 0x9d, 0xf3, 0x4a, 0x24, 0x18, 0x15, 0x18, 0x35, 0x58, 0x83, 0x40, 0x4c,
+	0x21, 0x09, 0x2e, 0x76, 0xa7, 0xcc, 0x92, 0xdc, 0xc4, 0x82, 0x62, 0x09, 0x26, 0x05, 0x66, 0x0d,
+	0x96, 0x20, 0x18, 0x17, 0x24, 0xe3, 0x9f, 0x96, 0x56, 0x9c, 0x5a, 0x52, 0x2c, 0xc1, 0xac, 0xc0,
+	0xac, 0xc1, 0x1a, 0x04, 0xe3, 0x0a, 0x09, 0x71, 0xb1, 0xb8, 0xe6, 0x94, 0x14, 0x4b, 0xb0, 0x28,
+	0x30, 0x6a, 0xf0, 0x04, 0x81, 0xd9, 0x4e, 0xdc, 0x51, 0x9c, 0x60, 0xdb, 0x4a, 0x2a, 0x0b, 0x52,
+	0x93, 0xd8, 0xc0, 0x4c, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf9, 0x2f, 0x3f, 0x60, 0x87,
+	0x00, 0x00, 0x00,
 }

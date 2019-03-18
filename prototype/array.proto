@@ -2,14 +2,14 @@ syntax = "proto3";
 
 option go_package = "prototype";
 
-message Array32Storage {
+message Array32 {
     // compatiblity gurantee:
     //     reserved field number: 1, 2, 3, 4
     //     reserved field name: Cnt, Bitmaps, Offsets, Elts
     //
-    uint32 Cnt              = 1; // current number of elts
+    int32 Cnt               = 1; // current number of elts
 
     repeated uint64 Bitmaps = 2; // bitmaps[] about which index has elt
-    repeated uint32 Offsets = 3; // index offset in `elts` for bitmap[i]
+    repeated int32  Offsets = 3; // index offset in `elts` for bitmap[i]
     bytes  Elts             = 4;
 }
