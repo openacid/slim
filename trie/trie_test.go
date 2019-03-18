@@ -311,6 +311,64 @@ func TestTrieNew(t *testing.T) {
 	}
 }
 
+func TestNewError(t *testing.T) {
+
+	cases := []struct {
+		keys    [][]byte
+		vals    interface{}
+		wanterr error
+	}{
+		{nil, nil, nil},
+		{[][]byte{}, nil, ErrValuesNotSlice},
+		{nil, []int{}, nil},
+		{nil, 1, nil},
+		{[][]byte{{1}}, 1, ErrValuesNotSlice},
+		{[][]byte{}, []int{1}, ErrKVLenNotMatch},
+		{[][]byte{{1}}, []int{}, ErrKVLenNotMatch},
+		{[][]byte{{1, 2}, {1}}, []int{1, 2}, ErrKeyOutOfOrder},
+		{[][]byte{{1, 2}, {1, 1}}, []int{1, 2}, ErrKeyOutOfOrder},
+		{[][]byte{{1, 2}, {1, 2}}, []int{1, 2}, ErrDuplicateKeys},
+	}
+
+	for i, c := range cases {
+		_, err := NewTrie(c.keys, c.vals)
+		if c.wanterr != errors.Cause(err) {
+			t.Fatalf("%d-th: input: keys:%v; vals: %v; wanterr: %v; actual: %v",
+				i+1, c.keys, c.vals, c.wanterr, err)
+		}
+	}
+}
+
+func TestAppend(t *testing.T) {
+
+	tr, err := NewTrie([][]byte{{2, 3}, {2, 5}}, []int{1, 2})
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
+	}
+
+	cases := []struct {
+		keys    []byte
+		wanterr error
+	}{
+		{[]byte{1}, ErrKeyOutOfOrder},
+		{[]byte{1, 2}, ErrKeyOutOfOrder},
+		{[]byte{2}, ErrKeyOutOfOrder},
+		{[]byte{2, 2}, ErrKeyOutOfOrder},
+		{[]byte{2, 3}, ErrDuplicateKeys},
+		{[]byte{2, 4}, ErrKeyOutOfOrder},
+		{[]byte{2, 5}, ErrDuplicateKeys},
+		{[]byte{2, 6}, nil},
+	}
+
+	for i, c := range cases {
+		_, err := tr.Append(c.keys, 1, false, false)
+		if c.wanterr != errors.Cause(err) {
+			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
+				i+1, c.keys, c.wanterr, err)
+		}
+	}
+}
+
 func TestRangeTrie(t *testing.T) {
 
 	var srcs = []struct {

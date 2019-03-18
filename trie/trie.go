@@ -41,6 +41,12 @@ const leafBranch = -1
 // `values` must be a slice.
 func NewTrie(keys [][]byte, values interface{}) (root *Node, err error) {
 
+	root = &Node{Children: make(map[int]*Node), Step: 1}
+
+	if keys == nil {
+		return
+	}
+
 	valSlice, ok := typehelper.ToSlice(values)
 	if !ok {
 		err = ErrValuesNotSlice
@@ -52,13 +58,11 @@ func NewTrie(keys [][]byte, values interface{}) (root *Node, err error) {
 		return
 	}
 
-	root = &Node{Children: make(map[int]*Node), Step: 1}
-
 	for i := 0; i < len(keys); i++ {
 		key := keys[i]
 		_, err = root.Append(key, valSlice[i], false, false)
 		if err != nil {
-			err = errors.Wrapf(err, "key: %s", key)
+			err = errors.Wrapf(err, "trie failed to add kvs")
 			return
 		}
 	}
@@ -264,6 +268,11 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 	for j = 0; j < len(key); j++ {
 		br := int(key[j])
 		if node.Children[br] == nil {
+			l := len(node.Branches)
+			if l > 0 && node.Branches[l-1] > br {
+				err = errors.Wrapf(ErrKeyOutOfOrder, "append %q", key)
+				return
+			}
 			break
 		}
 		node = node.Children[br]
@@ -278,11 +287,9 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 
 		if len(node.Branches) != 0 {
 			// means this key is a prefix of an existed key, so key's adding order is not ascending.
-			err = ErrKeyOutOfOrder
+			err = errors.Wrapf(ErrKeyOutOfOrder, "append %q is a prefix", key)
 			return
 		}
-
-		// must return before
 	}
 
 	commonNode := node
@@ -318,7 +325,8 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 		if r.NodeCnt > MaxNodeCnt {
 			delete(commonNode.Children, newBranch)
 			commonNode.removeBranch(newBranch)
-			return nil, ErrTooManyTrieNodes
+			err = errors.Wrapf(ErrTooManyTrieNodes, "append %q", key)
+			return nil, err
 		}
 	}
 
