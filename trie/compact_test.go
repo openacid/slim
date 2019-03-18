@@ -324,6 +324,23 @@ var (
 	searchValues = []int{0, 1, 2, 3, 4, 5, 6, 7}
 )
 
+func TestNewSlimTrieWithKVs(t *testing.T) {
+
+	st, err := NewSlimTrie(TestIntConv{}, []string{"ab", "cd"}, []int{1, 2})
+	if err != nil {
+		t.Error("expect no error but:", err)
+	}
+
+	v := st.Get("ab")
+	if v == nil {
+		t.Fatalf("%q should be found", "ab")
+	}
+
+	if v.(int) != 1 {
+		t.Fatalf("v should be 2, but: %v", v)
+	}
+}
+
 func TestNewSlimTrie(t *testing.T) {
 
 	ctrie, _ := NewSlimTrie(TestIntConv{}, nil, nil)
