@@ -1,4 +1,4 @@
-package array
+package array_test
 
 import (
 	"fmt"
@@ -6,10 +6,16 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/marshal"
 )
 
-func newByteArray32(eSize int, index []uint32, elts [][]byte) (*Array32, error) {
-	return New(ByteConv{EltSize: eSize}, index, elts)
+func newByteArray32(eSize int, index []int32, elts [][]byte) (*array.Array, error) {
+	a := &array.Array{}
+	a.EltMarshaler = marshal.Bytes{Size: eSize}
+	err := a.Init(index, elts)
+	return a, err
 }
 
 func readRss() uint64 {
@@ -31,13 +37,16 @@ func makeData(eltSize int, cnt uint32) [][]byte {
 	return eltsData
 }
 
-func calcMem(cnt int, indexes []uint32, eltSize int, elts [][]byte) uint64 {
+func calcMem(cnt int, indexes []int32, eltSize int, elts [][]byte) uint64 {
 	rss1 := readRss()
 
-	arr := []*Array32{}
+	arr := []*array.Array{}
 
 	for i := 0; i < cnt; i++ {
-		a32, _ := newByteArray32(eltSize, indexes, elts)
+		a32, err := newByteArray32(eltSize, indexes, elts)
+		if err != nil {
+			panic(err)
+		}
 		arr = append(arr, a32)
 	}
 
@@ -47,12 +56,12 @@ func calcMem(cnt int, indexes []uint32, eltSize int, elts [][]byte) uint64 {
 	return rss2 - rss1
 }
 
-func makeIndexes(maxIdx uint32, factor float64) []uint32 {
+func makeIndexes(maxIdx int32, factor float64) []int32 {
 	rnd := rand.New(rand.NewSource(time.Now().Unix()))
 
-	indexes := make([]uint32, 0)
+	indexes := make([]int32, 0)
 
-	for i := uint32(0); i < maxIdx; i++ {
+	for i := int32(0); i < maxIdx; i++ {
 		if rnd.Float64() < factor {
 			indexes = append(indexes, i)
 		}
@@ -61,7 +70,7 @@ func makeIndexes(maxIdx uint32, factor float64) []uint32 {
 	return indexes
 }
 
-func calcMemOverHead(factor float64, maxIdx uint32, eltSize int) (uint32, float64) {
+func calcMemOverHead(factor float64, maxIdx int32, eltSize int) (uint32, float64) {
 	cnt := 1024
 
 	indexes := makeIndexes(maxIdx, factor)
@@ -78,7 +87,7 @@ func calcMemOverHead(factor float64, maxIdx uint32, eltSize int) (uint32, float6
 	return eltCnt, overHead
 }
 
-func benchMemOverHead(eltSize int, maxIdx uint32) func(*testing.B) {
+func benchMemOverHead(eltSize int, maxIdx int32) func(*testing.B) {
 	return func(B *testing.B) {
 		factor := []float64{1.0, 0.5, 0.2, 0.1, 0.005, 0.001}
 
@@ -98,7 +107,7 @@ func benchMemOverHead(eltSize int, maxIdx uint32) func(*testing.B) {
 func BenchmarkMemOverhead(b *testing.B) {
 	var cases = []struct {
 		eltSize int
-		maxIdx  uint32
+		maxIdx  int32
 	}{
 		{1, 1 << 16},
 		{2, 1 << 16},
@@ -108,5 +117,30 @@ func BenchmarkMemOverhead(b *testing.B) {
 
 	for _, c := range cases {
 		b.Run("", benchMemOverHead(c.eltSize, c.maxIdx))
+	}
+}
+
+func BenchmarkGet(b *testing.B) {
+	indexes := []int32{0, 5, 9, 203, 400}
+	elts := []uint32{12, 15, 19, 120, 300}
+	a, _ := array.NewU32(indexes, elts)
+
+	for i := 0; i < b.N; i++ {
+		a.Get(5)
+	}
+}
+
+func BenchmarkGetBytes(b *testing.B) {
+	indexes := []int32{0, 5, 9, 203, 400}
+	elts := []uint32{12, 15, 19, 120, 300}
+	a := &array.Array{}
+	a.InitIndex(indexes)
+	a.Elts = make([]byte, 0, len(elts))
+	for _, elt := range elts {
+		a.Elts = append(a.Elts, byte(elt))
+	}
+
+	for i := 0; i < b.N; i++ {
+		a.GetBytes(5, 1)
 	}
 }

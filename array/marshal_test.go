@@ -4,12 +4,15 @@ import (
 	"reflect"
 	"testing"
 
+	proto "github.com/golang/protobuf/proto"
+	"github.com/kr/pretty"
 	"github.com/openacid/slim/array"
+	"github.com/openacid/slim/prototype"
 )
 
 func TestMarshalUnmarshal(t *testing.T) {
 
-	indexes := []uint32{1, 5, 9, 203}
+	indexes := []int32{1, 5, 9, 203}
 	elts := []uint16{12, 15, 19, 120}
 
 	cases := []struct {
@@ -32,12 +35,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 	for i, c := range cases {
 
-		a, err := array.NewArrayU16(indexes[:c.n], elts[:c.n])
+		a, err := array.NewU16(indexes[:c.n], elts[:c.n])
 		if err != nil {
 			t.Errorf("expect no error but: %s", err)
 		}
 
-		rst, err := array.Marshal(a)
+		rst, err := proto.Marshal(a)
 		if err != nil {
 			t.Errorf("expect no error but: %s", err)
 		}
@@ -50,19 +53,15 @@ func TestMarshalUnmarshal(t *testing.T) {
 		// Unmarshal
 
 		b := &array.ArrayU16{}
-		nread, err := array.Unmarshal(b, rst)
+		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
 			t.Errorf("expect no error but: %s", err)
 		}
 
-		if nread != len(rst) {
-			t.Errorf("expcect to read %d but %d", len(rst), nread)
-		}
-
-		if !reflect.DeepEqual(a.Data, b.Data) {
+		if !reflect.DeepEqual(a.Elts, b.Elts) {
 			t.Fatalf("%d-th: n: %v; compare Elts: a: %v; b: %v",
-				i+1, c.n, a.Data, b.Data)
+				i+1, c.n, a.Elts, b.Elts)
 		}
 
 		// protobuf handles empty structure specially.
@@ -70,9 +69,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 			continue
 		}
 
+		// ignore proto's field when compare
+		a.XXX_sizecache = 0
+
 		if !reflect.DeepEqual(a, b) {
-			t.Fatalf("%d-th: n: %v; compare Elts: a: %v; b: %v",
-				i+1, c.n, a.Data, b.Data)
+			t.Fatalf("%d-th: n: %v; compare a b: %v",
+				i+1, c.n, pretty.Diff(a, b))
 		}
 
 	}
@@ -82,58 +84,112 @@ func TestMarshalUnmarshalBit(t *testing.T) {
 
 	n := 102400
 	step := 2
-	indexes := []uint32{}
+	indexes := []int32{}
 	elts := []uint16{}
 
 	for i := 0; i < n; i += step {
-		indexes = append(indexes, uint32(i))
+		indexes = append(indexes, int32(i))
 		elts = append(elts, uint16(i))
 	}
 
-	a, err := array.NewArrayU16(indexes, elts)
+	a, err := array.NewU16(indexes, elts)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	rst, err := array.Marshal(a)
+	rst, err := proto.Marshal(a)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
 	}
 
 	b := &array.ArrayU16{}
-	nread, err := array.Unmarshal(b, rst)
+	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	if nread != len(rst) {
-		t.Errorf("expcect to read %d but %d", len(rst), nread)
-	}
-
+	// proto polute this field
+	a.XXX_sizecache = 0
 	if !reflect.DeepEqual(a, b) {
-		t.Fatalf("compare: a: %v; b: %v", a, b)
+		t.Fatalf("compare: a b: %v", pretty.Diff(a, b))
 	}
 
 }
 
-func TestMarshalUnmarshal2Types(t *testing.T) {
+func TestProtobufMarshalUnmarshal2Types(t *testing.T) {
 
-	indexes := []uint32{1, 5, 9, 203}
+	indexes := []int32{1, 5, 9, 203}
 	elts := []uint16{12, 15, 19, 120}
 
-	a, _ := array.NewArrayU16(indexes, elts)
-	rst, _ := array.Marshal(a)
+	udArr, _ := array.NewU16(indexes, elts)
+	convArr, _ := array.NewEmpty(uint16(0))
 
-	b, _ := array.New(array.U16Conv{}, []uint32{}, []uint16{})
-	array.Unmarshal(b, rst)
+	// ud to conv
 
+	buf, _ := proto.Marshal(udArr)
+	err := proto.Unmarshal(buf, convArr)
+	if err != nil {
+		t.Fatalf("expect no err, but: %v", err)
+	}
+
+	checkArrayEqual(t, udArr, convArr, indexes)
+
+	// conv to ud
+
+	buf, err = proto.Marshal(convArr)
+	if err != nil {
+		t.Fatalf("expect no err, but: %v", err)
+	}
+
+	err = proto.Unmarshal(buf, udArr)
+	if err != nil {
+		t.Fatalf("expect no err, but: %v", err)
+	}
+
+	checkArrayEqual(t, udArr, convArr, indexes)
+}
+
+func checkArrayEqual(t *testing.T, udArr *array.ArrayU16, convArr *array.Array, indexes []int32) {
 	for _, i := range indexes {
-		av, afound := a.Get2(i)
-		bv, bfound := b.Get2(i)
+		av, afound := udArr.Get(i)
+		bv, bfound := convArr.Get(i)
 
 		if av != bv || afound != bfound {
 			t.Fatalf("expect same result i=%d, %d %t %d %t", i, av, afound, bv, bfound)
 		}
 	}
+}
 
+func TestMigrateToSignedCntAndOffsets(t *testing.T) {
+	// marshalled data from previous prototype.Array with uint32 Cnt and uint32 Offsets
+	// message Array32 {
+	//     uint32 Cnt              = 1;
+	//     repeated uint64 Bitmaps = 2;
+	//     repeated uint32 Offsets = 3;
+	//     bytes  Elts             = 4;
+	// }
+	// prototype.Array32{
+	//     Cnt: 0xffffffff,
+	//     Bitmaps: []uint64{0},
+	//     Offsets: []uint32{0xffffffff},
+	//     Elts: []byte{},
+	// }
+	prevMarshalled := []byte{
+		0x8, 0xff, 0xff, 0xff, 0xff, 0xf, 0x12, 0x1,
+		0x0, 0x1a, 0x5, 0xff, 0xff, 0xff, 0xff, 0xf,
+	}
+
+	b := &prototype.Array32{}
+	err := proto.Unmarshal(prevMarshalled, b)
+	if err != nil {
+		t.Errorf("expect no error but: %s", err)
+	}
+
+	if b.Cnt != -1 {
+		t.Fatalf("expect -1 but: %v", b.Cnt)
+	}
+
+	if b.Offsets[0] != -1 {
+		t.Fatalf("expect -1 but: %v", b.Offsets)
+	}
 }

@@ -10,19 +10,19 @@ func Example() {
 	// arr[5]   = 15
 	// arr[9]   = 19
 
-	indexes := []uint32{0, 5, 9}
+	indexes := []int32{0, 5, 9}
 	elts := []uint32{12, 15, 19}
 
-	arr, err := New(U32Conv{}, indexes, elts)
+	arr, err := New(indexes, elts)
 	if err != nil {
 		fmt.Printf("Init compacted array error:%s\n", err)
 		return
 	}
 
 	if arr.Has(indexes[1]) {
-		val := arr.Get(indexes[1])
-		fmt.Printf("get indexed 1 value:%v\n", val)
+		val, found := arr.Get(indexes[1])
+		fmt.Printf("get indexed 1 value:%v found: %t\n", val, found)
 	}
 
-	// Output: get indexed 1 value:15
+	// Output: get indexed 1 value:15 found: true
 }

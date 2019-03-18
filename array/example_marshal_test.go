@@ -3,6 +3,7 @@ package array_test
 import (
 	"fmt"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/openacid/slim/array"
 )
 
@@ -10,34 +11,31 @@ func Example_marshal() {
 
 	// This example shows how to marshal / unmarshal an array
 
-	indexes := []uint32{1, 5, 9, 203}
+	indexes := []int32{1, 5, 9, 203}
 	elts := []uint16{12, 15, 19, 120}
 
-	a := &array.ArrayU16{
-		Data: elts,
-	}
-	err := a.InitIndexBitmap(indexes)
+	a, err := array.NewU16(indexes, elts)
 	if err != nil {
 		return
 	}
 
 	// Marshal
-	md, err := array.Marshal(a)
+	md, err := proto.Marshal(a)
 	fmt.Println("marshal: err:", err)
 	fmt.Println("marshaled bytes:", md)
 
 	// Unmarshal
 	b := &array.ArrayU16{}
-	n, err := array.Unmarshal(b, md)
+	err = proto.Unmarshal(md, b)
 
-	fmt.Println("unmarshal result:", n, err)
-	fmt.Println("a:", a.Cnt, a.Bitmaps, a.Offsets, a.Data)
-	fmt.Println("b:", b.Cnt, b.Bitmaps, b.Offsets, b.Data)
+	fmt.Println("unmarshal result:", err)
+	fmt.Println("a:", a.Cnt, a.Bitmaps, a.Offsets, a.Elts)
+	fmt.Println("b:", b.Cnt, b.Bitmaps, b.Offsets, b.Elts)
 
 	// Output:
 	// marshal: err: <nil>
 	// marshaled bytes: [8 4 18 6 162 4 0 0 128 16 26 4 0 0 0 3 34 8 12 0 15 0 19 0 120 0]
-	// unmarshal result: 26 <nil>
-	// a: 4 [546 0 0 2048] [0 0 0 3] [12 15 19 120]
-	// b: 4 [546 0 0 2048] [0 0 0 3] [12 15 19 120]
+	// unmarshal result: <nil>
+	// a: 4 [546 0 0 2048] [0 0 0 3] [12 0 15 0 19 0 120 0]
+	// b: 4 [546 0 0 2048] [0 0 0 3] [12 0 15 0 19 0 120 0]
 }
