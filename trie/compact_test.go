@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/strhelper"
 )
@@ -382,6 +383,58 @@ func TestNewSlimTrie(t *testing.T) {
 		rst = searchRst{lt, eq, gt}
 		if !reflect.DeepEqual(c.expected, rst) {
 			t.Fatal("key: ", kk, "expected value: ", c.expected, "rst: ", rst)
+		}
+	}
+}
+
+func TestSlimTrieLoad(t *testing.T) {
+
+	cases := []struct {
+		keys    []string
+		vals    interface{}
+		wanterr error
+	}{
+		{
+			[]string{"a", "a"},
+			[]int{1},
+			ErrKVLenNotMatch,
+		},
+		{
+			[]string{"a", "a"},
+			[]int{1, 2},
+			ErrDuplicateKeys,
+		},
+		{
+			[]string{"ab", "a"},
+			[]int{1, 2},
+			ErrKeyOutOfOrder,
+		},
+		{
+			[]string{"ab", "aa"},
+			[]int{1, 2},
+			ErrKeyOutOfOrder,
+		},
+		{
+			[]string{"ab", "aaa"},
+			[]int{1, 2},
+			ErrKeyOutOfOrder,
+		},
+	}
+
+	for i, c := range cases {
+		st, err := NewSlimTrie(TestIntConv{}, c.keys, c.vals)
+
+		if c.wanterr != errors.Cause(err) {
+			t.Fatalf("%d-th: input: keys: %v; vals: %v; wanterr: %v; actual: %v",
+				i+1, c.keys, c.vals, c.wanterr, err)
+		}
+
+		if err == nil && len(c.keys) > 0 {
+			v := st.Get(c.keys[0])
+			if v == nil {
+				t.Fatalf("%d-th: should be found but not. key=%q",
+					i+1, c.keys[0])
+			}
 		}
 	}
 }
