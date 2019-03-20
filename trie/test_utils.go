@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/btree"
 	"github.com/modood/table"
+	"github.com/openacid/slim/strhelper"
 	"github.com/openacid/slim/trie/benchmark"
 )
 
@@ -140,19 +141,6 @@ func makeKVElts(srcKeys []string, srcVals [][]byte) []*testKV {
 	return vals
 }
 
-func splitStringTo4BitWords(s string) []byte {
-
-	lenSrc := len(s)
-	words := make([]byte, lenSrc*2)
-
-	for i := 0; i < lenSrc; i++ {
-		b := s[i]
-		words[2*i] = (b & 0xf0) >> 4
-		words[2*i+1] = b & 0x0f
-	}
-	return words
-}
-
 func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 
 	srcKeys, err := makeStrings(cnt, int64(keyLen))
@@ -168,7 +156,7 @@ func makeTestSrc(cnt int64, keyLen, valLen uint32) *testSrcType {
 	// make test trie
 	keys := make([][]byte, cnt)
 	for i, k := range srcKeys {
-		keys[i] = splitStringTo4BitWords(k)
+		keys[i] = strhelper.ToBitWords(k, 4)
 	}
 
 	vals := makeKVElts(srcKeys, srcVals)

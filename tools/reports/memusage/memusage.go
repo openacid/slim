@@ -7,6 +7,7 @@ import (
 	"io"
 	mrand "math/rand"
 	"runtime"
+	"sort"
 
 	"github.com/openacid/slim/marshal"
 	"github.com/openacid/slim/trie"
@@ -125,6 +126,7 @@ func makeKeys(kCnt, kLen int64) []string {
 		keys[i] = string(key)
 	}
 
+	sort.Strings(keys)
 	return keys
 }
 
