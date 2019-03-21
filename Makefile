@@ -59,3 +59,7 @@ toc:
 	# brew install nodejs
 	# npm install -g doctoc
 	doctoc --title '' --github README.md
+
+fix:
+	gofmt -s -w $(GOFILES)
+	unconvert -v -apply $(PKGS)
