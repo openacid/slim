@@ -200,10 +200,10 @@ func main() {
         }
 
         // Lookup by SlimIndex
-        v, found := st.Get2("Alison")
+        v, found := st.Get("Alison")
         fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "Alison", found, v)
 
-        v, found = st.Get2("foo")
+        v, found = st.Get("foo")
         fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "foo", found, v)
 
         // Output:
