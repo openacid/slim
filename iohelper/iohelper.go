@@ -42,6 +42,7 @@ func (s *SectionWriter) Write(p []byte) (n int, err error) {
 var errWhence = errors.New("Seek: invalid whence")
 var errOffset = errors.New("Seek: invalid offset")
 
+// Seek seeks to relative position by offset.
 func (s *SectionWriter) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	default:
@@ -60,6 +61,7 @@ func (s *SectionWriter) Seek(offset int64, whence int) (int64, error) {
 	return offset - s.base, nil
 }
 
+// WriteAt write buf p at relative position off.
 func (s *SectionWriter) WriteAt(p []byte, off int64) (n int, err error) {
 	if off < 0 || off >= s.limit-s.base {
 		return 0, io.ErrShortWrite
