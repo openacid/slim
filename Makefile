@@ -34,7 +34,7 @@ misspell:
 		*.md *.go
 
 unconvert:
-	$(GO) get github.com/mdempsky/unconvert
+	$(GO) get github.com/openacid/unconvert
 	unconvert -v $(PKGS)
 
 ineffassign:
