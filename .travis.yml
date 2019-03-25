@@ -7,4 +7,4 @@ go:
     - tip
 
 script:
-  - make check
+  - make check_travis

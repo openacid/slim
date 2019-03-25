@@ -16,6 +16,8 @@ GO := go
 
 check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
+check_travis: test vet gofmt misspell unconvert ineffassign
+
 test:
 	$(GO) test $(PKGS)
 
