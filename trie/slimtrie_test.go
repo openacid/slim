@@ -348,8 +348,8 @@ func TestNewSlimTrieWithKVs(t *testing.T) {
 		t.Fatalf("expect no error but: %v", err)
 	}
 
-	v := st.Get("ab")
-	if v == nil {
+	v, found := st.Get("ab")
+	if !found {
 		t.Fatalf("%q should be found", "ab")
 	}
 
@@ -426,7 +426,12 @@ func TestSlimTrieLoad(t *testing.T) {
 		}
 
 		if err == nil && len(c.keys) > 0 {
-			v := st.Get(c.keys[0])
+			v, found := st.Get(c.keys[0])
+			if !found {
+				t.Fatalf("%d-th: should be found but not. key=%q",
+					i+1, c.keys[0])
+			}
+
 			if v == nil {
 				t.Fatalf("%d-th: should be found but not. key=%q",
 					i+1, c.keys[0])

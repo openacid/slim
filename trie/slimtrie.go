@@ -348,9 +348,10 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 // Because SlimTrie is a "index" but not a "kv-map", it does not stores complete
 // info of all keys.
 // SlimTrie tell you "WHERE IT POSSIBLY BE", rather than "IT IS JUST THERE".
-func (st *SlimTrie) Get(key string) (eqVal interface{}) {
+func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 
 	var word byte
+	found = false
 	eqIdx := int32(0)
 
 	// string to 4-bit words
@@ -379,7 +380,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 	}
 
 	if eqIdx != -1 {
-		eqVal, _ = st.Leaves.Get(eqIdx)
+		eqVal, found = st.Leaves.Get(eqIdx)
 	}
 
 	return

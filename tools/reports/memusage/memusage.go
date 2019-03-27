@@ -105,7 +105,7 @@ func getKVTrieMem2(keyCnt, keyLen int) int64 {
 
 	var s int
 	for _, k := range keys {
-		i := t.Get(k)
+		i, _ := t.Get(k)
 		// in real world, need to compare keys[i] and k to ensure it is a positive match
 		v := vals[i.(uint32)]
 		s += int(v)
