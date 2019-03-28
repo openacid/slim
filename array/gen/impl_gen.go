@@ -12,7 +12,7 @@ var implHead = `package array
 `
 
 var implTemplate = `
-// Array{{.Name}} is an implementation of Array32Index with {{.ValType}} element
+// Array{{.Name}} is an implementation of ArrayBase with {{.ValType}} element
 type Array{{.Name}} struct {
 	ArrayBase
 }
@@ -27,7 +27,7 @@ func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *Array{{.Name}}, err er
 	return a, err
 }
 
-// Get returns value indexed by idx and a bool indicate if the value is
+// Get returns value at "idx" and a bool indicating if the value is
 // found.
 func (a *Array{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 	bs, ok := a.GetBytes(idx, {{.ValLen}})

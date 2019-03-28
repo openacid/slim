@@ -2,7 +2,7 @@ package array
 
 // Do NOT edit. re-generate this file with "go generate ./..."
 
-// ArrayU16 is an implementation of Array32Index with uint16 element
+// ArrayU16 is an implementation of ArrayBase with uint16 element
 type ArrayU16 struct {
 	ArrayBase
 }
@@ -17,7 +17,7 @@ func NewU16(index []int32, elts []uint16) (a *ArrayU16, err error) {
 	return a, err
 }
 
-// Get returns value indexed by idx and a bool indicate if the value is
+// Get returns value at "idx" and a bool indicating if the value is
 // found.
 func (a *ArrayU16) Get(idx int32) (uint16, bool) {
 	bs, ok := a.GetBytes(idx, 2)
@@ -28,7 +28,7 @@ func (a *ArrayU16) Get(idx int32) (uint16, bool) {
 	return 0, false
 }
 
-// ArrayU32 is an implementation of Array32Index with uint32 element
+// ArrayU32 is an implementation of ArrayBase with uint32 element
 type ArrayU32 struct {
 	ArrayBase
 }
@@ -43,7 +43,7 @@ func NewU32(index []int32, elts []uint32) (a *ArrayU32, err error) {
 	return a, err
 }
 
-// Get returns value indexed by idx and a bool indicate if the value is
+// Get returns value at "idx" and a bool indicating if the value is
 // found.
 func (a *ArrayU32) Get(idx int32) (uint32, bool) {
 	bs, ok := a.GetBytes(idx, 4)
@@ -54,7 +54,7 @@ func (a *ArrayU32) Get(idx int32) (uint32, bool) {
 	return 0, false
 }
 
-// ArrayU64 is an implementation of Array32Index with uint64 element
+// ArrayU64 is an implementation of ArrayBase with uint64 element
 type ArrayU64 struct {
 	ArrayBase
 }
@@ -69,7 +69,7 @@ func NewU64(index []int32, elts []uint64) (a *ArrayU64, err error) {
 	return a, err
 }
 
-// Get returns value indexed by idx and a bool indicate if the value is
+// Get returns value at "idx" and a bool indicating if the value is
 // found.
 func (a *ArrayU64) Get(idx int32) (uint64, bool) {
 	bs, ok := a.GetBytes(idx, 8)

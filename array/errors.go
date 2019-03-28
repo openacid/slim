@@ -4,17 +4,16 @@ import (
 	"github.com/openacid/errors"
 )
 
-// ErrIndexNotAscending means indexes to initialize a Array must be in
-// ascending order.
+// ErrIndexNotAscending indicates that the indexes to initialize an Array is not
+// in ascending order.
 var ErrIndexNotAscending = errors.New("index must be an ascending ordered slice")
 
-// ErrIndexLen is returned if number of indexes does not equal the number of
-// datas, when initializing a Array.
+// ErrIndexLen indicates that the number of indexes does not equal the number of
+// elements, when initializing an Array.
 var ErrIndexLen = errors.New("the length of indexes and elts must be equal")
 
-// ErrUnknownSize indicates the element size can not be deside by its type.
+// ErrUnknownSize indicates that the element is not a fixed-type.
 var ErrUnknownSize = errors.New("the size of array size is unknown")
 
-// ErrDifferentEltSize indicates two elements has different size when creating
-// an array.
+// ErrDifferentEltSize indicates that two elements have different size.
 var ErrDifferentEltSize = errors.New("elements have different size")

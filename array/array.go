@@ -1,4 +1,9 @@
-// Package array implements functions for the manipulation of compacted array.
+// Package array implements several space effiecient array.
+//
+// Unlike a normal array, it does not allocate space for an absent element.
+// In some way it is like a map[int32]interface{} .
+//
+// Internally it use a bitmap to indicate at which index there is an element.
 package array
 
 import (
@@ -7,24 +12,23 @@ import (
 	"github.com/openacid/slim/marshal"
 )
 
-// Array is a space efficient array implementation.
+// Array is a space efficient array of fixed-size element.
 //
-// Unlike a normal array, it does not allocate space for a element that there is
-// not data in it.
-type Array struct {
-	ArrayBase
-}
-
-// NewEmpty creates an empty array with element of type of "v".
-// If v is a pointer, the value type it points to is used.
-// "v" must be a fixed size type, e.g.:
+// A fixed size type could be:
 //		int32
 //		struct { X int32; Y uint16 }
-// "v" can not be:
+//
+// A non-fixed size type could be:
 //		int
 //		[]uint32
 //		map
 //		etc.
+type Array struct {
+	ArrayBase
+}
+
+// NewEmpty creates an empty Array with element of type of "v".
+// If v is a pointer, the value type it points to is used.
 func NewEmpty(v interface{}) (*Array, error) {
 	m, err := marshal.NewTypeMarshaler(v)
 	if err != nil {
@@ -36,9 +40,9 @@ func NewEmpty(v interface{}) (*Array, error) {
 	return a, nil
 }
 
-// New creates an array from indexes and elts.
-// Length of indexes and length of elts must be the same.
-// elts must be a slice of value of fixed size.
+// New creates an array from specified indexes and elts.
+// The length of indexes and the length of elts must be the same.
+// "elts" must be a slice of fixed-size values.
 func New(indexes []int32, elts interface{}) (*Array, error) {
 	a := &Array{}
 	err := a.Init(indexes, elts)
@@ -48,9 +52,9 @@ func New(indexes []int32, elts interface{}) (*Array, error) {
 	return a, nil
 }
 
-// Init initializes an empty Array.
-// Length of indexes and length of elts must be the same.
-// elts must be a slice of value of fixed size.
+// Init initializes an Array.
+// Length of "indexes" and length of "elts" must be the same.
+// "elts" must be a slice of fixed-size value.
 func (a *Array) Init(indexes []int32, elts interface{}) error {
 	err := a.ArrayBase.Init(indexes, elts)
 	if err != nil {

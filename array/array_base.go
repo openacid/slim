@@ -11,22 +11,17 @@ import (
 	"github.com/openacid/slim/prototype"
 )
 
-// endian is default endian for array
+// endian is the default endian for array
 var endian = binary.LittleEndian
 
-// ArrayBase is a space efficient array implementation.
-//
-// Unlike a normal array, it does not allocate space for a element that there is
-// not data in it.
+// ArrayBase is the base of:
+//   a specific type array like ArrayU16
+//   and an Array of arbitrary fixed-size element.
 //
 // Performance note
 //
-// Has():          9~10 ns / call; 1 memory accesses
-// GetEltIndex(): 10~20 ns / call; 2 memory accesses
-//
-// Most time is spent on Bitmaps and Offsets access:
-// L1 or L2 cache assess costs 0.5 ns and 7 ns.
-// TODO test Cnt
+//	   Has():          9~10 ns / call; 1 memory accesses
+//	   GetEltIndex(): 10~20 ns / call; 2 memory accesses
 type ArrayBase struct {
 	prototype.Array32
 	EltMarshaler marshal.Marshaler
@@ -35,18 +30,19 @@ type ArrayBase struct {
 const (
 	// bmWidth defines how many bits for a bitmap word
 	bmWidth = int32(64)
+	bmShift = uint(6) // log₂64
 	bmMask  = int32(63)
 )
 
 // bmBit calculates bitamp word index and the bit index in the word.
 func bmBit(idx int32) (int32, int32) {
-	c := idx >> uint32(6) // == idx / bmWidth
-	r := idx & int32(63)  // == idx % bmWidth
+	c := idx >> bmShift
+	r := idx & bmMask
 	return c, r
 }
 
-// InitIndex initializes index bitmap for a compacted array.
-// Index must be a ascending array of type unit32, otherwise, return
+// InitIndex initializes index bitmap for an array.
+// Index must be an ascending int32 slice, otherwise, it return
 // the ErrIndexNotAscending error
 func (a *ArrayBase) InitIndex(index []int32) error {
 
@@ -71,9 +67,9 @@ func (a *ArrayBase) InitIndex(index []int32) error {
 	return nil
 }
 
-// GetEltIndex returns the data position in a.Elts indexed by `idx` and a bool
-// indicating existence.
-// If `idx` does not present it returns `0, false`.
+// GetEltIndex returns the position in a.Elts of element[idx] and a bool
+// indicating if found or not.
+// If "idx" absents it returns "0, false".
 func (a *ArrayBase) GetEltIndex(idx int32) (int32, bool) {
 	iBm, iBit := bmBit(idx)
 
@@ -98,9 +94,10 @@ func (a *ArrayBase) Has(idx int32) bool {
 	return iBm < int32(len(a.Bitmaps)) && ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
 }
 
-// Init initializes a compacted array from the slice type elts
-// the indexes parameter must be a ascending array of type unit32,
-// otherwise, return the ErrIndexNotAscending error
+// Init initializes an array from the "indexes" and "elts".
+// The indexes must be an ascending int32 slice,
+// otherwise, return the ErrIndexNotAscending error.
+// The "elts" is a slice.
 func (a *ArrayBase) Init(indexes []int32, elts interface{}) error {
 
 	rElts := reflect.ValueOf(elts)
@@ -143,6 +140,7 @@ func (a *ArrayBase) Init(indexes []int32, elts interface{}) error {
 	return nil
 }
 
+// InitElts initialized a.Elts, by marshaling elements in to bytes.
 func (a *ArrayBase) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, error) {
 
 	rElts := reflect.ValueOf(elts)
@@ -161,9 +159,13 @@ func (a *ArrayBase) InitElts(elts interface{}, marshaler marshal.Marshaler) (int
 	return n, nil
 }
 
-// GetTo retrieves the value at idx.
-// "v" is a pointer to a fixed size value as receiver.
-// If found it returns true, otherwise false.
+// GetTo retrieves the value at "idx" and stores it in "v".
+// "v" is a pointer to a fixed-size value as receiver.
+// "v" must have the same type with the slice element which is used to create
+// the array, or the behavior is undefined.
+//
+// If this array has a value at "idx" it returns true, otherwise false.
+//
 // When not found, "v" in intact.
 //
 // Performance note
@@ -195,6 +197,19 @@ func (a *ArrayBase) GetTo(idx int32, v interface{}) bool {
 	return false
 }
 
+// Get retrieves the value at "idx" and return it.
+// If this array has a value at "idx" it returns the value and "true",
+// otherwise it returns "nil" and "false".
+//
+// Performance note
+//
+// Involves 2 memory access:
+//	 a.Bitmaps
+//	 a.Elts
+//
+// Involves 1 alloc:
+//   // when Unmarshal convert a concrete type to interface{}
+//   a.EltMarshaler.Unmarshal(bs)
 func (a *ArrayBase) Get(idx int32) (interface{}, bool) {
 
 	if a.Cnt == 0 {
@@ -210,8 +225,15 @@ func (a *ArrayBase) Get(idx int32) (interface{}, bool) {
 	return nil, false
 }
 
-// GetBytes is similar to Get but does not return the byte slice instead of
-// unmarshaled data.
+// GetBytes retrieves the raw data of value in []byte at "idx" and return it.
+//
+// Performance note
+//
+// Involves 2 memory access:
+//	 a.Bitmaps
+//	 a.Elts
+//
+// Involves 0 alloc
 func (a *ArrayBase) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 	dataIndex, ok := a.GetEltIndex(idx)
 	if !ok {
@@ -222,7 +244,7 @@ func (a *ArrayBase) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 	return a.Elts[stIdx : stIdx+int32(eltsize)], true
 }
 
-// appendIndex add a index into index bitmap.
+// appendIndex add an index into index bitmap.
 // The `index` must be greater than any existent indexes.
 func (a *ArrayBase) appendIndex(index int32) {
 
