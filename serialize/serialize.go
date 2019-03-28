@@ -189,11 +189,7 @@ func Unmarshal(reader io.Reader, obj proto.Message) (err error) {
 		return err
 	}
 
-	if err := proto.Unmarshal(dataBuf, obj); err != nil {
-		return err
-	}
-
-	return nil
+	return proto.Unmarshal(dataBuf, obj)
 }
 
 // UnmarshalAt is similar to Unmarshal except it reads from io.ReaderAt thus it
