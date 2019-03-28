@@ -25,7 +25,7 @@ func Example() {
 	// (in memory or on disk) by indexing them with a SlimTrie:
 	//
 	// `data` is a sample of some unindexed data. In our example it is a comma
-	// seperated key value series.
+	// separated key value series.
 	//
 	// In order to let SlimTrie be able to read data, `data` should have
 	// a `Read` method:

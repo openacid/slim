@@ -134,7 +134,7 @@ func BenchmarkGetBytes(b *testing.B) {
 	indexes := []int32{0, 5, 9, 203, 400}
 	elts := []uint32{12, 15, 19, 120, 300}
 	a := &array.Array{}
-	a.InitIndex(indexes)
+	_ = a.InitIndex(indexes)
 	a.Elts = make([]byte, 0, len(elts))
 	for _, elt := range elts {
 		a.Elts = append(a.Elts, byte(elt))

@@ -108,7 +108,7 @@ func TestMarshalUnmarshalBit(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	// proto polute this field
+	// proto pollute this field
 	a.XXX_sizecache = 0
 	if !reflect.DeepEqual(a, b) {
 		t.Fatalf("compare: a b: %v", pretty.Diff(a, b))
@@ -161,7 +161,7 @@ func checkArrayEqual(t *testing.T, udArr *array.ArrayU16, convArr *array.Array, 
 }
 
 func TestMigrateToSignedCntAndOffsets(t *testing.T) {
-	// marshalled data from previous prototype.Array with uint32 Cnt and uint32 Offsets
+	// marshaled data from previous prototype.Array with uint32 Cnt and uint32 Offsets
 	// message Array32 {
 	//     uint32 Cnt              = 1;
 	//     repeated uint64 Bitmaps = 2;

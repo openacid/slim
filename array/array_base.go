@@ -148,13 +148,13 @@ func (a *ArrayBase) InitElts(elts interface{}, marshaler marshal.Marshaler) (int
 	eltsize := marshaler.GetMarshaledSize(nil)
 	sz := eltsize * n
 
-	b := bytes.NewBuffer(make([]byte, 0, sz))
+	b := make([]byte, 0, sz)
 	for i := 0; i < n; i++ {
 		ee := rElts.Index(i).Interface()
 		bs := marshaler.Marshal(ee)
-		b.Write(bs)
+		b = append(b, bs...)
 	}
-	a.Elts = b.Bytes()
+	a.Elts = b
 
 	return n, nil
 }

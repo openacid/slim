@@ -14,7 +14,7 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
 
 Slim is collection of surprisingly space efficient data types, with
-corresponding serialisation APIs to persisting them on-disk or for transport.
+corresponding serialization APIs to persisting them on-disk or for transport.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -45,7 +45,7 @@ Only the much more important information, WHERE-A-DATA-IS, deserve a seat in
 main memory.
 
 This is what `slim` does, keeps as little information as possible in main
-memory, as a minimised index of huge amount external data.
+memory, as a minimized index of huge amount external data.
 
 -   `SlimIndex`: is a common index structure, building on top of `SlimTrie`.
 
@@ -57,7 +57,7 @@ memory, as a minimised index of huge amount external data.
 
     **Features**:
 
-    -   **Minimised**:
+    -   **Minimized**:
         requires only **6 bytes per key**(even less than an 8-byte pointer!!).
 
     -   **Stable**:
@@ -231,7 +231,7 @@ All dependency packages are included in `vendor/` dir.
 
 
 <!-- TODO add FAQ -->
-<!-- TODO add serialisation explanation, on-disk data structure etc. -->
+<!-- TODO add serialization explanation, on-disk data structure etc. -->
 
 **Prerequisites**
 
@@ -264,7 +264,7 @@ All dependency packages are included in `vendor/` dir.
 
 <!-- ### Built With -->
 
-<!-- - [protobuf][] - Define on-disk data-structure and serialisation engine. -->
+<!-- - [protobuf][] - Define on-disk data-structure and serialization engine. -->
 <!-- - [dep][] - Dependency Management. -->
 <!-- - [semver][] - For versioning data-structure. -->
 
@@ -298,7 +298,7 @@ All dependency packages are included in `vendor/` dir.
 ## Roadmap
 
 -   [x] **2019 Mar 08**: SlimIndex, SlimTrie
--   [ ] Marshalling support
+-   [ ] Marshaling support
 -   [ ] SlimArray
 
 
@@ -311,10 +311,10 @@ All dependency packages are included in `vendor/` dir.
 
 **Feedback and Contributions are greatly appreciated**.
 
-At this stage, the maintainers are most interested in feedback centred on:
+At this stage, the maintainers are most interested in feedback centered on:
 
 -   Do you have a real life scenario that `slim` supports well, or doesn't support at all?
--   Do any of the APIs fulfil your needs well?
+-   Do any of the APIs fulfill your needs well?
 
 Let us know by filing an issue, describing what you did or wanted to do, what
 you expected to happen, and what actually happened:
@@ -345,9 +345,9 @@ Or other type of [issue][new-issue].
 
 <!-- ### Tool chain -->
 
-<!-- ### Customised install -->
+<!-- ### Customized install -->
 
-<!-- Alternatively, if you have a customised go develop environment, you could also -->
+<!-- Alternatively, if you have a customized go develop environment, you could also -->
 <!-- clone it: -->
 
 <!-- ```sh -->
@@ -401,11 +401,11 @@ Or other type of [issue][new-issue].
 <!-- ordered by unicode of author's name -->
 <!-- leave 3 to 5 major jobs you have done in this project -->
 
-- ![][刘保海-img-sml] **[刘保海][]** *marshalling*
+- ![][刘保海-img-sml] **[刘保海][]** *marshaling*
 - ![][吴义谱-img-sml] **[吴义谱][]** *array*
 - ![][张炎泼-img-sml] **[张炎泼][]** *slimtrie design*
 - ![][李文博-img-sml] **[李文博][]** *trie-compressing, trie-search*
-- ![][李树龙-img-sml] **[李树龙][]** *marshalling*
+- ![][李树龙-img-sml] **[李树龙][]** *marshaling*
 
 
 See also the list of [contributors][] who participated in this project.

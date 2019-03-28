@@ -120,8 +120,8 @@ func testPanic(t *testing.T, f func(), msg string) {
 func TestArrayBaseInit(t *testing.T) {
 
 	ab := &array.ArrayBase{}
-	testPanic(t, func() { ab.Init([]int32{}, 1) }, "elts int")
-	testPanic(t, func() { ab.Init([]int32{1, 2}, []interface{}{uint32(1), uint64(1)}) }, "different type elts")
+	testPanic(t, func() { _ = ab.Init([]int32{}, 1) }, "elts int")
+	testPanic(t, func() { _ = ab.Init([]int32{1, 2}, []interface{}{uint32(1), uint64(1)}) }, "different type elts")
 
 	cases := []struct {
 		input       []int32

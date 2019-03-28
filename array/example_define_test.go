@@ -13,7 +13,7 @@ type MyElt struct {
 
 func Example_useArray() {
 
-	// This exmaple shows how to define a new array type.
+	// This example shows how to define a new array type.
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []MyElt{

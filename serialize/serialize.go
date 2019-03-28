@@ -23,7 +23,7 @@ const (
 	MaxMarshalledSize int64 = 1024 * 1024 * 1024
 )
 
-// DataHeader defines the header format of a serialised byte stream.
+// DataHeader defines the header format of a serialized byte stream.
 //
 // It contains version, header size(size of this struct) and data size(size of the user data).
 //
@@ -37,7 +37,7 @@ const (
 //      - test Every version of dataHeader ever existed
 //
 type DataHeader struct {
-	// Version of this serialised data, for compatibility check.
+	// Version of this serialized data, for compatibility check.
 	// It is in form of <major>.<minor>.<release>;.
 	// As long as version is a string, its max size is 16.
 	//
@@ -129,7 +129,7 @@ func marshalHeader(writer io.Writer, header *DataHeader) (err error) {
 
 // Marshal serializes a protobuf object into a io.Writer .
 //
-// It returns number of bytes acutally written, and encountered error.
+// It returns number of bytes actually written, and encountered error.
 //
 // The content written to writer may be wrong if there were error during Marshal().
 // So make a temp copy, and copy it to destination if everything is ok.
@@ -218,7 +218,7 @@ func UnmarshalAt(reader io.ReaderAt, offset int64, obj proto.Message) (n int64, 
 
 }
 
-// GetMarshalHeaderSize returns the serialised size of a DataHeader struct.
+// GetMarshalHeaderSize returns the serialized size of a DataHeader struct.
 func GetMarshalHeaderSize() int64 {
 	return int64(unsafe.Sizeof(uint64(0))*2 + version.MAXLEN)
 }

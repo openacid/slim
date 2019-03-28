@@ -104,7 +104,7 @@ func Test{{.Name}}New(t *testing.T) {
 		}
 
 		buf := new(bytes.Buffer)
-		binary.Write(buf, binary.LittleEndian, eltsData)
+		_ = binary.Write(buf, binary.LittleEndian, eltsData)
 
 		expElts := buf.Bytes()
 		if expElts == nil {
@@ -273,7 +273,7 @@ func Test{{.Name}}MarshalUnmarshalBig(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	// proto polute this field
+	// proto pollute this field
 	a.XXX_sizecache = 0
 	if !reflect.DeepEqual(a, b) {
 		t.Fatalf("compare: a b: %v", pretty.Diff(a, b))

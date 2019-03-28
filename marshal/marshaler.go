@@ -22,7 +22,7 @@ var (
 // A Marshaler converts one element between serialized byte stream
 // and in-memory data structure.
 type Marshaler interface {
-	// Convert into serialised byte stream.
+	// Convert into serialized byte stream.
 	Marshal(interface{}) []byte
 
 	// Read byte stream and convert it back to typed data.

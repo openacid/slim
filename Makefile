@@ -28,8 +28,11 @@ staticcheck:
 
 misspell:
 	$(GO) get github.com/client9/misspell/cmd/misspell
+	find $(SRCDIRS) -name '*.go' -or -name '*.md' | xargs misspell \
+		-locale US \
+		-error
 	misspell \
-		-locale GB \
+		-locale US \
 		-error \
 		*.md *.go
 
@@ -59,6 +62,9 @@ toc:
 	# brew install nodejs
 	# npm install -g doctoc
 	doctoc --title '' --github README.md
+
+gen:
+	$(GO) generate ./...
 
 fix:
 	gofmt -s -w $(GOFILES)
