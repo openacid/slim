@@ -411,3 +411,39 @@ func BenchmarkArrayBaseGetTo(b *testing.B) {
 		ab.GetTo(1, &v)
 	}
 }
+
+func BenchmarkArrayBaseGet(b *testing.B) {
+
+	indexes := []int32{1, 3, 100}
+	elts := []uint16{1, 3, 100}
+
+	ab := &array.ArrayBase{}
+	err := ab.Init(indexes, elts)
+	if err != nil {
+		panic(err)
+	}
+
+	ab.EltMarshaler = marshal.U16{}
+
+	for i := 0; i < b.N; i++ {
+		ab.Get(1)
+	}
+}
+
+func BenchmarkArrayBaseGetBytes(b *testing.B) {
+
+	indexes := []int32{1, 3, 100}
+	elts := []uint16{1, 3, 100}
+
+	ab := &array.ArrayBase{}
+	err := ab.Init(indexes, elts)
+	if err != nil {
+		panic(err)
+	}
+
+	ab.EltMarshaler = marshal.U16{}
+
+	for i := 0; i < b.N; i++ {
+		ab.GetBytes(1, 2)
+	}
+}
