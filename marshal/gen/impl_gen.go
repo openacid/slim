@@ -110,7 +110,7 @@ func Test{{.Name}}(t *testing.T) {
 }
 `
 
-type Inventory struct {
+type implConfig struct {
 	Name       string
 	ValType    string
 	ValLen     int
@@ -120,7 +120,7 @@ type Inventory struct {
 
 func main() {
 
-	impls := []Inventory{
+	impls := []implConfig{
 		{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
 		{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
 		{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},

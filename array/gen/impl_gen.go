@@ -291,7 +291,7 @@ func Benchmark{{.Name}}Get(b *testing.B) {
 }
 `
 
-type Inventory struct {
+type implConfig struct {
 	Name    string
 	ValType string
 	ValLen  int
@@ -300,7 +300,7 @@ type Inventory struct {
 
 func main() {
 
-	impls := []Inventory{
+	impls := []implConfig{
 		{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16"},
 		{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32"},
 		{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64"},
