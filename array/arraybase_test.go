@@ -363,6 +363,7 @@ func BenchmarkHasAndGetEltIndex(b *testing.B) {
 
 	var name string
 	runs := []struct{ cnt int32 }{
+		{5},
 		{32},
 		{256},
 		{1024},
@@ -374,24 +375,17 @@ func BenchmarkHasAndGetEltIndex(b *testing.B) {
 
 		name = fmt.Sprintf("Has-%d", r.cnt)
 		b.Run(name, func(b *testing.B) {
-
-			j := int32(0)
 			for i := 0; i < b.N; i++ {
-				arr.Has(j)
-				j = (j + 1) % (maxIndex)
+				arr.Has(int32(i) % maxIndex)
 			}
 		})
 
 		name = fmt.Sprintf("GetEltIndex-%d", r.cnt)
 		b.Run(name, func(b *testing.B) {
-
-			j := int32(0)
 			for i := 0; i < b.N; i++ {
-				arr.GetEltIndex(j)
-				j = (j + 1) % (maxIndex)
+				arr.GetEltIndex(int32(i) % maxIndex)
 			}
 		})
-
 	}
 }
 
