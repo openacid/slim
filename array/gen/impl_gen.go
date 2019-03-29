@@ -94,13 +94,13 @@ func Test{{.Name}}New(t *testing.T) {
 		index, eltsData := c.index, c.eltsData
 		cnt := int32(len(index))
 
-		ca, err := array.New{{.Name}}(index, eltsData)
+		a, err := array.New{{.Name}}(index, eltsData)
 		if err != nil {
 			t.Fatalf("failed new compacted array, err: %s", err)
 		}
 
-		if ca.Cnt != cnt {
-			t.Fatalf("cnt is not equal expect: %d, act: %d", cnt, ca.Cnt)
+		if a.Cnt != cnt {
+			t.Fatalf("cnt is not equal expect: %d, act: %d", cnt, a.Cnt)
 		}
 
 		buf := new(bytes.Buffer)
@@ -111,9 +111,9 @@ func Test{{.Name}}New(t *testing.T) {
 			expElts = []byte{}
 		}
 
-		if !reflect.DeepEqual(ca.Elts, expElts) && len(ca.Elts) != 0 && len(expElts) != 0 {
-			fmt.Println(pretty.Diff(ca.Elts, expElts))
-			t.Fatalf("elts is not equal expect: %d, act: %d", expElts, ca.Elts)
+		if !reflect.DeepEqual(a.Elts, expElts) && len(a.Elts) != 0 && len(expElts) != 0 {
+			fmt.Println(pretty.Diff(a.Elts, expElts))
+			t.Fatalf("elts is not equal expect: %d, act: %d", expElts, a.Elts)
 		}
 	}
 
@@ -138,7 +138,7 @@ func Test{{.Name}}Get(t *testing.T) {
 		}
 	}
 
-	ca, err := array.New{{.Name}}(index, eltsData)
+	a, err := array.New{{.Name}}(index, eltsData)
 	if err != nil {
 		t.Fatalf("failed new compacted array, err: %s", err)
 	}
@@ -146,7 +146,7 @@ func Test{{.Name}}Get(t *testing.T) {
 	dataIdx := int32(0)
 	for ii := int32(0); ii < idx; ii++ {
 
-		actByte, found := ca.Get(ii)
+		actByte, found := a.Get(ii)
 		_, present := keysMap[ii]
 		if found != present {
 			t.Fatalf("Get i:%d present:%t but:%t", ii, present, found)
