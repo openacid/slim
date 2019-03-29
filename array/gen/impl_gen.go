@@ -307,7 +307,7 @@ func main() {
 	}
 
 	var outfn string
-	flag.StringVar(&outfn, "out", "impl.go", "output fn")
+	flag.StringVar(&outfn, "out", "int.go", "output fn")
 	flag.Parse()
 
 	fmt.Println(outfn)
@@ -336,7 +336,7 @@ func main() {
 
 	// test
 
-	outfn = "impl_test.go"
+	outfn = "int_test.go"
 	f, err = os.OpenFile(outfn, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
