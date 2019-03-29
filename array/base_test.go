@@ -13,8 +13,8 @@ import (
 	"github.com/openacid/slim/marshal"
 )
 
-func makeRandArray(cnt int32) (idx int32, indexes []int32, keysMap map[int32]bool, ar *array.ArrayBase, err error) {
-	arr := &array.ArrayBase{}
+func makeRandArray(cnt int32) (idx int32, indexes []int32, keysMap map[int32]bool, ar *array.Base, err error) {
+	arr := &array.Base{}
 
 	indexes = []int32{}
 	rnd := rand.New(rand.NewSource(time.Now().Unix()))
@@ -33,7 +33,7 @@ func makeRandArray(cnt int32) (idx int32, indexes []int32, keysMap map[int32]boo
 	return idx, indexes, keysMap, arr, err
 }
 
-func TestArrayBaseInitIndex(t *testing.T) {
+func TestBaseInitIndex(t *testing.T) {
 
 	cases := []struct {
 		input       []int32
@@ -80,7 +80,7 @@ func TestArrayBaseInitIndex(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		ab := &array.ArrayBase{}
+		ab := &array.Base{}
 		err := ab.InitIndex(c.input)
 
 		if errors.Cause(err) != c.wanterr {
@@ -117,9 +117,9 @@ func testPanic(t *testing.T, f func(), msg string) {
 	f()
 }
 
-func TestArrayBaseInit(t *testing.T) {
+func TestBaseInit(t *testing.T) {
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 	testPanic(t, func() { _ = ab.Init([]int32{}, 1) }, "elts int")
 	testPanic(t, func() { _ = ab.Init([]int32{1, 2}, []interface{}{uint32(1), uint64(1)}) }, "different type elts")
 
@@ -190,7 +190,7 @@ func TestArrayBaseInit(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		ab := &array.ArrayBase{}
+		ab := &array.Base{}
 		err := ab.Init(c.input, c.elts)
 
 		if errors.Cause(err) != c.wanterr {
@@ -232,8 +232,8 @@ func (m IntMarshaler) GetMarshaledSize(d []byte) int {
 	return 1
 }
 
-func TestArrayBaseInitWithMarshaler(t *testing.T) {
-	ab := &array.ArrayBase{}
+func TestBaseInitWithMarshaler(t *testing.T) {
+	ab := &array.Base{}
 	ab.EltMarshaler = IntMarshaler{}
 	err := ab.Init([]int32{1, 2}, []int{3, 4})
 	if err != nil {
@@ -246,7 +246,7 @@ func TestArrayBaseInitWithMarshaler(t *testing.T) {
 	}
 }
 
-func TestArrayBaseHasAndGetEltIndex(t *testing.T) {
+func TestBaseHasAndGetEltIndex(t *testing.T) {
 
 	maxIndex, indexes, keysMap, arr, err := makeRandArray(1024)
 	if err != nil {
@@ -277,12 +277,12 @@ func TestArrayBaseHasAndGetEltIndex(t *testing.T) {
 	}
 }
 
-func TestArrayBaseGetTo(t *testing.T) {
+func TestBaseGetTo(t *testing.T) {
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 
 	// test empty array
 	v := uint16(0)
@@ -318,12 +318,12 @@ func TestArrayBaseGetTo(t *testing.T) {
 	}
 }
 
-func TestArrayBaseGet(t *testing.T) {
+func TestBaseGet(t *testing.T) {
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 	ab.EltMarshaler = marshal.U16{}
 
 	// test empty array
@@ -389,12 +389,12 @@ func BenchmarkHasAndGetEltIndex(b *testing.B) {
 	}
 }
 
-func BenchmarkArrayBaseGetTo(b *testing.B) {
+func BenchmarkBaseGetTo(b *testing.B) {
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 	err := ab.Init(indexes, elts)
 	if err != nil {
 		panic(err)
@@ -406,12 +406,12 @@ func BenchmarkArrayBaseGetTo(b *testing.B) {
 	}
 }
 
-func BenchmarkArrayBaseGet(b *testing.B) {
+func BenchmarkBaseGet(b *testing.B) {
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 	err := ab.Init(indexes, elts)
 	if err != nil {
 		panic(err)
@@ -424,12 +424,12 @@ func BenchmarkArrayBaseGet(b *testing.B) {
 	}
 }
 
-func BenchmarkArrayBaseGetBytes(b *testing.B) {
+func BenchmarkBaseGetBytes(b *testing.B) {
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
 
-	ab := &array.ArrayBase{}
+	ab := &array.Base{}
 	err := ab.Init(indexes, elts)
 	if err != nil {
 		panic(err)

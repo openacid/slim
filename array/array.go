@@ -24,7 +24,7 @@ import (
 //		map
 //		etc.
 type Array struct {
-	ArrayBase
+	Base
 }
 
 // NewEmpty creates an empty Array with element of type of "v".
@@ -56,7 +56,7 @@ func New(indexes []int32, elts interface{}) (*Array, error) {
 // Length of "indexes" and length of "elts" must be the same.
 // "elts" must be a slice of fixed-size value.
 func (a *Array) Init(indexes []int32, elts interface{}) error {
-	err := a.ArrayBase.Init(indexes, elts)
+	err := a.Base.Init(indexes, elts)
 	if err != nil {
 		return err
 	}

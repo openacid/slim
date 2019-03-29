@@ -175,7 +175,7 @@ func TestU16MarshalUnmarshal(t *testing.T) {
 
 		// Unmarshal
 
-		b := &array.ArrayU16{}
+		b := &array.U16{}
 		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
@@ -225,7 +225,7 @@ func TestU16MarshalUnmarshalBig(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	b := &array.ArrayU16{}
+	b := &array.U16{}
 	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
@@ -407,7 +407,7 @@ func TestU32MarshalUnmarshal(t *testing.T) {
 
 		// Unmarshal
 
-		b := &array.ArrayU32{}
+		b := &array.U32{}
 		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
@@ -457,7 +457,7 @@ func TestU32MarshalUnmarshalBig(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	b := &array.ArrayU32{}
+	b := &array.U32{}
 	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
@@ -639,7 +639,7 @@ func TestU64MarshalUnmarshal(t *testing.T) {
 
 		// Unmarshal
 
-		b := &array.ArrayU64{}
+		b := &array.U64{}
 		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
@@ -689,7 +689,7 @@ func TestU64MarshalUnmarshalBig(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	b := &array.ArrayU64{}
+	b := &array.U64{}
 	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)

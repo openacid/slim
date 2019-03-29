@@ -25,7 +25,7 @@ func Example_marshal() {
 	fmt.Println("marshaled bytes:", md)
 
 	// Unmarshal
-	b := &array.ArrayU16{}
+	b := &array.U16{}
 	err = proto.Unmarshal(md, b)
 
 	fmt.Println("unmarshal result:", err)

@@ -2,14 +2,14 @@ package array
 
 // Do NOT edit. re-generate this file with "go generate ./..."
 
-// ArrayU16 is an implementation of ArrayBase with uint16 element
-type ArrayU16 struct {
-	ArrayBase
+// U16 is an implementation of Base with uint16 element
+type U16 struct {
+	Base
 }
 
-// NewU16 creates a ArrayU16
-func NewU16(index []int32, elts []uint16) (a *ArrayU16, err error) {
-	a = &ArrayU16{}
+// NewU16 creates a U16
+func NewU16(index []int32, elts []uint16) (a *U16, err error) {
+	a = &U16{}
 	err = a.Init(index, elts)
 	if err != nil {
 		a = nil
@@ -19,7 +19,7 @@ func NewU16(index []int32, elts []uint16) (a *ArrayU16, err error) {
 
 // Get returns value at "idx" and a bool indicating if the value is
 // found.
-func (a *ArrayU16) Get(idx int32) (uint16, bool) {
+func (a *U16) Get(idx int32) (uint16, bool) {
 	bs, ok := a.GetBytes(idx, 2)
 	if ok {
 		return endian.Uint16(bs), true
@@ -28,14 +28,14 @@ func (a *ArrayU16) Get(idx int32) (uint16, bool) {
 	return 0, false
 }
 
-// ArrayU32 is an implementation of ArrayBase with uint32 element
-type ArrayU32 struct {
-	ArrayBase
+// U32 is an implementation of Base with uint32 element
+type U32 struct {
+	Base
 }
 
-// NewU32 creates a ArrayU32
-func NewU32(index []int32, elts []uint32) (a *ArrayU32, err error) {
-	a = &ArrayU32{}
+// NewU32 creates a U32
+func NewU32(index []int32, elts []uint32) (a *U32, err error) {
+	a = &U32{}
 	err = a.Init(index, elts)
 	if err != nil {
 		a = nil
@@ -45,7 +45,7 @@ func NewU32(index []int32, elts []uint32) (a *ArrayU32, err error) {
 
 // Get returns value at "idx" and a bool indicating if the value is
 // found.
-func (a *ArrayU32) Get(idx int32) (uint32, bool) {
+func (a *U32) Get(idx int32) (uint32, bool) {
 	bs, ok := a.GetBytes(idx, 4)
 	if ok {
 		return endian.Uint32(bs), true
@@ -54,14 +54,14 @@ func (a *ArrayU32) Get(idx int32) (uint32, bool) {
 	return 0, false
 }
 
-// ArrayU64 is an implementation of ArrayBase with uint64 element
-type ArrayU64 struct {
-	ArrayBase
+// U64 is an implementation of Base with uint64 element
+type U64 struct {
+	Base
 }
 
-// NewU64 creates a ArrayU64
-func NewU64(index []int32, elts []uint64) (a *ArrayU64, err error) {
-	a = &ArrayU64{}
+// NewU64 creates a U64
+func NewU64(index []int32, elts []uint64) (a *U64, err error) {
+	a = &U64{}
 	err = a.Init(index, elts)
 	if err != nil {
 		a = nil
@@ -71,7 +71,7 @@ func NewU64(index []int32, elts []uint64) (a *ArrayU64, err error) {
 
 // Get returns value at "idx" and a bool indicating if the value is
 // found.
-func (a *ArrayU64) Get(idx int32) (uint64, bool) {
+func (a *U64) Get(idx int32) (uint64, bool) {
 	bs, ok := a.GetBytes(idx, 8)
 	if ok {
 		return endian.Uint64(bs), true

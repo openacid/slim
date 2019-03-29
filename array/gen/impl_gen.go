@@ -12,14 +12,14 @@ var implHead = `package array
 `
 
 var implTemplate = `
-// Array{{.Name}} is an implementation of ArrayBase with {{.ValType}} element
-type Array{{.Name}} struct {
-	ArrayBase
+// {{.Name}} is an implementation of Base with {{.ValType}} element
+type {{.Name}} struct {
+	Base
 }
 
-// New{{.Name}} creates a Array{{.Name}}
-func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *Array{{.Name}}, err error) {
-	a = &Array{{.Name}}{}
+// New{{.Name}} creates a {{.Name}}
+func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *{{.Name}}, err error) {
+	a = &{{.Name}}{}
 	err = a.Init(index, elts)
 	if err != nil {
 		a = nil
@@ -29,7 +29,7 @@ func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *Array{{.Name}}, err er
 
 // Get returns value at "idx" and a bool indicating if the value is
 // found.
-func (a *Array{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
+func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 	bs, ok := a.GetBytes(idx, {{.ValLen}})
 	if ok {
 		return endian.{{.Decoder}}(bs), true
@@ -217,7 +217,7 @@ func Test{{.Name}}MarshalUnmarshal(t *testing.T) {
 
 		// Unmarshal
 
-		b := &array.Array{{.Name}}{}
+		b := &array.{{.Name}}{}
 		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
@@ -267,7 +267,7 @@ func Test{{.Name}}MarshalUnmarshalBig(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	b := &array.Array{{.Name}}{}
+	b := &array.{{.Name}}{}
 	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)

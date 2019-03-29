@@ -49,8 +49,8 @@ const (
 //
 // TODO add scenario.
 type SlimTrie struct {
-	Children array.ArrayU32
-	Steps    array.ArrayU16
+	Children array.U32
+	Steps    array.U16
 	Leaves   array.Array
 }
 
@@ -71,8 +71,8 @@ var (
 //	   struct { X int64; Y int32; } hax fixed size.
 func NewSlimTrie(m marshal.Marshaler, keys []string, values interface{}) (*SlimTrie, error) {
 	st := &SlimTrie{
-		Children: array.ArrayU32{},
-		Steps:    array.ArrayU16{},
+		Children: array.U32{},
+		Steps:    array.U16{},
 		Leaves:   array.Array{},
 	}
 	st.Leaves.EltMarshaler = m

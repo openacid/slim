@@ -52,7 +52,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 		// Unmarshal
 
-		b := &array.ArrayU16{}
+		b := &array.U16{}
 		err = proto.Unmarshal(rst, b)
 
 		if err != nil {
@@ -102,7 +102,7 @@ func TestMarshalUnmarshalBit(t *testing.T) {
 		t.Errorf("expect no error but: %s", err)
 	}
 
-	b := &array.ArrayU16{}
+	b := &array.U16{}
 	err = proto.Unmarshal(rst, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)
@@ -149,7 +149,7 @@ func TestProtobufMarshalUnmarshal2Types(t *testing.T) {
 	checkArrayEqual(t, udArr, convArr, indexes)
 }
 
-func checkArrayEqual(t *testing.T, udArr *array.ArrayU16, convArr *array.Array, indexes []int32) {
+func checkArrayEqual(t *testing.T, udArr *array.U16, convArr *array.Array, indexes []int32) {
 	for _, i := range indexes {
 		av, afound := udArr.Get(i)
 		bv, bfound := convArr.Get(i)

@@ -14,7 +14,7 @@ import (
 // endian is the default endian for array
 var endian = binary.LittleEndian
 
-// ArrayBase is the base of:
+// Base is the base of:
 //   a specific type array like ArrayU16
 //   and an Array of arbitrary fixed-size element.
 //
@@ -22,7 +22,7 @@ var endian = binary.LittleEndian
 //
 //	   Has():          9~10 ns / call; 1 memory accesses
 //	   GetEltIndex(): 10~20 ns / call; 2 memory accesses
-type ArrayBase struct {
+type Base struct {
 	prototype.Array32
 	EltMarshaler marshal.Marshaler
 }
@@ -44,7 +44,7 @@ func bmBit(idx int32) (int32, int32) {
 // InitIndex initializes index bitmap for an array.
 // Index must be an ascending int32 slice, otherwise, it return
 // the ErrIndexNotAscending error
-func (a *ArrayBase) InitIndex(index []int32) error {
+func (a *Base) InitIndex(index []int32) error {
 
 	capacity := int32(0)
 	if len(index) > 0 {
@@ -70,7 +70,7 @@ func (a *ArrayBase) InitIndex(index []int32) error {
 // GetEltIndex returns the position in a.Elts of element[idx] and a bool
 // indicating if found or not.
 // If "idx" absents it returns "0, false".
-func (a *ArrayBase) GetEltIndex(idx int32) (int32, bool) {
+func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 	iBm, iBit := bmBit(idx)
 
 	if iBm >= int32(len(a.Bitmaps)) {
@@ -89,7 +89,7 @@ func (a *ArrayBase) GetEltIndex(idx int32) (int32, bool) {
 }
 
 // Has returns true if idx is in array, else return false.
-func (a *ArrayBase) Has(idx int32) bool {
+func (a *Base) Has(idx int32) bool {
 	iBm := idx / bmWidth
 	return iBm < int32(len(a.Bitmaps)) && ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
 }
@@ -98,7 +98,7 @@ func (a *ArrayBase) Has(idx int32) bool {
 // The indexes must be an ascending int32 slice,
 // otherwise, return the ErrIndexNotAscending error.
 // The "elts" is a slice.
-func (a *ArrayBase) Init(indexes []int32, elts interface{}) error {
+func (a *Base) Init(indexes []int32, elts interface{}) error {
 
 	rElts := reflect.ValueOf(elts)
 	if rElts.Kind() != reflect.Slice {
@@ -141,7 +141,7 @@ func (a *ArrayBase) Init(indexes []int32, elts interface{}) error {
 }
 
 // InitElts initialized a.Elts, by marshaling elements in to bytes.
-func (a *ArrayBase) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, error) {
+func (a *Base) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, error) {
 
 	rElts := reflect.ValueOf(elts)
 	n := rElts.Len()
@@ -173,7 +173,7 @@ func (a *ArrayBase) InitElts(elts interface{}, marshaler marshal.Marshaler) (int
 // Involves 2 alloc:
 //	 bytes.NewBuffer()
 //	 binary.Read()
-func (a *ArrayBase) GetTo(idx int32, v interface{}) bool {
+func (a *Base) GetTo(idx int32, v interface{}) bool {
 
 	if a.Cnt == 0 {
 		return false
@@ -210,7 +210,7 @@ func (a *ArrayBase) GetTo(idx int32, v interface{}) bool {
 // Involves 1 alloc:
 //   // when Unmarshal convert a concrete type to interface{}
 //   a.EltMarshaler.Unmarshal(bs)
-func (a *ArrayBase) Get(idx int32) (interface{}, bool) {
+func (a *Base) Get(idx int32) (interface{}, bool) {
 
 	if a.Cnt == 0 {
 		return nil, false
@@ -234,7 +234,7 @@ func (a *ArrayBase) Get(idx int32) (interface{}, bool) {
 //	 a.Elts
 //
 // Involves 0 alloc
-func (a *ArrayBase) GetBytes(idx int32, eltsize int) ([]byte, bool) {
+func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 	dataIndex, ok := a.GetEltIndex(idx)
 	if !ok {
 		return nil, false
@@ -246,7 +246,7 @@ func (a *ArrayBase) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 
 // appendIndex add an index into index bitmap.
 // The `index` must be greater than any existent indexes.
-func (a *ArrayBase) appendIndex(index int32) {
+func (a *Base) appendIndex(index int32) {
 
 	iBm, iBit := bmBit(index)
 
