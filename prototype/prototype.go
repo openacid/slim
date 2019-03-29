@@ -1,9 +1,8 @@
 // Package prototype provides generated Protocol Buffers for cache serialization.
-//
-// Usage:
-//		go generate ./...
-//
-// It just read the comment line starts with "//go:generate" and run.
 package prototype
+
+// Auto-generated code definition
+// Usage:
+//     go generate ./...
 
 //go:generate protoc --proto_path=. --go_out=. array.proto
