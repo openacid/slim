@@ -1,7 +1,9 @@
-package array
+package array_test
 
 import (
 	"fmt"
+
+	"github.com/openacid/slim/array"
 )
 
 func Example() {
@@ -13,7 +15,7 @@ func Example() {
 	indexes := []int32{0, 5, 9}
 	elts := []uint32{12, 15, 19}
 
-	arr, err := New(indexes, elts)
+	arr, err := array.New(indexes, elts)
 	if err != nil {
 		fmt.Printf("Init compacted array error:%s\n", err)
 		return
