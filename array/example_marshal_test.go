@@ -3,7 +3,7 @@ package array_test
 import (
 	"fmt"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/openacid/slim/array"
 )
 

@@ -21,10 +21,12 @@ func Example() {
 		return
 	}
 
-	if arr.Has(indexes[1]) {
-		val, found := arr.Get(indexes[1])
-		fmt.Printf("get indexed 1 value:%v found: %t\n", val, found)
-	}
+	fmt.Printf("array has %d-th elt: %t\n", 4, arr.Has(4))
 
-	// Output: get indexed 1 value:15 found: true
+	val, found := arr.Get(5)
+	fmt.Printf("get arr[%d] value:%v found: %t\n", 5, val, found)
+
+	// Output:
+	// array has 4-th elt: false
+	// get arr[5] value:15 found: true
 }

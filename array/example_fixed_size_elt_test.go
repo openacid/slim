@@ -11,7 +11,7 @@ type MyElt struct {
 	J uint64
 }
 
-func Example_useArray() {
+func ExampleArray_with_fixed_size_elt() {
 
 	// This example shows how to define a new array type.
 
