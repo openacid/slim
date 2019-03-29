@@ -32,12 +32,16 @@ import (
 // To achieve the best performance, use a type specific array such as array.U32.
 // The performance is much better: a Get() costs ~ 12 ns/op and involves 0
 // alloc.
+//
+// Since 0.2.0
 type Array struct {
 	Base
 }
 
 // NewEmpty creates an empty Array with element of type of "v".
 // If v is a pointer, the value type it points to is used.
+//
+// Since 0.2.0
 func NewEmpty(v interface{}) (*Array, error) {
 	m, err := marshal.NewTypeMarshaler(v)
 	if err != nil {
@@ -52,6 +56,8 @@ func NewEmpty(v interface{}) (*Array, error) {
 // New creates an array from specified indexes and elts.
 // The length of indexes and the length of elts must be the same.
 // "elts" must be a slice of fixed-size values.
+//
+// Since 0.2.0
 func New(indexes []int32, elts interface{}) (*Array, error) {
 	a := &Array{}
 	err := a.Init(indexes, elts)
@@ -64,6 +70,8 @@ func New(indexes []int32, elts interface{}) (*Array, error) {
 // Init initializes an Array.
 // Length of "indexes" and length of "elts" must be the same.
 // "elts" must be a slice of fixed-size value.
+//
+// Since 0.2.0
 func (a *Array) Init(indexes []int32, elts interface{}) error {
 	err := a.Base.Init(indexes, elts)
 	if err != nil {

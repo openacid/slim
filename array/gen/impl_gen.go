@@ -13,11 +13,15 @@ var implHead = `package array
 
 var implTemplate = `
 // {{.Name}} is an implementation of Base with {{.ValType}} element
+//
+// Since 0.2.0
 type {{.Name}} struct {
 	Base
 }
 
 // New{{.Name}} creates a {{.Name}}
+//
+// Since 0.2.0
 func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *{{.Name}}, err error) {
 	a = &{{.Name}}{}
 	err = a.Init(index, elts)
@@ -29,6 +33,8 @@ func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *{{.Name}}, err error) 
 
 // Get returns value at "idx" and a bool indicating if the value is
 // found.
+//
+// Since 0.2.0
 func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 	bs, ok := a.GetBytes(idx, {{.ValLen}})
 	if ok {

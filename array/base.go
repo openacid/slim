@@ -22,6 +22,8 @@ var endian = binary.LittleEndian
 //
 //	   Has():          9~10 ns / call; 1 memory accesses
 //	   GetEltIndex(): 10~20 ns / call; 2 memory accesses
+//
+// Since 0.2.0
 type Base struct {
 	prototype.Array32
 	EltMarshaler marshal.Marshaler
@@ -44,6 +46,8 @@ func bmBit(idx int32) (int32, int32) {
 // InitIndex initializes index bitmap for an array.
 // Index must be an ascending int32 slice, otherwise, it return
 // the ErrIndexNotAscending error
+//
+// Since 0.2.0
 func (a *Base) InitIndex(index []int32) error {
 
 	capacity := int32(0)
@@ -70,6 +74,8 @@ func (a *Base) InitIndex(index []int32) error {
 // GetEltIndex returns the position in a.Elts of element[idx] and a bool
 // indicating if found or not.
 // If "idx" absents it returns "0, false".
+//
+// Since 0.2.0
 func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 	iBm, iBit := bmBit(idx)
 
@@ -89,6 +95,8 @@ func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 }
 
 // Has returns true if idx is in array, else return false.
+//
+// Since 0.2.0
 func (a *Base) Has(idx int32) bool {
 	iBm := idx / bmWidth
 	return iBm < int32(len(a.Bitmaps)) && ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
@@ -98,6 +106,8 @@ func (a *Base) Has(idx int32) bool {
 // The indexes must be an ascending int32 slice,
 // otherwise, return the ErrIndexNotAscending error.
 // The "elts" is a slice.
+//
+// Since 0.2.0
 func (a *Base) Init(indexes []int32, elts interface{}) error {
 
 	rElts := reflect.ValueOf(elts)
@@ -141,6 +151,8 @@ func (a *Base) Init(indexes []int32, elts interface{}) error {
 }
 
 // InitElts initialized a.Elts, by marshaling elements in to bytes.
+//
+// Since 0.2.0
 func (a *Base) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, error) {
 
 	rElts := reflect.ValueOf(elts)
@@ -173,6 +185,8 @@ func (a *Base) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, err
 // Involves 2 alloc:
 //	 bytes.NewBuffer()
 //	 binary.Read()
+//
+// Since 0.2.0
 func (a *Base) GetTo(idx int32, v interface{}) bool {
 
 	if a.Cnt == 0 {
@@ -210,6 +224,8 @@ func (a *Base) GetTo(idx int32, v interface{}) bool {
 // Involves 1 alloc:
 //   // when Unmarshal convert a concrete type to interface{}
 //   a.EltMarshaler.Unmarshal(bs)
+//
+// Since 0.2.0
 func (a *Base) Get(idx int32) (interface{}, bool) {
 
 	if a.Cnt == 0 {
@@ -234,6 +250,8 @@ func (a *Base) Get(idx int32) (interface{}, bool) {
 //	 a.Elts
 //
 // Involves 0 alloc
+//
+// Since 0.2.0
 func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 	dataIndex, ok := a.GetEltIndex(idx)
 	if !ok {
