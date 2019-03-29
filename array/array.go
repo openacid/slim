@@ -23,6 +23,15 @@ import (
 //		[]uint32
 //		map
 //		etc.
+//
+// Performance note
+//
+// A general Array.Get is implemented with reflect.
+// Benchmark shows a Get() costs ~ 168 ns/op and involves 4 alloc.
+//
+// To achieve the best performance, use a type specific array such as array.U32.
+// The performance is much better: a Get() costs ~ 12 ns/op and involves 0
+// alloc.
 type Array struct {
 	Base
 }

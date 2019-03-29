@@ -104,7 +104,7 @@ func benchMemOverHead(eltSize int, maxIdx int32) func(*testing.B) {
 	}
 }
 
-func BenchmarkMemOverhead(b *testing.B) {
+func BenchmarkArrayMemOverhead(b *testing.B) {
 	var cases = []struct {
 		eltSize int
 		maxIdx  int32
@@ -120,27 +120,12 @@ func BenchmarkMemOverhead(b *testing.B) {
 	}
 }
 
-func BenchmarkGet(b *testing.B) {
+func BenchmarkArrayGet(b *testing.B) {
 	indexes := []int32{0, 5, 9, 203, 400}
 	elts := []uint32{12, 15, 19, 120, 300}
-	a, _ := array.NewU32(indexes, elts)
+	a, _ := array.New(indexes, elts)
 
 	for i := 0; i < b.N; i++ {
 		a.Get(5)
-	}
-}
-
-func BenchmarkGetBytes(b *testing.B) {
-	indexes := []int32{0, 5, 9, 203, 400}
-	elts := []uint32{12, 15, 19, 120, 300}
-	a := &array.Array{}
-	_ = a.InitIndex(indexes)
-	a.Elts = make([]byte, 0, len(elts))
-	for _, elt := range elts {
-		a.Elts = append(a.Elts, byte(elt))
-	}
-
-	for i := 0; i < b.N; i++ {
-		a.GetBytes(5, 1)
 	}
 }
