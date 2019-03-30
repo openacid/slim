@@ -1,14 +1,8 @@
 package main
 
-import (
-	"flag"
-	"fmt"
-	"os"
-	"text/template"
-)
+import "github.com/openacid/slim/genhelper"
 
 var implHead = `package marshal
-// Do NOT edit. re-generate this file with "go generate ./..."
 
 import "encoding/binary"
 `
@@ -20,7 +14,7 @@ type {{.Name}} struct{}
 // Marshal converts {{.ValType}} to slice of {{.ValLen}} bytes.
 func (c {{.Name}}) Marshal(d interface{}) []byte {
 	b := make([]byte, {{.ValLen}})
-	v := {{.EncodeCast}}(d.({{.ValType}}))
+	v := {{.DecodeCast}}(d.({{.ValType}}))
 	binary.LittleEndian.Put{{.Decoder}}(b, v)
 	return b
 }
@@ -48,7 +42,6 @@ func (c {{.Name}}) GetMarshaledSize(b []byte) int {
 `
 
 var testHead = `package marshal_test
-// Do NOT edit. re-generate this file with "go generate ./..."
 
 import (
 	"testing"
@@ -110,74 +103,21 @@ func Test{{.Name}}(t *testing.T) {
 }
 `
 
-type implConfig struct {
-	Name       string
-	ValType    string
-	ValLen     int
-	Decoder    string
-	EncodeCast string
-}
-
 func main() {
 
-	impls := []implConfig{
-		{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
-		{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
+	pref := "int"
+	implfn := pref + ".go"
+	testfn := pref + "_test.go"
+
+	impls := []interface{}{
+		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", DecodeCast: "uint16"},
+		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", DecodeCast: "uint32"},
+		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", DecodeCast: "uint64"},
+		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", DecodeCast: "uint16"},
+		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", DecodeCast: "uint32"},
+		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", DecodeCast: "uint64"},
 	}
 
-	var outfn string
-	flag.StringVar(&outfn, "out", "int.go", "output fn")
-	flag.Parse()
-
-	fmt.Println(outfn)
-
-	// impl
-
-	f, err := os.OpenFile(outfn, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(f, implHead)
-
-	tmpl, err := template.New("test").Parse(implTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, imp := range impls {
-		err = tmpl.Execute(f, imp)
-		if err != nil {
-			panic(err)
-		}
-	}
-	f.Close()
-
-	// test
-
-	outfn = "int_test.go"
-	f, err = os.OpenFile(outfn, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(f, testHead)
-
-	tmpl, err = template.New("test").Parse(testTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, imp := range impls {
-		err = tmpl.Execute(f, imp)
-		if err != nil {
-			panic(err)
-		}
-	}
-	f.Close()
-
+	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
+	genhelper.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
 }

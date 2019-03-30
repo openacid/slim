@@ -1,14 +1,10 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"os"
-	"text/template"
+	"github.com/openacid/slim/genhelper"
 )
 
 var implHead = `package array
-// Do NOT edit. re-generate this file with "go generate ./..."
 `
 
 var implTemplate = `
@@ -46,7 +42,6 @@ func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 `
 
 var testHead = `package array_test
-// Do NOT edit. re-generate this file with "go generate ./..."
 
 import (
 	"bytes"
@@ -297,70 +292,18 @@ func Benchmark{{.Name}}Get(b *testing.B) {
 }
 `
 
-type implConfig struct {
-	Name    string
-	ValType string
-	ValLen  int
-	Decoder string
-}
-
 func main() {
 
-	impls := []implConfig{
-		{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16"},
-		{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32"},
-		{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64"},
+	pref := "int"
+	implfn := pref + ".go"
+	testfn := pref + "_test.go"
+
+	impls := []interface{}{
+		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16"},
+		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32"},
+		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64"},
 	}
 
-	var outfn string
-	flag.StringVar(&outfn, "out", "int.go", "output fn")
-	flag.Parse()
-
-	fmt.Println(outfn)
-
-	// impl
-
-	f, err := os.OpenFile(outfn, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(f, implHead)
-
-	tmpl, err := template.New("test").Parse(implTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, imp := range impls {
-		err = tmpl.Execute(f, imp)
-		if err != nil {
-			panic(err)
-		}
-	}
-	f.Close()
-
-	// test
-
-	outfn = "int_test.go"
-	f, err = os.OpenFile(outfn, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(f, testHead)
-
-	tmpl, err = template.New("test").Parse(testTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, imp := range impls {
-		err = tmpl.Execute(f, imp)
-		if err != nil {
-			panic(err)
-		}
-	}
-	f.Close()
-
+	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
+	genhelper.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
 }

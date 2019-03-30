@@ -1,6 +1,6 @@
-package array_test
+// Code generated 'by go generate ./...'; DO NOT EDIT.
 
-// Do NOT edit. re-generate this file with "go generate ./..."
+package array_test
 
 import (
 	"bytes"

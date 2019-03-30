@@ -1,6 +1,6 @@
-package marshal_test
+// Code generated 'by go generate ./...'; DO NOT EDIT.
 
-// Do NOT edit. re-generate this file with "go generate ./..."
+package marshal_test
 
 import (
 	"testing"

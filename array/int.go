@@ -1,6 +1,6 @@
-package array
+// Code generated 'by go generate ./...'; DO NOT EDIT.
 
-// Do NOT edit. re-generate this file with "go generate ./..."
+package array
 
 // U16 is an implementation of Base with uint16 element
 //
