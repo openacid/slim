@@ -326,7 +326,7 @@ func TestBaseGet(t *testing.T) {
 	}
 }
 
-func BenchmarkHasAndGetEltIndex(b *testing.B) {
+func BenchmarkBaseHasAndGetEltIndex(b *testing.B) {
 
 	var name string
 	runs := []struct{ cnt int32 }{
