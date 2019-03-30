@@ -14,11 +14,9 @@ import (
 // endian is the default endian for array
 var endian = binary.LittleEndian
 
-// Base is the base of:
-//   a specific type array like ArrayU16
-//   and an Array of arbitrary fixed-size element.
+// Base is the base of: Array and U16 etc.
 //
-// Performance note
+// Performance note.
 //
 //	   Has():          9~10 ns / call; 1 memory accesses
 //	   GetEltIndex(): 10~20 ns / call; 2 memory accesses
@@ -214,16 +212,6 @@ func (a *Base) GetTo(idx int32, v interface{}) bool {
 // Get retrieves the value at "idx" and return it.
 // If this array has a value at "idx" it returns the value and "true",
 // otherwise it returns "nil" and "false".
-//
-// Performance note
-//
-// Involves 2 memory access:
-//	 a.Bitmaps
-//	 a.Elts
-//
-// Involves 1 alloc:
-//   // when Unmarshal convert a concrete type to interface{}
-//   a.EltMarshaler.Unmarshal(bs)
 //
 // Since 0.2.0
 func (a *Base) Get(idx int32) (interface{}, bool) {
