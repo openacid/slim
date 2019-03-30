@@ -1,29 +1,36 @@
 package array_test
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/openacid/slim/array"
 )
 
-type MyElt struct {
-	I uint32
-	J uint64
+// Define a array
+
+type MyElt uint32
+
+type MyArray struct {
+	array.Array
 }
 
-func ExampleArray_with_fixed_size_elt() {
-
-	// This example shows how to define a new array type.
-
-	indexes := []int32{1, 5, 9, 203}
-	elts := []MyElt{
-		{1, 2},
-		{3, 4},
-		{6, 6},
-		{7, 8},
+func (ma *MyArray) Get(i int32) (MyElt, bool) {
+	bs, found := ma.GetBytes(i, 4)
+	if !found {
+		return MyElt(0), false
 	}
 
-	a, err := array.New(indexes, elts)
+	return MyElt(binary.LittleEndian.Uint32(bs)), true
+}
+
+func Example_defineArray() {
+
+	a := &MyArray{}
+	err := a.Init(
+		[]int32{1, 5, 9, 203},
+		[]MyElt{1, 2, 3, 4})
+
 	if err != nil {
 		panic(err)
 	}
@@ -38,8 +45,8 @@ func ExampleArray_with_fixed_size_elt() {
 	}
 
 	// Output:
-	// value of a[1]: {1 2}
+	// value of a[1]: 1
 	// value of a[2] does not exist
-	// value of a[5]: {3 4}
+	// value of a[5]: 2
 	// value of a[6] does not exist
 }

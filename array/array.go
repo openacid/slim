@@ -113,6 +113,8 @@ func New(indexes []int32, elts interface{}) (*Array, error) {
 // Length of "indexes" and length of "elts" must be the same.
 // "elts" must be a slice of fixed-size values.
 //
+// By default Array encodes an element with binary.Write(), in binary.LittenEndian.
+//
 // Since 0.2.0
 func (a *Array) Init(indexes []int32, elts interface{}) error {
 	err := a.Base.Init(indexes, elts)
