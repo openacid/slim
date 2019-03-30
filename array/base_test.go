@@ -13,24 +13,29 @@ import (
 	"github.com/openacid/slim/marshal"
 )
 
-func makeRandArray(cnt int32) (idx int32, indexes []int32, keysMap map[int32]bool, ar *array.Base, err error) {
-	arr := &array.Base{}
+func randIndexes(cnt int32) []int32 {
 
-	indexes = []int32{}
+	indexes := []int32{}
 	rnd := rand.New(rand.NewSource(time.Now().Unix()))
 
-	keysMap = map[int32]bool{}
-	num, idx := int32(0), int32(0)
-	for ; num < cnt; idx++ {
+	for i := int32(0); cnt > 0; i++ {
 		if rnd.Intn(2) == 1 {
-			indexes = append(indexes, idx)
-			num++
-			keysMap[idx] = true
+			indexes = append(indexes, i)
+			cnt--
 		}
 	}
 
-	err = arr.InitIndex(indexes)
-	return idx, indexes, keysMap, arr, err
+	return indexes
+}
+
+func makeIndexMap(idx []int32) map[int32]bool {
+
+	indexMap := map[int32]bool{}
+	for _, i := range idx {
+		indexMap[i] = true
+	}
+
+	return indexMap
 }
 
 func TestBaseInitIndex(t *testing.T) {
@@ -248,31 +253,34 @@ func TestBaseInitWithMarshaler(t *testing.T) {
 
 func TestBaseHasAndGetEltIndex(t *testing.T) {
 
-	maxIndex, indexes, keysMap, arr, err := makeRandArray(1024)
+	cnt := int32(024)
+	indexes := randIndexes(cnt)
+	indexMap := makeIndexMap(indexes)
+
+	maxIndex := indexes[len(indexes)-1]
+
+	arr := &array.Base{}
+	err := arr.InitIndex(indexes)
 	if err != nil {
 		t.Fatalf("expect no err but: %s", err)
 	}
 
 	for i := int32(0); i < maxIndex+128; i++ {
-		if _, ok := keysMap[i]; ok {
-			if !arr.Has(i) {
-				t.Fatalf("expect has but not: %d", i)
-			}
-			eltIndex, found := arr.GetEltIndex(i)
-			if !found {
-				t.Fatalf("should found but not: %d", i)
-			}
-			if indexes[eltIndex] != i {
-				t.Fatalf("i=%d should be at %d", i, eltIndex)
-			}
-		} else {
-			if arr.Has(i) {
-				t.Fatalf("expect not has but has: %d", i)
-			}
-			_, found := arr.GetEltIndex(i)
-			if found {
-				t.Fatalf("should not found but found: %d", i)
-			}
+
+		_, inMap := indexMap[i]
+
+		has := arr.Has(i)
+		if inMap != has {
+			t.Fatalf("Has(%d) expect: %v; but: %v", i, inMap, has)
+		}
+
+		eltIndex, inElts := arr.GetEltIndex(i)
+		if inMap != inElts {
+			t.Fatalf("Has(%d) expect: %v; but: %v", i, inMap, inElts)
+		}
+
+		if inMap && indexes[eltIndex] != i {
+			t.Fatalf("i=%d should be at %d", i, eltIndex)
 		}
 	}
 }
@@ -330,7 +338,15 @@ func BenchmarkHasAndGetEltIndex(b *testing.B) {
 		{102400},
 	}
 	for _, r := range runs {
-		maxIndex, _, _, arr, _ := makeRandArray(r.cnt)
+
+		indexes := randIndexes(r.cnt)
+		maxIndex := indexes[len(indexes)-1]
+
+		arr := &array.Base{}
+		err := arr.InitIndex(indexes)
+		if err != nil {
+			panic(err)
+		}
 
 		name = fmt.Sprintf("Has-%d", r.cnt)
 		b.Run(name, func(b *testing.B) {
