@@ -63,6 +63,9 @@ toc:
 	# npm install -g doctoc
 	doctoc --title '' --github README.md
 
+ben: test
+	$(GO) test ./... -run=none -bench=. -benchmem
+
 gen:
 	$(GO) generate ./...
 

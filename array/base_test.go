@@ -361,6 +361,8 @@ func BenchmarkBaseGet(b *testing.B) {
 
 	ab.EltMarshaler = marshal.U16{}
 
+	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		ab.Get(1)
 	}
@@ -377,7 +379,7 @@ func BenchmarkBaseGetBytes(b *testing.B) {
 		panic(err)
 	}
 
-	ab.EltMarshaler = marshal.U16{}
+	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		ab.GetBytes(1, 2)
