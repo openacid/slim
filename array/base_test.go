@@ -277,47 +277,6 @@ func TestBaseHasAndGetEltIndex(t *testing.T) {
 	}
 }
 
-func TestBaseGetTo(t *testing.T) {
-
-	indexes := []int32{1, 3, 100}
-	elts := []uint16{1, 3, 100}
-
-	ab := &array.Base{}
-
-	// test empty array
-	v := uint16(0)
-	found := ab.GetTo(1, &v)
-	if found {
-		t.Fatalf("expect not found but: %v", found)
-	}
-
-	err := ab.Init(indexes, elts)
-	if err != nil {
-		t.Fatalf("expected no error but: %#v", err)
-	}
-
-	testPanic(t, func() { ii := int(0); ab.GetTo(1, &ii) }, "int is not size fixed")
-
-	for i, idx := range indexes {
-		found := ab.GetTo(idx, &v)
-		if !found {
-			t.Fatalf("%d-th, expect found but: %d %v", i+1, idx, found)
-		}
-		if v != elts[i] {
-			t.Fatalf("%d-th, %d expect %d found but: %v", i+1, idx, elts[i], v)
-		}
-
-		v = 0
-		found = ab.GetTo(idx+1, &v)
-		if found {
-			t.Fatalf("%d-th, expect not found but: %d %v", i+1, idx, found)
-		}
-		if v != 0 {
-			t.Fatalf("%d-th, %d expect nil found but: %v", i+1, idx, v)
-		}
-	}
-}
-
 func TestBaseGet(t *testing.T) {
 
 	indexes := []int32{1, 3, 100}
@@ -386,23 +345,6 @@ func BenchmarkHasAndGetEltIndex(b *testing.B) {
 				arr.GetEltIndex(int32(i) % maxIndex)
 			}
 		})
-	}
-}
-
-func BenchmarkBaseGetTo(b *testing.B) {
-
-	indexes := []int32{1, 3, 100}
-	elts := []uint16{1, 3, 100}
-
-	ab := &array.Base{}
-	err := ab.Init(indexes, elts)
-	if err != nil {
-		panic(err)
-	}
-
-	v := uint16(0)
-	for i := 0; i < b.N; i++ {
-		ab.GetTo(1, &v)
 	}
 }
 

@@ -1,7 +1,6 @@
 package array
 
 import (
-	"bytes"
 	"encoding/binary"
 	"reflect"
 
@@ -167,46 +166,6 @@ func (a *Base) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, err
 	a.Elts = b
 
 	return n, nil
-}
-
-// GetTo retrieves the value at "idx" and stores it in "v".
-// "v" is a pointer to a fixed-size value as receiver.
-// "v" must have the same type with the slice element which is used to create
-// the array, or the behavior is undefined.
-//
-// If this array has a value at "idx" it returns true, otherwise false.
-//
-// When not found, "v" in intact.
-//
-// Performance note
-//
-// Involves 2 alloc:
-//	 bytes.NewBuffer()
-//	 binary.Read()
-//
-// Since 0.2.0
-func (a *Base) GetTo(idx int32, v interface{}) bool {
-
-	if a.Cnt == 0 {
-		return false
-	}
-
-	sz := binary.Size(v)
-	if sz < 0 {
-		panic(marshal.ErrNotFixedSize)
-	}
-
-	bs, ok := a.GetBytes(idx, sz)
-	if ok {
-		b := bytes.NewBuffer(bs)
-		err := binary.Read(b, endian, v)
-		if err != nil {
-			panic(err)
-		}
-		return true
-	}
-
-	return false
 }
 
 // Get retrieves the value at "idx" and return it.
