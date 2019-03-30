@@ -14,7 +14,7 @@ type {{.Name}} struct{}
 // Marshal converts {{.ValType}} to slice of {{.ValLen}} bytes.
 func (c {{.Name}}) Marshal(d interface{}) []byte {
 	b := make([]byte, {{.ValLen}})
-	v := {{.DecodeCast}}(d.({{.ValType}}))
+	v := {{.EncodeCast}}(d.({{.ValType}}))
 	binary.LittleEndian.Put{{.Decoder}}(b, v)
 	return b
 }
@@ -110,12 +110,12 @@ func main() {
 	testfn := pref + "_test.go"
 
 	impls := []interface{}{
-		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", DecodeCast: "uint16"},
-		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", DecodeCast: "uint32"},
-		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", DecodeCast: "uint64"},
-		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", DecodeCast: "uint16"},
-		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", DecodeCast: "uint32"},
-		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", DecodeCast: "uint64"},
+		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
+		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
+		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
+		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
+		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
+		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
 	}
 
 	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})

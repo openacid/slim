@@ -18,9 +18,9 @@ type IntConfig struct {
 	ValLen int
 	// Decoder defines the name of function to decode raw bytes into ValType.
 	Decoder string
-	// DecodeCast defines a cast type/function to convert decoded values.
-	// Because sometimes Decoder does not provides a exact type.
-	DecodeCast string
+	// EncodeCast defines a cast type/function to convert values before encode.
+	// Because sometimes encoder does not provides a exact type.
+	EncodeCast string
 }
 
 // Render generate a file "fn".

@@ -34,7 +34,7 @@ func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *{{.Name}}, err error) 
 func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 	bs, ok := a.GetBytes(idx, {{.ValLen}})
 	if ok {
-		return endian.{{.Decoder}}(bs), true
+		return {{.ValType}}(endian.{{.Decoder}}(bs)), true
 	}
 
 	return 0, false
@@ -206,7 +206,7 @@ func Test{{.Name}}MarshalUnmarshal(t *testing.T) {
 			want = append(c.want, byte(c.n*{{.ValLen}}))
 			for i := 0; i < c.n; i++ {
 				b := make([]byte, {{.ValLen}})
-				binary.LittleEndian.Put{{.Decoder}}(b, elts[i])
+				binary.LittleEndian.Put{{.Decoder}}(b, {{.EncodeCast}}(elts[i]))
 				want = append(want, b...)
 			}
 		}
@@ -299,9 +299,12 @@ func main() {
 	testfn := pref + "_test.go"
 
 	impls := []interface{}{
-		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16"},
-		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32"},
-		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64"},
+		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
+		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
+		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
+		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
+		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
+		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
 	}
 
 	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
