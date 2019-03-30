@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/openacid/slim/array"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 func newByteArray32(eSize int, index []int32, elts [][]byte) (*array.Array, error) {
 	a := &array.Array{}
-	a.EltMarshaler = marshal.Bytes{Size: eSize}
+	a.EltEncoder = encode.Bytes{Size: eSize}
 	err := a.Init(index, elts)
 	return a, err
 }

@@ -1,4 +1,4 @@
-package marshal
+package encode
 
 // Auto-generated code definition
 // Usage:

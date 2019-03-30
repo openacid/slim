@@ -11,29 +11,29 @@ type Combined struct {
 	J uint8
 }
 
-type MyMarshaler struct{}
+type MyEncoder struct{}
 
-func (c MyMarshaler) Marshal(d interface{}) []byte {
+func (c MyEncoder) Encode(d interface{}) []byte {
 	v := d.(Combined)
 	return []byte{v.I, v.J}
 }
 
-func (c MyMarshaler) Unmarshal(b []byte) (int, interface{}) {
+func (c MyEncoder) Decode(b []byte) (int, interface{}) {
 	return 2, Combined{
 		I: b[0],
 		J: b[1],
 	}
 }
 
-func (c MyMarshaler) GetSize(d interface{}) int {
+func (c MyEncoder) GetSize(d interface{}) int {
 	return 2
 }
 
-func (c MyMarshaler) GetMarshaledSize(b []byte) int {
+func (c MyEncoder) GetEncodedSize(b []byte) int {
 	return 2
 }
 
-func Example_withMarshaler() {
+func Example_withEncoder() {
 
 	// This example shows how to define a new array type.
 
@@ -46,7 +46,7 @@ func Example_withMarshaler() {
 	}
 
 	a := &array.Array{}
-	a.EltMarshaler = MyMarshaler{}
+	a.EltEncoder = MyEncoder{}
 	err := a.Init(indexes, elts)
 	if err != nil {
 		panic(err)

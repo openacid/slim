@@ -1,4 +1,4 @@
-package marshal_test
+package encode_test
 
 import (
 	"encoding/binary"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/openacid/errors"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 type typeXY struct {
@@ -24,9 +24,9 @@ func testPanic(t *testing.T, f func(), msg string) {
 	f()
 }
 
-func TestNewTypeMarshaler(t *testing.T) {
+func TestNewTypeEncoder(t *testing.T) {
 
-	m, _ := marshal.NewTypeMarshaler(int32(1))
+	m, _ := encode.NewTypeEncoder(int32(1))
 	if m.Endian != binary.LittleEndian {
 		t.Fatalf("expect default endian is %#v but %#v", binary.LittleEndian, m.Endian)
 	}
@@ -35,22 +35,22 @@ func TestNewTypeMarshaler(t *testing.T) {
 
 	cases := []struct {
 		input   interface{}
-		want    *marshal.TypeMarshaler
+		want    *encode.TypeEncoder
 		wanterr error
 	}{
 		{
 			int(1),
 			nil,
-			marshal.ErrNotFixedSize,
+			encode.ErrNotFixedSize,
 		},
 		{
 			[]int32{1},
 			nil,
-			marshal.ErrNotFixedSize,
+			encode.ErrNotFixedSize,
 		},
 		{
 			int32(1),
-			&marshal.TypeMarshaler{
+			&encode.TypeEncoder{
 				Endian: binary.LittleEndian,
 				Type:   reflect.ValueOf(int32(1)).Type(),
 				Size:   4,
@@ -59,7 +59,7 @@ func TestNewTypeMarshaler(t *testing.T) {
 		},
 		{
 			&ii,
-			&marshal.TypeMarshaler{
+			&encode.TypeEncoder{
 				Endian: binary.LittleEndian,
 				Type:   reflect.ValueOf(int32(1)).Type(),
 				Size:   4,
@@ -68,7 +68,7 @@ func TestNewTypeMarshaler(t *testing.T) {
 		},
 		{
 			typeXY{1, 2},
-			&marshal.TypeMarshaler{
+			&encode.TypeEncoder{
 				Endian: binary.LittleEndian,
 				Type:   reflect.ValueOf(typeXY{}).Type(),
 				Size:   8,
@@ -77,7 +77,7 @@ func TestNewTypeMarshaler(t *testing.T) {
 		},
 		{
 			&typeXY{1, 2},
-			&marshal.TypeMarshaler{
+			&encode.TypeEncoder{
 				Endian: binary.LittleEndian,
 				Type:   reflect.ValueOf(typeXY{}).Type(),
 				Size:   8,
@@ -87,7 +87,7 @@ func TestNewTypeMarshaler(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		rst, err := marshal.NewTypeMarshalerEndian(c.input, nil)
+		rst, err := encode.NewTypeEncoderEndian(c.input, nil)
 		if errors.Cause(err) != c.wanterr {
 			t.Fatalf("%d-th: input: %#v; wanterr: %#v; actual: %#v",
 				i+1, c.input, c.wanterr, err)
@@ -98,7 +98,7 @@ func TestNewTypeMarshaler(t *testing.T) {
 				i+1, c.input, c.want, rst)
 		}
 
-		m, err := marshal.NewTypeMarshalerEndianByType(
+		m, err := encode.NewTypeEncoderEndianByType(
 			reflect.Indirect(reflect.ValueOf(c.input)).Type(), nil)
 		if errors.Cause(err) != c.wanterr {
 			t.Fatalf("%d-th: input: %#v; wanterr: %#v; actual: %#v",
@@ -112,19 +112,19 @@ func TestNewTypeMarshaler(t *testing.T) {
 	}
 }
 
-func TestTypeMarshalerMarshal(t *testing.T) {
+func TestTypeEncoderEncode(t *testing.T) {
 
-	m, err := marshal.NewTypeMarshalerEndian(int32(1), nil)
+	m, err := encode.NewTypeEncoderEndian(int32(1), nil)
 	if err != nil {
 		t.Fatalf("expected no error but: %v", err)
 	}
 
-	testPanic(t, func() { m.Marshal(uint32(1)) }, "int32: uint32")
-	testPanic(t, func() { m.Marshal([]int32{1}) }, "int32: []int32")
+	testPanic(t, func() { m.Encode(uint32(1)) }, "int32: uint32")
+	testPanic(t, func() { m.Encode([]int32{1}) }, "int32: []int32")
 
 	// indirect value results in no panic
 	ii := int32(5)
-	bs := m.Marshal(&ii)
+	bs := m.Encode(&ii)
 	want := []byte{5, 0, 0, 0}
 	if !reflect.DeepEqual(want, bs) {
 		t.Fatalf("want: %#v, but: %#v", want, bs)
@@ -153,7 +153,7 @@ func TestTypeMarshalerMarshal(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		m, err := marshal.NewTypeMarshalerEndian(c.input, nil)
+		m, err := encode.NewTypeEncoderEndian(c.input, nil)
 		if err != nil {
 			t.Fatalf("%d-th: expected no error but: %#v", i+1, err)
 		}
@@ -163,7 +163,7 @@ func TestTypeMarshalerMarshal(t *testing.T) {
 			t.Fatalf("expect n to be %d but %d", binary.Size(c.input), n)
 		}
 
-		bs := m.Marshal(c.input)
+		bs := m.Encode(c.input)
 		if !reflect.DeepEqual(c.want, bs) {
 			t.Fatalf("%d-th: input: %#v; want: %#v; actual: %#v",
 				i+1, c.input, c.want, bs)
@@ -171,7 +171,7 @@ func TestTypeMarshalerMarshal(t *testing.T) {
 	}
 }
 
-func TestTypeMarshalerUnmarshal(t *testing.T) {
+func TestTypeEncoderDecode(t *testing.T) {
 
 	ii := int32(5)
 
@@ -202,20 +202,20 @@ func TestTypeMarshalerUnmarshal(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		m, err := marshal.NewTypeMarshalerEndian(c.input, nil)
+		m, err := encode.NewTypeEncoderEndian(c.input, nil)
 		if err != nil {
 			t.Fatalf("%d-th: expected no error but: %#v", i+1, err)
 		}
 
-		bs := m.Marshal(c.input)
-		n, v := m.Unmarshal(bs)
+		bs := m.Encode(c.input)
+		n, v := m.Decode(bs)
 
 		if n != m.Size {
 			t.Fatalf("expect n to b %d but %d", m.Size, n)
 		}
 
-		if n != m.GetMarshaledSize(bs) {
-			t.Fatalf("expect n to b %d but %d", m.GetMarshaledSize(bs), n)
+		if n != m.GetEncodedSize(bs) {
+			t.Fatalf("expect n to b %d but %d", m.GetEncodedSize(bs), n)
 		}
 
 		if !reflect.DeepEqual(c.want, v) {

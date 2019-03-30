@@ -12,7 +12,7 @@
 package index
 
 import (
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
 )
 
@@ -58,7 +58,7 @@ func NewSlimIndex(index []OffsetIndexItem, dr DataReader) (*SlimIndex, error) {
 		offsets = append(offsets, index[i].Offset)
 	}
 
-	st, err := trie.NewSlimTrie(marshal.I64{}, keys, offsets)
+	st, err := trie.NewSlimTrie(encode.I64{}, keys, offsets)
 	if err != nil {
 		return nil, err
 	}

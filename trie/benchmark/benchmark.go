@@ -140,7 +140,7 @@ type testKVConv struct {
 	valSize int
 }
 
-func (c testKVConv) Marshal(d interface{}) []byte {
+func (c testKVConv) Encode(d interface{}) []byte {
 
 	elt := d.(*TrieBenchKV)
 
@@ -152,7 +152,7 @@ func (c testKVConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c testKVConv) Unmarshal(b []byte) (int, interface{}) {
+func (c testKVConv) Decode(b []byte) (int, interface{}) {
 
 	size := 8
 	s := b[:size]
@@ -175,7 +175,7 @@ func (c testKVConv) GetSize(d interface{}) int {
 	return 8
 }
 
-func (c testKVConv) GetMarshaledSize(b []byte) int {
+func (c testKVConv) GetEncodedSize(b []byte) int {
 	return 8
 }
 

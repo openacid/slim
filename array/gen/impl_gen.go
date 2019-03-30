@@ -165,7 +165,7 @@ func Test{{.Name}}Get(t *testing.T) {
 	}
 }
 
-func Test{{.Name}}MarshalUnmarshal(t *testing.T) {
+func Test{{.Name}}EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []{{.ValType}}{12, 15, 19, 120}
@@ -216,7 +216,7 @@ func Test{{.Name}}MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.{{.Name}}{}
 		err = proto.Unmarshal(rst, b)
@@ -246,7 +246,7 @@ func Test{{.Name}}MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func Test{{.Name}}MarshalUnmarshalBig(t *testing.T) {
+func Test{{.Name}}EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2

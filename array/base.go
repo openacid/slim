@@ -6,7 +6,7 @@ import (
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/bits"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/prototype"
 )
 
@@ -23,7 +23,7 @@ var endian = binary.LittleEndian
 // Since 0.2.0
 type Base struct {
 	prototype.Array32
-	EltMarshaler marshal.Marshaler
+	EltEncoder encode.Encoder
 }
 
 const (
@@ -126,20 +126,20 @@ func (a *Base) Init(indexes []int32, elts interface{}) error {
 		return nil
 	}
 
-	var marshaler marshal.Marshaler
+	var encoder encode.Encoder
 
-	if a.EltMarshaler == nil {
+	if a.EltEncoder == nil {
 		var err error
-		marshaler, err = marshal.NewTypeMarshalerEndian(rElts.Index(0).Interface(), endian)
+		encoder, err = encode.NewTypeEncoderEndian(rElts.Index(0).Interface(), endian)
 		if err != nil {
 			// TODO wrap
 			return err
 		}
 	} else {
-		marshaler = a.EltMarshaler
+		encoder = a.EltEncoder
 	}
 
-	_, err = a.InitElts(elts, marshaler)
+	_, err = a.InitElts(elts, encoder)
 	if err != nil {
 		return errors.Wrapf(err, "failure Init Array")
 	}
@@ -147,20 +147,20 @@ func (a *Base) Init(indexes []int32, elts interface{}) error {
 	return nil
 }
 
-// InitElts initialized a.Elts, by marshaling elements in to bytes.
+// InitElts initialized a.Elts, by encoding elements in to bytes.
 //
 // Since 0.2.0
-func (a *Base) InitElts(elts interface{}, marshaler marshal.Marshaler) (int, error) {
+func (a *Base) InitElts(elts interface{}, encoder encode.Encoder) (int, error) {
 
 	rElts := reflect.ValueOf(elts)
 	n := rElts.Len()
-	eltsize := marshaler.GetMarshaledSize(nil)
+	eltsize := encoder.GetEncodedSize(nil)
 	sz := eltsize * n
 
 	b := make([]byte, 0, sz)
 	for i := 0; i < n; i++ {
 		ee := rElts.Index(i).Interface()
-		bs := marshaler.Marshal(ee)
+		bs := encoder.Encode(ee)
 		b = append(b, bs...)
 	}
 	a.Elts = b
@@ -179,9 +179,9 @@ func (a *Base) Get(idx int32) (interface{}, bool) {
 		return nil, false
 	}
 
-	bs, ok := a.GetBytes(idx, a.EltMarshaler.GetMarshaledSize(nil))
+	bs, ok := a.GetBytes(idx, a.EltEncoder.GetEncodedSize(nil))
 	if ok {
-		_, v := a.EltMarshaler.Unmarshal(bs)
+		_, v := a.EltEncoder.Decode(bs)
 		return v, true
 	}
 

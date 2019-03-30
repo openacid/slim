@@ -1,11 +1,11 @@
 // Code generated 'by go generate ./...'; DO NOT EDIT.
 
-package marshal_test
+package encode_test
 
 import (
 	"testing"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 func TestU16(t *testing.T) {
@@ -26,10 +26,10 @@ func TestU16(t *testing.T) {
 		{^uint16(0), string(vneg[:2]), 2},
 	}
 
-	m := marshal.U16{}
+	m := encode.U16{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -41,19 +41,19 @@ func TestU16(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}
@@ -77,10 +77,10 @@ func TestU32(t *testing.T) {
 		{^uint32(0), string(vneg[:4]), 4},
 	}
 
-	m := marshal.U32{}
+	m := encode.U32{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -92,19 +92,19 @@ func TestU32(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}
@@ -128,10 +128,10 @@ func TestU64(t *testing.T) {
 		{^uint64(0), string(vneg[:8]), 8},
 	}
 
-	m := marshal.U64{}
+	m := encode.U64{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -143,19 +143,19 @@ func TestU64(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}
@@ -179,10 +179,10 @@ func TestI16(t *testing.T) {
 		{^int16(0), string(vneg[:2]), 2},
 	}
 
-	m := marshal.I16{}
+	m := encode.I16{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -194,19 +194,19 @@ func TestI16(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}
@@ -230,10 +230,10 @@ func TestI32(t *testing.T) {
 		{^int32(0), string(vneg[:4]), 4},
 	}
 
-	m := marshal.I32{}
+	m := encode.I32{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -245,19 +245,19 @@ func TestI32(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}
@@ -281,10 +281,10 @@ func TestI64(t *testing.T) {
 		{^int64(0), string(vneg[:8]), 8},
 	}
 
-	m := marshal.I64{}
+	m := encode.I64{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -296,19 +296,19 @@ func TestI64(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}

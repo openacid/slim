@@ -122,7 +122,7 @@ func TestU16Get(t *testing.T) {
 	}
 }
 
-func TestU16MarshalUnmarshal(t *testing.T) {
+func TestU16EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []uint16{12, 15, 19, 120}
@@ -173,7 +173,7 @@ func TestU16MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.U16{}
 		err = proto.Unmarshal(rst, b)
@@ -203,7 +203,7 @@ func TestU16MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestU16MarshalUnmarshalBig(t *testing.T) {
+func TestU16EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2
@@ -354,7 +354,7 @@ func TestU32Get(t *testing.T) {
 	}
 }
 
-func TestU32MarshalUnmarshal(t *testing.T) {
+func TestU32EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []uint32{12, 15, 19, 120}
@@ -405,7 +405,7 @@ func TestU32MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.U32{}
 		err = proto.Unmarshal(rst, b)
@@ -435,7 +435,7 @@ func TestU32MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestU32MarshalUnmarshalBig(t *testing.T) {
+func TestU32EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2
@@ -586,7 +586,7 @@ func TestU64Get(t *testing.T) {
 	}
 }
 
-func TestU64MarshalUnmarshal(t *testing.T) {
+func TestU64EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []uint64{12, 15, 19, 120}
@@ -637,7 +637,7 @@ func TestU64MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.U64{}
 		err = proto.Unmarshal(rst, b)
@@ -667,7 +667,7 @@ func TestU64MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestU64MarshalUnmarshalBig(t *testing.T) {
+func TestU64EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2
@@ -818,7 +818,7 @@ func TestI16Get(t *testing.T) {
 	}
 }
 
-func TestI16MarshalUnmarshal(t *testing.T) {
+func TestI16EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []int16{12, 15, 19, 120}
@@ -869,7 +869,7 @@ func TestI16MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.I16{}
 		err = proto.Unmarshal(rst, b)
@@ -899,7 +899,7 @@ func TestI16MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestI16MarshalUnmarshalBig(t *testing.T) {
+func TestI16EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2
@@ -1050,7 +1050,7 @@ func TestI32Get(t *testing.T) {
 	}
 }
 
-func TestI32MarshalUnmarshal(t *testing.T) {
+func TestI32EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []int32{12, 15, 19, 120}
@@ -1101,7 +1101,7 @@ func TestI32MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.I32{}
 		err = proto.Unmarshal(rst, b)
@@ -1131,7 +1131,7 @@ func TestI32MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestI32MarshalUnmarshalBig(t *testing.T) {
+func TestI32EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2
@@ -1282,7 +1282,7 @@ func TestI64Get(t *testing.T) {
 	}
 }
 
-func TestI64MarshalUnmarshal(t *testing.T) {
+func TestI64EncodeDecode(t *testing.T) {
 
 	indexes := []int32{1, 5, 9, 203}
 	elts := []int64{12, 15, 19, 120}
@@ -1333,7 +1333,7 @@ func TestI64MarshalUnmarshal(t *testing.T) {
 				i+1, c.n, want, rst)
 		}
 
-		// Unmarshal
+		// Decode
 
 		b := &array.I64{}
 		err = proto.Unmarshal(rst, b)
@@ -1363,7 +1363,7 @@ func TestI64MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestI64MarshalUnmarshalBig(t *testing.T) {
+func TestI64EncodeDecodeBig(t *testing.T) {
 
 	n := 102400
 	step := 2

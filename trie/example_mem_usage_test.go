@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
 )
 
 var (
-	m = marshal.String16{}
+	m = encode.String16{}
 )
 
 func makeCopies(ncopy int, keys []string, offsets []uint16) []*trie.SlimTrie {
 	copies := make([]*trie.SlimTrie, ncopy)
 
 	for i := 0; i < len(copies); i++ {
-		copies[i], _ = trie.NewSlimTrie(marshal.U16{}, keys, offsets)
+		copies[i], _ = trie.NewSlimTrie(encode.U16{}, keys, offsets)
 	}
 	return copies
 }
@@ -35,8 +35,8 @@ func Example_memoryUsage() {
 		keys = append(keys, k)
 		offsets = append(offsets, uint16(len(data)))
 
-		data = append(data, m.Marshal(k)...)
-		data = append(data, m.Marshal(v)...)
+		data = append(data, m.Encode(k)...)
+		data = append(data, m.Encode(v)...)
 
 		ksize += len(k)
 	}

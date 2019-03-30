@@ -1,9 +1,9 @@
-package marshal_test
+package encode_test
 
 import (
 	"testing"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 func TestString16(t *testing.T) {
@@ -17,69 +17,69 @@ func TestString16(t *testing.T) {
 		{"abc", 5},
 	}
 
-	m := marshal.String16{}
+	m := encode.String16{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if len(rst) != c.want {
-			t.Fatalf("%d-th: marshaled len: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: encoded len: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, len(rst))
 		}
 
-		l := m.GetMarshaledSize(rst)
+		l := m.GetEncodedSize(rst)
 		if l != c.want {
-			t.Fatalf("%d-th: marshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: encoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, l)
 		}
 
-		n, s := m.Unmarshal(rst)
+		n, s := m.Decode(rst)
 		if c.want != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, n)
 		}
 		if c.input != s {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, s)
 		}
 	}
 }
 
-func TestGetMarshaler(t *testing.T) {
+func TestGetEncoder(t *testing.T) {
 
 	cases := []struct {
 		input   interface{}
-		want    marshal.Marshaler
+		want    encode.Encoder
 		wanterr error
 	}{
 		{
 			uint16(0),
-			marshal.U16{},
+			encode.U16{},
 			nil,
 		},
 		{
 			uint32(0),
-			marshal.U32{},
+			encode.U32{},
 			nil,
 		},
 		{
 			uint64(0),
-			marshal.U64{},
+			encode.U64{},
 			nil,
 		},
 		{
 			[]int{},
 			nil,
-			marshal.ErrUnknownEltType,
+			encode.ErrUnknownEltType,
 		},
 		{
 			nil,
 			nil,
-			marshal.ErrUnknownEltType,
+			encode.ErrUnknownEltType,
 		},
 	}
 
 	for i, c := range cases {
-		rst, err := marshal.GetMarshaler(c.input)
+		rst, err := encode.EncoderOf(c.input)
 		if rst != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, rst)
@@ -91,42 +91,42 @@ func TestGetMarshaler(t *testing.T) {
 	}
 }
 
-func TestGetSliceEltMarshaler(t *testing.T) {
+func TestGetSliceEltEncoder(t *testing.T) {
 
 	cases := []struct {
 		input   interface{}
-		want    marshal.Marshaler
+		want    encode.Encoder
 		wanterr error
 	}{
 		{
 			[]uint16{},
-			marshal.U16{},
+			encode.U16{},
 			nil,
 		},
 		{
 			[]uint32{},
-			marshal.U32{},
+			encode.U32{},
 			nil,
 		},
 		{
 			[]uint64{},
-			marshal.U64{},
+			encode.U64{},
 			nil,
 		},
 		{
 			[]int{},
 			nil,
-			marshal.ErrUnknownEltType,
+			encode.ErrUnknownEltType,
 		},
 		{
 			int(1),
 			nil,
-			marshal.ErrNotSlice,
+			encode.ErrNotSlice,
 		},
 	}
 
 	for i, c := range cases {
-		rst, err := marshal.GetSliceEltMarshaler(c.input)
+		rst, err := encode.GetSliceEltEncoder(c.input)
 		if rst != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, rst)

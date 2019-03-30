@@ -10,7 +10,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 func randIndexes(cnt int32) []int32 {
@@ -162,7 +162,7 @@ func TestBaseInit(t *testing.T) {
 			[]uint64{},
 			[]int32{},
 			[]byte{},
-			marshal.ErrNotFixedSize,
+			encode.ErrNotFixedSize,
 		},
 		{
 			[]int32{0}, []byte{1},
@@ -222,24 +222,24 @@ func TestBaseInit(t *testing.T) {
 	}
 }
 
-type IntMarshaler struct{}
+type intEncoder struct{}
 
-func (m IntMarshaler) Marshal(v interface{}) []byte {
+func (m intEncoder) Encode(v interface{}) []byte {
 	return []byte{byte(v.(int))}
 }
-func (m IntMarshaler) Unmarshal(d []byte) (int, interface{}) {
+func (m intEncoder) Decode(d []byte) (int, interface{}) {
 	return 1, int(d[0])
 }
-func (m IntMarshaler) GetSize(v interface{}) int {
+func (m intEncoder) GetSize(v interface{}) int {
 	return 1
 }
-func (m IntMarshaler) GetMarshaledSize(d []byte) int {
+func (m intEncoder) GetEncodedSize(d []byte) int {
 	return 1
 }
 
-func TestBaseInitWithMarshaler(t *testing.T) {
+func TestBaseInitWithEncoder(t *testing.T) {
 	ab := &array.Base{}
-	ab.EltMarshaler = IntMarshaler{}
+	ab.EltEncoder = intEncoder{}
 	err := ab.Init([]int32{1, 2}, []int{3, 4})
 	if err != nil {
 		t.Fatalf("expected no error but: %#v", err)
@@ -291,7 +291,7 @@ func TestBaseGet(t *testing.T) {
 	elts := []uint16{1, 3, 100}
 
 	ab := &array.Base{}
-	ab.EltMarshaler = marshal.U16{}
+	ab.EltEncoder = encode.U16{}
 
 	// test empty array
 	v, found := ab.Get(1)
@@ -375,7 +375,7 @@ func BenchmarkBaseGet(b *testing.B) {
 		panic(err)
 	}
 
-	ab.EltMarshaler = marshal.U16{}
+	ab.EltEncoder = encode.U16{}
 
 	b.ResetTimer()
 

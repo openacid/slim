@@ -11,7 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/strhelper"
 )
 
@@ -28,14 +28,14 @@ just to make it easier to test it as a number of uint64
 */
 type TestIntConv struct{}
 
-func (c TestIntConv) Marshal(d interface{}) []byte {
+func (c TestIntConv) Encode(d interface{}) []byte {
 	b := make([]byte, 8)
 	v := uint64(d.(int))
 	binary.LittleEndian.PutUint64(b, v)
 	return b
 }
 
-func (c TestIntConv) Unmarshal(b []byte) (int, interface{}) {
+func (c TestIntConv) Decode(b []byte) (int, interface{}) {
 
 	size := 8
 	s := b[:size]
@@ -47,7 +47,7 @@ func (c TestIntConv) Unmarshal(b []byte) (int, interface{}) {
 func (c TestIntConv) GetSize(d interface{}) int {
 	return 8
 }
-func (c TestIntConv) GetMarshaledSize(b []byte) int {
+func (c TestIntConv) GetEncodedSize(b []byte) int {
 	return 8
 }
 
@@ -93,7 +93,7 @@ func TestMaxKeys(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	ctrie, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -148,7 +148,7 @@ func TestMaxNode(t *testing.T) {
 
 	trie.Squash()
 
-	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	ctrie, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err = ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -501,7 +501,7 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	trie, _ := NewTrie(key, value)
 
-	ctrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	ctrie, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err := ctrie.LoadTrie(trie)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -511,17 +511,17 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	size := ctrie.getMarshalSize()
 
-	n, err := ctrie.marshal(rw)
+	n, err := ctrie.encode(rw)
 	if err != nil {
-		t.Fatalf("failed to marshal ctrie: %v", err)
+		t.Fatalf("failed to encode ctrie: %v", err)
 	}
 
 	if n != size || int64(rw.Len()) != size {
-		t.Fatalf("wrong marshal size: %d, %d, %d", n, size, rw.Len())
+		t.Fatalf("wrong encode size: %d, %d, %d", n, size, rw.Len())
 	}
 
 	// unmarshal
-	rCtrie, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	rCtrie, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err = rCtrie.unmarshal(rw)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -559,13 +559,13 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	trie1, _ := NewTrie(key, value1)
 	trie2, _ := NewTrie(key, value2)
 
-	ctrie1, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	ctrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err := ctrie1.LoadTrie(trie1)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
 	}
 
-	ctrie2, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	ctrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	err = ctrie2.LoadTrie(trie2)
 	if err != nil {
 		t.Fatalf("compact trie error: %v", err)
@@ -582,22 +582,22 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	offset1 := int64(0)
 	n, err := ctrie1.marshalAt(writer, offset1)
 	if err != nil {
-		t.Fatalf("failed to marshal ctrie: %v", err)
+		t.Fatalf("failed to encode ctrie: %v", err)
 	}
 
 	size := ctrie1.getMarshalSize()
 	if n != size {
-		t.Fatalf("wrong marshal size: %d, %d", n, size)
+		t.Fatalf("wrong encode size: %d, %d", n, size)
 	}
 
 	offset2 := offset1 + n
 	n, err = ctrie2.marshalAt(writer, offset2)
 	if err != nil {
-		t.Fatalf("failed to marshal ctrie: %v", err)
+		t.Fatalf("failed to encode ctrie: %v", err)
 	}
 	size = ctrie1.getMarshalSize()
 	if n != size {
-		t.Fatalf("wrong marshal size: %d, %d", n, size)
+		t.Fatalf("wrong encode size: %d, %d", n, size)
 	}
 
 	writer.Close()
@@ -609,7 +609,7 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 	}
 	defer reader.Close()
 
-	rCtrie1, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	rCtrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	_, err = rCtrie1.unmarshalAt(reader, offset1)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -617,7 +617,7 @@ func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
 
 	checkSlimTrie(ctrie1, rCtrie1, t)
 
-	rCtrie2, _ := NewSlimTrie(marshal.U16{}, nil, nil)
+	rCtrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
 	_, err = rCtrie2.unmarshalAt(reader, offset2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
@@ -631,7 +631,7 @@ func TestSlimTrieBinaryCompatible(t *testing.T) {
 	// Made from:
 	// st, err := NewSlimTrie(TestIntConv{}, searchKeys, searchValues)
 	// b := &bytes.Buffer{}
-	// _, err := st.marshal(b)
+	// _, err := st.encode(b)
 	// fmt.Printf("%#v\n", b.Bytes())
 	marshaled := []byte{0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x27, 0x0, 0x0, 0x0,

@@ -18,7 +18,7 @@ import (
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bits"
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/serialize"
 	"github.com/openacid/slim/strhelper"
 )
@@ -64,18 +64,18 @@ var (
 )
 
 // NewSlimTrie create an empty SlimTrie.
-// Argument m implements a marshal.Marshaler to convert user data to serialized
+// Argument m implements a encode.Encoder to convert user data to serialized
 // bytes and back.
 // Leave it to nil if element in values are size fixed type.
 //	   int is not of fixed size.
 //	   struct { X int64; Y int32; } hax fixed size.
-func NewSlimTrie(m marshal.Marshaler, keys []string, values interface{}) (*SlimTrie, error) {
+func NewSlimTrie(m encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
 	st := &SlimTrie{
 		Children: array.U32{},
 		Steps:    array.U16{},
 		Leaves:   array.Array{},
 	}
-	st.Leaves.EltMarshaler = m
+	st.Leaves.EltEncoder = m
 
 	if keys != nil {
 		return st, st.load(keys, values)
@@ -87,7 +87,7 @@ func NewSlimTrie(m marshal.Marshaler, keys []string, values interface{}) (*SlimT
 // load Loads keys and values and builds a SlimTrie.
 //
 // values must be a slice of data-type of fixed size or compatible with
-// SlimTrie.Leaves.Marshaler.
+// SlimTrie.Leaves.Encoder.
 func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
 	ks := strhelper.SliceToBitWords(keys, 4)
 	return st.loadBytes(ks, values)
@@ -504,8 +504,8 @@ func (st *SlimTrie) getMarshalSize() int64 {
 	return cSize + sSize + lSize
 }
 
-// marshal serializes it to byte stream.
-func (st *SlimTrie) marshal(writer io.Writer) (cnt int64, err error) {
+// encode serializes it to byte stream.
+func (st *SlimTrie) encode(writer io.Writer) (cnt int64, err error) {
 	var n int64
 
 	if n, err = serialize.Marshal(writer, &st.Children); err != nil {
@@ -532,7 +532,7 @@ func (st *SlimTrie) marshal(writer io.Writer) (cnt int64, err error) {
 func (st *SlimTrie) marshalAt(f *os.File, offset int64) (cnt int64, err error) {
 
 	buf := new(bytes.Buffer)
-	if cnt, err = st.marshal(buf); err != nil {
+	if cnt, err = st.encode(buf); err != nil {
 		return 0, err
 	}
 

@@ -1,6 +1,6 @@
-// Package marshal provides marshaling API definition and with several commonly
-// used Marshaler suchas uint32 and uint64 etc.
-package marshal
+// Package encode provides encoding API definition and with several commonly
+// used Encoder suchas uint32 and uint64 etc.
+package encode
 
 import (
 	"errors"
@@ -19,34 +19,34 @@ var (
 	ErrNotFixedSize = errors.New("element type is not fixed size")
 )
 
-// A Marshaler converts one element between serialized byte stream
+// A Encoder converts one element between serialized byte stream
 // and in-memory data structure.
-type Marshaler interface {
+type Encoder interface {
 	// Convert into serialized byte stream.
-	Marshal(interface{}) []byte
+	Encode(interface{}) []byte
 
 	// Read byte stream and convert it back to typed data.
-	Unmarshal([]byte) (int, interface{})
+	Decode([]byte) (int, interface{})
 
-	// GetSize returns the size in byte after marshaling v.
-	// If v is of type this marshaler can not marshal, it panics.
+	// GetSize returns the size in byte after encoding v.
+	// If v is of type this encoder can not encode, it panics.
 	GetSize(v interface{}) int
 
-	// GetMarshaledSize returns size of the marshaled value.
-	// Marshaled element may be var-length.
+	// GetEncodedSize returns size of the encoded value.
+	// Encoded element may be var-length.
 	// This function is used to determine element size without the need of
-	// unmarshaling it.
-	GetMarshaledSize([]byte) int
+	// encoding it.
+	GetEncodedSize([]byte) int
 }
 
-// GetMarshaler returns a `Marshaler` implementation for type of `e`
-func GetMarshaler(e interface{}) (Marshaler, error) {
+// EncoderOf returns a `Encoder` implementation for type of `e`
+func EncoderOf(e interface{}) (Encoder, error) {
 	k := reflect.ValueOf(e).Kind()
-	return getMarshalerByKind(k)
+	return EncoderByKind(k)
 }
 
-// GetSliceEltMarshaler creates a `Marshaler` for type of element in slice `s`
-func GetSliceEltMarshaler(s interface{}) (Marshaler, error) {
+// GetSliceEltEncoder creates a `Encoder` for type of element in slice `s`
+func GetSliceEltEncoder(s interface{}) (Encoder, error) {
 	sl := reflect.ValueOf(s)
 	if sl.Kind() != reflect.Slice {
 		return nil, ErrNotSlice
@@ -54,11 +54,11 @@ func GetSliceEltMarshaler(s interface{}) (Marshaler, error) {
 
 	eltKind := reflect.TypeOf(s).Elem().Kind()
 
-	return getMarshalerByKind(eltKind)
+	return EncoderByKind(eltKind)
 }
 
-func getMarshalerByKind(k reflect.Kind) (Marshaler, error) {
-	var m Marshaler
+func EncoderByKind(k reflect.Kind) (Encoder, error) {
+	var m Encoder
 	switch k {
 	case reflect.Uint16:
 		m = U16{}
@@ -76,8 +76,8 @@ func getMarshalerByKind(k reflect.Kind) (Marshaler, error) {
 // String16 converts uint16 to slice of 2 bytes and back.
 type String16 struct{}
 
-// Marshal converts uint16 to slice of 2 bytes.
-func (s String16) Marshal(d interface{}) []byte {
+// Encode converts uint16 to slice of 2 bytes.
+func (s String16) Encode(d interface{}) []byte {
 	ss := d.(string)
 	l := len(ss)
 	rst := make([]byte, 2, 2+l)
@@ -86,15 +86,15 @@ func (s String16) Marshal(d interface{}) []byte {
 	return append(rst, []byte(ss)...)
 }
 
-// Unmarshal converts slice of 2 bytes to uint16.
+// Decode converts slice of 2 bytes to uint16.
 // It returns number bytes consumed and an uint16.
-func (s String16) Unmarshal(b []byte) (int, interface{}) {
+func (s String16) Decode(b []byte) (int, interface{}) {
 	l := int(b[0])<<8 + int(b[1])
 	ss := string(b[2 : 2+l])
 	return 2 + l, ss
 }
 
-// GetSize returns number of byte required to marshal a string.
+// GetSize returns number of byte required to encode a string.
 // It is len(str) + 2;
 func (s String16) GetSize(d interface{}) int {
 	ss := d.(string)
@@ -102,8 +102,8 @@ func (s String16) GetSize(d interface{}) int {
 	return 2 + l
 }
 
-// GetMarshaledSize returned size of marshaled data.
-func (s String16) GetMarshaledSize(b []byte) int {
+// GetEncodedSize returned size of encoded data.
+func (s String16) GetEncodedSize(b []byte) int {
 	l := int(b[0])<<8 + int(b[1])
 	return 2 + l
 }

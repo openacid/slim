@@ -1,15 +1,15 @@
-package marshal_test
+package encode_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 func TestBytes(t *testing.T) {
 
-	var x marshal.Marshaler = marshal.Bytes{}
+	var x encode.Encoder = encode.Bytes{}
 	_ = x
 
 	cases := []struct {
@@ -22,32 +22,32 @@ func TestBytes(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		m := marshal.Bytes{Size: c.want}
+		m := encode.Bytes{Size: c.want}
 		l := m.GetSize(c.input)
 		if l != c.want {
 			t.Fatalf("%d-th: GetSize: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, l)
 		}
 
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if len(rst) != c.want {
-			t.Fatalf("%d-th: marshaled len: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: encoded len: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, len(rst))
 		}
 
-		l = m.GetMarshaledSize(rst)
+		l = m.GetEncodedSize(rst)
 		if l != c.want {
-			t.Fatalf("%d-th: marshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: encoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, l)
 		}
 
-		n, s := m.Unmarshal(rst)
+		n, s := m.Decode(rst)
 		if c.want != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, n)
 		}
 		if !reflect.DeepEqual(c.input, s) {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, s)
 		}
 

@@ -2,7 +2,7 @@ package main
 
 import "github.com/openacid/slim/genhelper"
 
-var implHead = `package marshal
+var implHead = `package encode
 
 import "encoding/binary"
 `
@@ -11,17 +11,17 @@ var implTemplate = `
 // {{.Name}} converts {{.ValType}} to slice of {{.ValLen}} bytes and back.
 type {{.Name}} struct{}
 
-// Marshal converts {{.ValType}} to slice of {{.ValLen}} bytes.
-func (c {{.Name}}) Marshal(d interface{}) []byte {
+// Encode converts {{.ValType}} to slice of {{.ValLen}} bytes.
+func (c {{.Name}}) Encode(d interface{}) []byte {
 	b := make([]byte, {{.ValLen}})
 	v := {{.EncodeCast}}(d.({{.ValType}}))
 	binary.LittleEndian.Put{{.Decoder}}(b, v)
 	return b
 }
 
-// Unmarshal converts slice of {{.ValLen}} bytes to {{.ValType}}.
+// Decode converts slice of {{.ValLen}} bytes to {{.ValType}}.
 // It returns number bytes consumed and an {{.ValType}}.
-func (c {{.Name}}) Unmarshal(b []byte) (int, interface{}) {
+func (c {{.Name}}) Decode(b []byte) (int, interface{}) {
 
 	size := int({{.ValLen}})
 	s := b[:size]
@@ -30,23 +30,23 @@ func (c {{.Name}}) Unmarshal(b []byte) (int, interface{}) {
 	return size, d
 }
 
-// GetSize returns the size in byte after marshaling v.
+// GetSize returns the size in byte after encoding v.
 func (c {{.Name}}) GetSize(d interface{}) int {
 	return {{.ValLen}}
 }
 
-// GetMarshaledSize returns {{.ValLen}}.
-func (c {{.Name}}) GetMarshaledSize(b []byte) int {
+// GetEncodedSize returns {{.ValLen}}.
+func (c {{.Name}}) GetEncodedSize(b []byte) int {
 	return {{.ValLen}}
 }
 `
 
-var testHead = `package marshal_test
+var testHead = `package encode_test
 
 import (
 	"testing"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 `
 
@@ -69,10 +69,10 @@ func Test{{.Name}}(t *testing.T) {
 		{^{{.ValType}}(0), string(vneg[:{{.ValLen}}]), {{.ValLen}}},
 	}
 
-	m := marshal.{{.Name}}{}
+	m := encode.{{.Name}}{}
 
 	for i, c := range cases {
-		rst := m.Marshal(c.input)
+		rst := m.Encode(c.input)
 		if string(rst) != c.want {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, []byte(c.want), rst)
@@ -84,19 +84,19 @@ func Test{{.Name}}(t *testing.T) {
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n = m.GetMarshaledSize(rst)
+		n = m.GetEncodedSize(rst)
 		if c.wantsize != n {
 			t.Fatalf("%d-th: input: %v; wantsize: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 
-		n, u64 := m.Unmarshal(rst)
+		n, u64 := m.Decode(rst)
 		if c.input != u64 {
-			t.Fatalf("%d-th: unmarshal: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decode: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.input, u64)
 		}
 		if c.wantsize != n {
-			t.Fatalf("%d-th: unmarshaled size: input: %v; want: %v; actual: %v",
+			t.Fatalf("%d-th: decoded size: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.wantsize, n)
 		}
 	}

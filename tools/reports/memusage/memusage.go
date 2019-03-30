@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"sort"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
 )
 
@@ -22,7 +22,7 @@ type testKVConv struct {
 	EltSize uint32
 }
 
-func (c testKVConv) Marshal(d interface{}) []byte {
+func (c testKVConv) Encode(d interface{}) []byte {
 
 	elt := d.(*testKV)
 
@@ -39,7 +39,7 @@ func (c testKVConv) Marshal(d interface{}) []byte {
 	return b
 }
 
-func (c testKVConv) Unmarshal(b []byte) (int, interface{}) {
+func (c testKVConv) Decode(b []byte) (int, interface{}) {
 
 	elt := testKV{}
 	vSize := uint32(2) // an uint16
@@ -54,7 +54,7 @@ func (c testKVConv) Unmarshal(b []byte) (int, interface{}) {
 func (c testKVConv) GetSize(d interface{}) int {
 	return int(c.EltSize)
 }
-func (c testKVConv) GetMarshaledSize(b []byte) int {
+func (c testKVConv) GetEncodedSize(b []byte) int {
 	return int(c.EltSize)
 }
 
@@ -156,7 +156,7 @@ func getTrieMem(keyCnt, keyLen int64) (size int64, err error) {
 	keys := makeKeys(keyCnt, keyLen)
 	vals := makeVals(keyCnt)
 
-	t, err := trie.NewSlimTrie(marshal.U16{}, keys, vals)
+	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
 	if err != nil {
 		return
 	}

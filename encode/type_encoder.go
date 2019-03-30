@@ -1,4 +1,4 @@
-package marshal
+package encode
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 // defaultEndian is default endian
 var defaultEndian = binary.LittleEndian
 
-// TypeMarshaler provides marshaling for fixed size types.
+// TypeEncoder provides encoding for fixed size types.
 // Such as int32 or struct { X int32; Y int64; }
 //
 // "int" is not a fixed size type: int on different platform has different size,
@@ -19,31 +19,31 @@ var defaultEndian = binary.LittleEndian
 //
 // "[]int32" is not a fixed size type: the data size is also defined by the
 // number of elements.
-type TypeMarshaler struct {
-	// Endian defines the byte order to marshal a value.
+type TypeEncoder struct {
+	// Endian defines the byte order to encode a value.
 	// By default it is binary.LittleEndian
 	Endian binary.ByteOrder
-	// Type is the data type to marshal.
+	// Type is the data type to encode.
 	Type reflect.Type
-	// Size is the marshaled size of this type.
+	// Size is the encoded size of this type.
 	Size int
 }
 
-// NewTypeMarshaler creates a *TypeMarshaler by a value.
-// The value "zero" defines what type this Marshaler can deal with and must be a
+// NewTypeEncoder creates a *TypeEncoder by a value.
+// The value "zero" defines what type this Encoder can deal with and must be a
 // fixed size type.
-func NewTypeMarshaler(zero interface{}) (*TypeMarshaler, error) {
-	return NewTypeMarshalerEndian(zero, nil)
+func NewTypeEncoder(zero interface{}) (*TypeEncoder, error) {
+	return NewTypeEncoderEndian(zero, nil)
 }
 
-// NewTypeMarshalerEndian creates a *TypeMarshaler with a specified byte order.
+// NewTypeEncoderEndian creates a *TypeEncoder with a specified byte order.
 //
 // "endian" could be binary.LittleEndian or binary.BigEndian.
-func NewTypeMarshalerEndian(zero interface{}, endian binary.ByteOrder) (*TypeMarshaler, error) {
+func NewTypeEncoderEndian(zero interface{}, endian binary.ByteOrder) (*TypeEncoder, error) {
 	if endian == nil {
 		endian = defaultEndian
 	}
-	m := &TypeMarshaler{
+	m := &TypeEncoder{
 		Endian: endian,
 		Type:   reflect.Indirect(reflect.ValueOf(zero)).Type(),
 		Size:   binary.Size(zero),
@@ -59,20 +59,20 @@ func NewTypeMarshalerEndian(zero interface{}, endian binary.ByteOrder) (*TypeMar
 	return m, nil
 }
 
-// NewTypeMarshalerEndianByType creates a *TypeMarshaler for specified type and with a specified byte order.
+// NewTypeEncoderEndianByType creates a *TypeEncoder for specified type and with a specified byte order.
 //
 // "endian" could be binary.LittleEndian or binary.BigEndian.
-func NewTypeMarshalerEndianByType(t reflect.Type, endian binary.ByteOrder) (*TypeMarshaler, error) {
+func NewTypeEncoderEndianByType(t reflect.Type, endian binary.ByteOrder) (*TypeEncoder, error) {
 	v := reflect.New(t)
-	return NewTypeMarshalerEndian(v.Interface(), endian)
+	return NewTypeEncoderEndian(v.Interface(), endian)
 }
 
-// Marshal converts a m.Type value to byte slice.
-// If a different type value from the one used with NewTypeMarshaler passed in,
+// Encode converts a m.Type value to byte slice.
+// If a different type value from the one used with NewTypeEncoder passed in,
 // it panics.
-func (m *TypeMarshaler) Marshal(d interface{}) []byte {
+func (m *TypeEncoder) Encode(d interface{}) []byte {
 	if reflect.Indirect(reflect.ValueOf(d)).Type() != m.Type {
-		panic("different type from TypeMarshaler.Type")
+		panic("different type from TypeEncoder.Type")
 	}
 
 	b := bytes.NewBuffer(make([]byte, 0, m.Size))
@@ -84,9 +84,9 @@ func (m *TypeMarshaler) Marshal(d interface{}) []byte {
 	return b.Bytes()
 }
 
-// Unmarshal converts byte slice to a pointer to Type value.
+// Decode converts byte slice to a pointer to Type value.
 // It returns number bytes consumed and an Type value in interface{}.
-func (m *TypeMarshaler) Unmarshal(b []byte) (int, interface{}) {
+func (m *TypeEncoder) Decode(b []byte) (int, interface{}) {
 
 	b = b[0:m.Size]
 	v := reflect.New(m.Type)
@@ -98,11 +98,11 @@ func (m *TypeMarshaler) Unmarshal(b []byte) (int, interface{}) {
 }
 
 // GetSize returns m.Size.
-func (m *TypeMarshaler) GetSize(d interface{}) int {
+func (m *TypeEncoder) GetSize(d interface{}) int {
 	return m.Size
 }
 
-// GetMarshaledSize returns m.Size.
-func (m *TypeMarshaler) GetMarshaledSize(b []byte) int {
+// GetEncodedSize returns m.Size.
+func (m *TypeEncoder) GetEncodedSize(b []byte) int {
 	return m.Size
 }

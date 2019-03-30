@@ -42,8 +42,8 @@
 // A Get involves at least 2 memory access to a.Bitmaps and a.Elts.
 //
 // An "Array" of general type requires one additional alloc for a Get:
-//   // when Unmarshal convert a concrete type to interface{}
-//   a.EltMarshaler.Unmarshal(bs)
+//   // when Decode convert a concrete type to interface{}
+//   a.EltEncoder.Decode(bs)
 //
 // An array of specific type such as "U32" does not requires additional alloc.
 package array
@@ -51,7 +51,7 @@ package array
 import (
 	"reflect"
 
-	"github.com/openacid/slim/marshal"
+	"github.com/openacid/slim/encode"
 )
 
 // Array is a space efficient array of fixed-size element.
@@ -85,13 +85,13 @@ type Array struct {
 //
 // Since 0.2.0
 func NewEmpty(v interface{}) (*Array, error) {
-	m, err := marshal.NewTypeMarshaler(v)
+	m, err := encode.NewTypeEncoder(v)
 	if err != nil {
 		return nil, err
 	}
 
 	a := &Array{}
-	a.EltMarshaler = m
+	a.EltEncoder = m
 	return a, nil
 }
 
@@ -122,16 +122,16 @@ func (a *Array) Init(indexes []int32, elts interface{}) error {
 		return err
 	}
 
-	// Only when inited with some elements, we init the Marshaler
-	if a.Cnt > 0 && a.EltMarshaler == nil {
+	// Only when inited with some elements, we init the Encoder
+	if a.Cnt > 0 && a.EltEncoder == nil {
 
 		v := reflect.ValueOf(elts).Index(0)
-		marshaler, err := marshal.NewTypeMarshalerEndian(v.Interface(), endian)
+		encoder, err := encode.NewTypeEncoderEndian(v.Interface(), endian)
 		if err != nil {
 			return err
 		}
 
-		a.EltMarshaler = marshaler
+		a.EltEncoder = encoder
 	}
 
 	return nil
