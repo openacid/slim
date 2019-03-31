@@ -6,6 +6,10 @@ require (
 	github.com/golang/protobuf v1.3.1
 	github.com/google/btree v1.0.0
 	github.com/kr/pretty v0.1.0
+	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/modood/table v0.0.0-20181112072225-499dc7fba710
 	github.com/openacid/errors v0.8.1
+	github.com/openacid/tablewriter v0.0.0-20190403062637-eae587ad7165
+	github.com/pkg/errors v0.8.1 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 )
