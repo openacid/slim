@@ -122,3 +122,13 @@ func TestArrayAndU32InterMarshal(t *testing.T) {
 		t.Fatalf("second serialized data incorrect")
 	}
 }
+
+func BenchmarkArrayGet(b *testing.B) {
+	indexes := []int32{0, 5, 9, 203, 400}
+	elts := []uint32{12, 15, 19, 120, 300}
+	a, _ := array.New(indexes, elts)
+
+	for i := 0; i < b.N; i++ {
+		a.Get(5)
+	}
+}
