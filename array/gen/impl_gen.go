@@ -5,6 +5,9 @@ import (
 )
 
 var implHead = `package array
+import (
+	"github.com/openacid/slim/bits"
+)
 `
 
 var implTemplate = `
@@ -32,12 +35,24 @@ func New{{.Name}}(index []int32, elts []{{.ValType}}) (a *{{.Name}}, err error) 
 //
 // Since 0.2.0
 func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
-	bs, ok := a.GetBytes(idx, {{.ValLen}})
-	if ok {
-		return {{.ValType}}(endian.{{.Decoder}}(bs)), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*{{.ValLen}} + int32(cnt1)*{{.ValLen}}
+
+	return {{.ValType}}(endian.{{.Decoder}}(a.Elts[stIdx:])), true
 }
 `
 

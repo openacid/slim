@@ -4,4 +4,4 @@ package array
 // Usage:
 //     go generate ./...
 
-//go:generate go run report/memusage.go
+//go:generate go run report/report.go
