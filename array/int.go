@@ -2,6 +2,10 @@
 
 package array
 
+import (
+	"github.com/openacid/slim/bits"
+)
+
 // U16 is an implementation of Base with uint16 element
 //
 // Since 0.2.0
@@ -26,12 +30,24 @@ func NewU16(index []int32, elts []uint16) (a *U16, err error) {
 //
 // Since 0.2.0
 func (a *U16) Get(idx int32) (uint16, bool) {
-	bs, ok := a.GetBytes(idx, 2)
-	if ok {
-		return endian.Uint16(bs), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*2 + int32(cnt1)*2
+
+	return endian.Uint16(a.Elts[stIdx:]), true
 }
 
 // U32 is an implementation of Base with uint32 element
@@ -58,12 +74,24 @@ func NewU32(index []int32, elts []uint32) (a *U32, err error) {
 //
 // Since 0.2.0
 func (a *U32) Get(idx int32) (uint32, bool) {
-	bs, ok := a.GetBytes(idx, 4)
-	if ok {
-		return endian.Uint32(bs), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*4 + int32(cnt1)*4
+
+	return endian.Uint32(a.Elts[stIdx:]), true
 }
 
 // U64 is an implementation of Base with uint64 element
@@ -90,12 +118,24 @@ func NewU64(index []int32, elts []uint64) (a *U64, err error) {
 //
 // Since 0.2.0
 func (a *U64) Get(idx int32) (uint64, bool) {
-	bs, ok := a.GetBytes(idx, 8)
-	if ok {
-		return endian.Uint64(bs), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*8 + int32(cnt1)*8
+
+	return endian.Uint64(a.Elts[stIdx:]), true
 }
 
 // I16 is an implementation of Base with int16 element
@@ -122,12 +162,24 @@ func NewI16(index []int32, elts []int16) (a *I16, err error) {
 //
 // Since 0.2.0
 func (a *I16) Get(idx int32) (int16, bool) {
-	bs, ok := a.GetBytes(idx, 2)
-	if ok {
-		return int16(endian.Uint16(bs)), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*2 + int32(cnt1)*2
+
+	return int16(endian.Uint16(a.Elts[stIdx:])), true
 }
 
 // I32 is an implementation of Base with int32 element
@@ -154,12 +206,24 @@ func NewI32(index []int32, elts []int32) (a *I32, err error) {
 //
 // Since 0.2.0
 func (a *I32) Get(idx int32) (int32, bool) {
-	bs, ok := a.GetBytes(idx, 4)
-	if ok {
-		return int32(endian.Uint32(bs)), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*4 + int32(cnt1)*4
+
+	return int32(endian.Uint32(a.Elts[stIdx:])), true
 }
 
 // I64 is an implementation of Base with int64 element
@@ -186,10 +250,22 @@ func NewI64(index []int32, elts []int64) (a *I64, err error) {
 //
 // Since 0.2.0
 func (a *I64) Get(idx int32) (int64, bool) {
-	bs, ok := a.GetBytes(idx, 8)
-	if ok {
-		return int64(endian.Uint64(bs)), true
+
+	iBm, iBit := bmBit(idx)
+
+	if iBm >= int32(len(a.Bitmaps)) {
+		return 0, false
 	}
 
-	return 0, false
+	var n = a.Bitmaps[iBm]
+
+	if ((n >> uint(iBit)) & 1) == 0 {
+		return 0, false
+	}
+
+	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+
+	stIdx := a.Offsets[iBm]*8 + int32(cnt1)*8
+
+	return int64(endian.Uint64(a.Elts[stIdx:])), true
 }

@@ -4,8 +4,11 @@ package benchhelper
 
 import (
 	"math/rand"
+	"os"
 	"runtime"
 	"time"
+
+	"github.com/openacid/tablewriter"
 )
 
 // Allocated returns the in-use heap in bytes.
@@ -42,4 +45,24 @@ func RandI32SliceBetween(min int32, max int32, factor float64) []int32 {
 	}
 
 	return indexes
+}
+
+func NewMDFileTable(fn string) (*os.File, *tablewriter.Table) {
+
+	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	err = f.Truncate(0)
+	if err != nil {
+		panic(err)
+	}
+
+	table := tablewriter.NewWriter(f)
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+
+	return f, table
+
 }
