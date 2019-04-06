@@ -128,40 +128,41 @@ func TestFindSignificantBits22(t *testing.T) {
 
 	cases := []struct {
 		input     int
-		wantIbits []bitree.SigBit
+		wantIbits []int
 		// wantTrie  []bitree.SigTrie
 	}{
 		// {
 			// 1,
-			// []bitree.SigBit{},
+			// []int{},
 		// },
 		{
 			2,
-			[]bitree.SigBit{{0, 16}},
+			[]int{16},
 		},
 		{
 			3,
-			[]bitree.SigBit{{0, 16}, {1, 39}},
+			[]int{16, 39},
 		},
-		// {
-		//     4,
-		//     []bitree.SigBit{{0, 16}, {1, 39}, {2, 80}},
-		// },
-		// {
-		//     5,
-		//     []bitree.SigBit{{0, 16}, {1, 39}, {2, 80}, {3, 112}},
-		// },
-		// {
-		//     6,
-		//     []bitree.SigBit{{0, 16}, {1, 39}, {2, 80}, {3, 112}, {4, 103}},
-		// },
-		// {
-		//     7,
-		//     []bitree.SigBit{{0, 16}, {1, 39}, {2, 80}, {3, 112}, {4, 103}, {5, 121}},
-		// },
+		{
+			4,
+			[]int{16, 39, 80},
+		},
+		{
+			5,
+			[]int{16, 39, 80, 112},
+		},
+		{
+			6,
+			[]int{16, 39, 80, 112, 103},
+		},
+		{
+			7,
+			[]int{16, 39, 80, 112, 103, 121},
+		},
 	}
 
 	for i, c := range cases {
+		w := words[:c.input]
 		rstIbits := bitree.FindSignificantBits222(words[:c.input])
 
 		fmt.Println("strings:")
@@ -180,11 +181,36 @@ func TestFindSignificantBits22(t *testing.T) {
 				i+1, c.input, c.wantIbits, rstIbits)
 		}
 
-		// build trie from sig bits
-		trie := bitree.NewSigTrie(rstIbits)
-		fmt.Println( "trie:" )
-		fmt.Println(trie)
+		// // build trie from sig bits
+		// trie := bitree.NewSigTrie(rstIbits)
+		// fmt.Println( "trie:" )
+		// fmt.Println(trie)
+
+		bt:= bitree.NewBitrie(w)
+		fmt.Printf("%+v\n", bt)
+
+		// Get
+
+		for i, k := range w {
+			n := bt.Get(k)
+			if i != n {
+				trie := bitree.NewSigTrie(rstIbits)
+				fmt.Println( "trie:" )
+				fmt.Println(trie)
+				t.Fatalf("in %v search %v expect: %v; but: %v", w, k, i, n)
+			}
+		}
+	
 	}
+
+	// rstIbits := bitree.FindSignificantBits222(words[:32])
+	// trie := bitree.NewSigTrie(rstIbits)
+	// fmt.Println( "trie:" )
+	// fmt.Println(trie)
+
+	// bt:= bitree.NewBitrie(words[:32])
+	// fmt.Println( len(bt) )
+	// fmt.Printf("%+v\n", bt)
 }
 
 func TestFirstDiff(t *testing.T) {

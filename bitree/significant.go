@@ -1,9 +1,14 @@
 package bitree
 
 import (
+	"encoding/binary"
 	"fmt"
+	gobits "math/bits"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/openacid/slim/bits"
 )
 
 func ToScaled(a byte) string {
@@ -28,6 +33,27 @@ func ToBin(s string) string {
 	return strings.Join(rst, " ")
 }
 
+func bitmap2Bin(bs []byte) string {
+	rst := []string{}
+	for _, b := range bs {
+		s := strconv.FormatInt(int64(gobits.Reverse8(b)), 2)
+		s = fmt.Sprintf("%08s", s)
+		rst = append(rst, s)
+	}
+	return strings.Join(rst, " ")
+}
+
+func bitmap64ToBin(bm uint64) string {
+	rst := []string{}
+	for i := 0; i < 8; i++ {
+		b := byte(bm >> uint(i*8))
+		s := strconv.FormatInt(int64(gobits.Reverse8(b)), 2)
+		s = fmt.Sprintf("%08s", s)
+		rst = append(rst, s)
+	}
+	return strings.Join(rst, " ")
+}
+
 func MakeSteps(is []int) []int {
 	rst := make([]int, len(is))
 	p0 := 0
@@ -37,11 +63,6 @@ func MakeSteps(is []int) []int {
 	}
 
 	return rst
-}
-
-type SigBit struct {
-	Row int
-	Pos int
 }
 
 func FindSignificantBits(s []string, nbit int) ([]string, []int) {
@@ -69,11 +90,11 @@ func FindSignificantBits(s []string, nbit int) ([]string, []int) {
 	return strs, is
 }
 
-func MinSigBit(sb []SigBit) int {
+func MinSigBit(sb []int, frm, to int) int {
 
-	min := 0
-	for i := 1; i < len(sb); i++ {
-		if sb[i].Pos < sb[min].Pos {
+	min := frm
+	for i := frm + 1; i < to; i++ {
+		if sb[i] < sb[min] {
 			min = i
 		}
 	}
@@ -81,37 +102,197 @@ func MinSigBit(sb []SigBit) int {
 }
 
 type TNode struct {
-	SigBits   []SigBit
+	frm, to   int
 	Leaf      bool
 	LeafValue int
 	L, R      int
-	Level     int
+	Pos       int
 }
 
 type SigTrie []TNode
 
-func (t SigTrie) Strings(i int) []string {
+func (t SigTrie) Strings(i int, lvl int) []string {
 
 	node := t[i]
-	fmt.Printf("tostring: %d, %#v\n", i, node)
-	nodestr := strings.Repeat(" ", node.Level*4)+
-	fmt.Sprintf("%02d)", i)
+	nodestr := strings.Repeat(" ", lvl*4) +
+		fmt.Sprintf("%02d)", i)
 	if node.Leaf {
 		return []string{nodestr + fmt.Sprintf(":%d", node.LeafValue)}
 	}
 
-	rst := t.Strings(node.L)
-	rst = append(rst, nodestr)
-	rst = append(rst, t.Strings(node.R)...)
+	rst := t.Strings(node.L, lvl+1)
+	rst = append(rst, nodestr+fmt.Sprintf("@%d", node.Pos))
+	rst = append(rst, t.Strings(node.R, lvl+1)...)
 
 	return rst
 }
 
 func (t SigTrie) String() string {
-	return strings.Join(t.Strings(0), "\n")
+	return strings.Join(t.Strings(0, 0), "\n")
 }
 
-func NewSigTrie(sb []SigBit) SigTrie {
+type Bitrie []byte
+
+func (bt Bitrie) String() string {
+	bs := []byte(bt)
+
+	rst := []string{}
+	for _, b := range bs[1:] {
+
+		// Reverse to place lower bit on the left
+		s := strconv.FormatInt(int64(gobits.Reverse8(b)), 2)
+		s = fmt.Sprintf("%08s", s)
+		rst = append(rst, s)
+	}
+	bm := strings.Join(rst, " ")
+
+	return bm
+}
+
+func GetIthbit(s string, i int) int {
+	// TODO test it
+	ibyte := i / 16
+	if ibyte >= len(s) {
+		return 0
+	}
+
+	// get non-ending mark bit
+	if i&1 == 0 {
+		return 1
+	}
+
+	b := s[ibyte]
+	ibit := (i % 16) / 2
+	fmt.Println("get key bit from:", ToScaled(b), ibit)
+	fmt.Println(ToScaled(b >> uint(7-ibit)))
+	return int((b >> uint(7-ibit)) & 1)
+}
+
+func (bt Bitrie) Get(k string) int {
+
+	bm := (uint64(bt[1]) |
+		(uint64(bt[2]) << 8) |
+		(uint64(bt[3]) << 16) |
+		(uint64(bt[4]) << 24) |
+		(uint64(bt[5]) << 32) |
+		(uint64(bt[6]) << 40) |
+		(uint64(bt[7]) << 48) |
+		(uint64(bt[8]) << 54))
+
+	leftLeavesMask := uint64(0)
+	leftMost := 1
+
+	// trie starts at the second bit in bitmap
+	i := 1
+	// skip flag byte and bitmap
+	ipos := 1 + 8
+	ikey := 0
+
+	// to read the first inner node pos
+	iipos := 0
+
+	for {
+
+		if bm&(1<<uint(i)) != 0 {
+			// leaf
+			fmt.Println("found leaf at:", i)
+			break
+		}
+
+		// i is a inner node
+
+		preceding1 := bits.OnesCount64Before(bm, uint(i))
+		fmt.Println(bt)
+		fmt.Println("i, preceding1:", i, preceding1)
+
+		nthInner := i - preceding1 - 1
+
+		for ; iipos <= nthInner; iipos++ {
+			fmt.Println("ipos:", ipos)
+			fmt.Println("read pos from:", bt[ipos:])
+			pos, n := binary.Varint(bt[ipos:])
+			fmt.Println("rel pos, read:", pos, n)
+			ipos += n
+			ikey += int(pos)
+			
+		}
+
+		bit := GetIthbit(k, ikey)
+		fmt.Println("key:", ToBin(k))
+		fmt.Println("ikey:", ikey)
+		fmt.Println("bit:", bit)
+
+		i = (i-preceding1)*2 + bit
+		leftMost = (leftMost - bits.OnesCount64Before(bm, uint(leftMost))) * 2
+		levelMask := ((uint64(1) << uint(i)) - 1) ^ ((uint64(1) << uint(leftMost)) - 1)
+		leftLeavesMask |= levelMask
+		fmt.Println("level mask:", bitmap64ToBin(levelMask))
+		fmt.Println("left leaves mask:", bitmap64ToBin(leftLeavesMask))
+		fmt.Println("i to child:", i)
+	}
+
+	for i != leftMost {
+		// start to filter all left leaves
+		preceding1 := bits.OnesCount64Before(bm, uint(i))
+		i = (i-preceding1)*2
+		leftMost = (leftMost - bits.OnesCount64Before(bm, uint(leftMost))) * 2
+		levelMask := ((uint64(1) << uint(i)) - 1) ^ ((uint64(1) << uint(leftMost)) - 1)
+		leftLeavesMask |= levelMask
+		fmt.Println( "level mast:", leftMost, i, bitmap64ToBin(levelMask) )
+		fmt.Println("left leaves mask:", bitmap64ToBin(leftLeavesMask))
+	}
+
+	return bits.OnesCount64Before(bm&leftLeavesMask, 64)
+}
+
+func NewBitrie(s []string) Bitrie {
+	sigbits := FindSignificantBits222(s)
+
+	nodes := SigBitsBulidTrie(sigbits)
+	// 1 flags
+	// 8 byte bitmap
+	bt := make([]byte, 1+8)
+
+	p0 := 0
+	// n-1 inner nodes, n leaf nodes
+	positions := make([]int, 0, len(s)-1)
+
+	// place root at 2nd bit to simplify the math
+	for i, n := range nodes {
+		j := i + 1
+		// mark leaf as 1 thus right most 1 is the size of bitmap
+		if n.Leaf {
+			bt[1+j/8] |= 1 << uint(j%8)
+		} else {
+			positions = append(positions, n.Pos-p0)
+			// if p0 == 0 {
+			p0 = n.Pos
+			// }
+		}
+	}
+
+	fmt.Println("flag and bitmap:", bt)
+	fmt.Println(positions)
+
+	// max size for 64 var-int64
+	pos := make([]byte, 64*9)
+	n := 0
+	for _, p := range positions {
+		n += binary.PutVarint(pos[n:], int64(p))
+	}
+
+	pos = pos[:n]
+
+	bbb := make([]byte, len(bt)+n)
+	copy(bbb, bt)
+	copy(bbb[len(bt):], pos)
+
+	fmt.Println("result:", bbb)
+
+	return Bitrie(bbb)
+}
+
+func NewSigTrie(sb []int) SigTrie {
 
 	if len(sb) == 0 {
 		return nil
@@ -122,12 +303,12 @@ func NewSigTrie(sb []SigBit) SigTrie {
 }
 
 // SigBitsBulidTrie form a trie and return the root.
-func SigBitsBulidTrie(sigbits []SigBit) []TNode {
+func SigBitsBulidTrie(sigbits []int) []TNode {
 
 	children := make([]TNode, 0, len(sigbits)*2+1)
 	children = append(children, TNode{
-		SigBits: sigbits,
-		Level:   0,
+		frm: 0,
+		to:  len(sigbits),
 	})
 
 	for i := 0; i < len(children); i++ {
@@ -137,50 +318,47 @@ func SigBitsBulidTrie(sigbits []SigBit) []TNode {
 			continue
 		}
 
-		min := MinSigBit(n.SigBits)
+		min := MinSigBit(sigbits, n.frm, n.to)
+		n.Pos = sigbits[min]
 
-		fmt.Println("sigbits:", n.SigBits)
-		fmt.Println("min:", min)
-
-		minRow := n.SigBits[min].Row
+		// fmt.Println("sigbits:", sigbits[n.frm:n.to])
+		// fmt.Println("min:", min)
 
 		var t TNode
-		if min == 0 {
+		if min == n.frm {
 			t = TNode{
 				Leaf:      true,
-				LeafValue: minRow,
-				Level:     n.Level + 1,
+				LeafValue: min,
 			}
 		} else {
 			t = TNode{
-				Leaf:    false,
-				SigBits: n.SigBits[0:min],
-				Level:   n.Level + 1,
+				Leaf: false,
+				frm:  n.frm,
+				to:   min,
 			}
 		}
 		n.L = len(children)
 		children = append(children, t)
-		fmt.Printf("append left child: %#v\n", t)
+		// fmt.Printf("append left child: %#v\n", t)
 		// fmt.Printf("children: %#v\n", children)
 
-		if min == len(n.SigBits)-1 {
+		if min == n.to-1 {
 			t = TNode{
 				Leaf:      true,
-				LeafValue: minRow + 1,
-				Level:     n.Level + 1,
+				LeafValue: min + 1,
 			}
 		} else {
 			t = TNode{
-				Leaf:    false,
-				SigBits: n.SigBits[min+1:],
-				Level:   n.Level + 1,
+				Leaf: false,
+				frm:  min + 1,
+				to:   n.to,
 			}
 		}
 		n.R = len(children)
 		children = append(children, t)
-		fmt.Printf("append right child: %#v\n", t)
+		// fmt.Printf("append right child: %#v\n", t)
 
-		fmt.Printf("processed: %#v\n", n)
+		// fmt.Printf("processed: %#v\n", n)
 		// fmt.Printf("children: %#v\n", children)
 		// fmt.Println("current trie:", children)
 	}
@@ -188,12 +366,12 @@ func SigBitsBulidTrie(sigbits []SigBit) []TNode {
 	return children
 }
 
-func FindSignificantBits222(s []string) []SigBit {
+func FindSignificantBits222(s []string) []int {
 	prev := s[0]
-	sigbits := make([]SigBit, 0)
-	for row, str := range s[1:] {
+	sigbits := make([]int, 0)
+	for _, str := range s[1:] {
 		i := FirstDiff(prev, str)
-		sigbits = append(sigbits, SigBit{Row: row, Pos: i})
+		sigbits = append(sigbits, i)
 		// fmt.Printf("found diff bit of %s %s at: %d\n", ToBin(prev), ToBin(str), i)
 		prev = str
 	}
