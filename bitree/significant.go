@@ -185,61 +185,45 @@ func (bt Bitrie) Get(k string) int {
 	// trie starts at the second bit in bitmap
 	i := 1
 	// skip flag byte and bitmap
-	ipos := 1 + 8
+	posOffset := 1 + 8
 	ikey := 0
 
 	// to read the first inner node pos
-	iipos := 0
+	posIndex := 0
 
 	for {
 
 		if bm&(1<<uint(i)) != 0 {
 			// leaf
-			fmt.Println("found leaf at:", i)
 			break
 		}
 
 		// i is a inner node
 
 		preceding1 := bits.OnesCount64Before(bm, uint(i))
-		fmt.Println(bt)
-		fmt.Println("i, preceding1:", i, preceding1)
 
 		nthInner := i - preceding1 - 1
 
-		for ; iipos <= nthInner; iipos++ {
-			fmt.Println("ipos:", ipos)
-			fmt.Println("read pos from:", bt[ipos:])
-			pos, n := binary.Varint(bt[ipos:])
-			fmt.Println("rel pos, read:", pos, n)
-			ipos += n
+		for ; posIndex <= nthInner; posIndex++ {
+			pos, n := binary.Varint(bt[posOffset:])
+			posOffset += n
 			ikey += int(pos)
-			
 		}
 
 		bit := GetIthbit(k, ikey)
-		fmt.Println("key:", ToBin(k))
-		fmt.Println("ikey:", ikey)
-		fmt.Println("bit:", bit)
 
 		i = (i-preceding1)*2 + bit
 		leftMost = (leftMost - bits.OnesCount64Before(bm, uint(leftMost))) * 2
 		levelMask := ((uint64(1) << uint(i)) - 1) ^ ((uint64(1) << uint(leftMost)) - 1)
 		leftLeavesMask |= levelMask
-		fmt.Println("level mask:", bitmap64ToBin(levelMask))
-		fmt.Println("left leaves mask:", bitmap64ToBin(leftLeavesMask))
-		fmt.Println("i to child:", i)
 	}
 
 	for i != leftMost {
 		// start to filter all left leaves
-		preceding1 := bits.OnesCount64Before(bm, uint(i))
-		i = (i-preceding1)*2
+		i = (i - bits.OnesCount64Before(bm, uint(i))) * 2
 		leftMost = (leftMost - bits.OnesCount64Before(bm, uint(leftMost))) * 2
 		levelMask := ((uint64(1) << uint(i)) - 1) ^ ((uint64(1) << uint(leftMost)) - 1)
 		leftLeavesMask |= levelMask
-		fmt.Println( "level mast:", leftMost, i, bitmap64ToBin(levelMask) )
-		fmt.Println("left leaves mask:", bitmap64ToBin(leftLeavesMask))
 	}
 
 	return bits.OnesCount64Before(bm&leftLeavesMask, 64)
