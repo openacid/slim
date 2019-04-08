@@ -3,7 +3,7 @@
 package array
 
 import (
-	"github.com/openacid/slim/bits"
+	"math/bits"
 )
 
 // U16 is an implementation of Base with uint16 element
@@ -43,7 +43,7 @@ func (a *U16) Get(idx int32) (uint16, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*2 + int32(cnt1)*2
 
@@ -87,7 +87,7 @@ func (a *U32) Get(idx int32) (uint32, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*4 + int32(cnt1)*4
 
@@ -131,7 +131,7 @@ func (a *U64) Get(idx int32) (uint64, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*8 + int32(cnt1)*8
 
@@ -175,7 +175,7 @@ func (a *I16) Get(idx int32) (int16, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*2 + int32(cnt1)*2
 
@@ -219,7 +219,7 @@ func (a *I32) Get(idx int32) (int32, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*4 + int32(cnt1)*4
 
@@ -263,7 +263,7 @@ func (a *I64) Get(idx int32) (int64, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*8 + int32(cnt1)*8
 

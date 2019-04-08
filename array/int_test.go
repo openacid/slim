@@ -16,6 +16,9 @@ import (
 	"github.com/openacid/slim/array"
 )
 
+var Input int32 = 2
+var Output int64
+
 func TestU16NewErrorArgments(t *testing.T) {
 	var index []int32
 	eltsData := []uint16{12, 15, 19, 120, 300}
@@ -243,9 +246,13 @@ func BenchmarkU16Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := uint16(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 
 func TestU32NewErrorArgments(t *testing.T) {
@@ -475,9 +482,13 @@ func BenchmarkU32Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := uint32(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 
 func TestU64NewErrorArgments(t *testing.T) {
@@ -707,9 +718,13 @@ func BenchmarkU64Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := uint64(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 
 func TestI16NewErrorArgments(t *testing.T) {
@@ -939,9 +954,13 @@ func BenchmarkI16Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := int16(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 
 func TestI32NewErrorArgments(t *testing.T) {
@@ -1171,9 +1190,13 @@ func BenchmarkI32Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := int32(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 
 func TestI64NewErrorArgments(t *testing.T) {
@@ -1403,7 +1426,11 @@ func BenchmarkI64Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := int64(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = s
 }

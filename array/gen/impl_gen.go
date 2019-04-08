@@ -6,7 +6,7 @@ import (
 
 var implHead = `package array
 import (
-	"github.com/openacid/slim/bits"
+	"math/bits"
 )
 `
 
@@ -48,7 +48,7 @@ func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 		return 0, false
 	}
 
-	cnt1 := bits.OnesCount64Before(n, uint(iBit))
+	cnt1 := bits.OnesCount64(n & ((uint64(1) << uint(iBit)) - 1))
 
 	stIdx := a.Offsets[iBm]*{{.ValLen}} + int32(cnt1)*{{.ValLen}}
 
@@ -71,6 +71,9 @@ import (
 	"github.com/kr/pretty"
 	"github.com/openacid/slim/array"
 )
+
+var Input int32 = 2
+var Output int64
 `
 
 var testTemplate = `
@@ -301,9 +304,13 @@ func Benchmark{{.Name}}Get(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
+
+	s := {{.ValType}}(0)
 	for i := 0; i < b.N; i++ {
-		a.Get(2)
+		r, _ := a.Get(Input)
+		s += r
 	}
+	Output = int64(s)
 }
 `
 

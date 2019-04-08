@@ -158,7 +158,7 @@ func BenchmarkOnesCount64Before(b *testing.B) {
 
 	var s int
 	for i := 0; i < b.N; i++ {
-		s += OnesCount64Before(uint64(Input), 15)
+		s += OnesCount64Before(Input, 15)
 	}
 
 	Output = s
@@ -227,7 +227,7 @@ func BenchmarkGoOnesCount32(b *testing.B) {
 func BenchmarkGoOnesCount64(b *testing.B) {
 	var s int
 	for i := 0; i < b.N; i++ {
-		s += gobits.OnesCount64(uint64(Input))
+		s += gobits.OnesCount64(Input)
 	}
 	Output = s
 }
