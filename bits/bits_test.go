@@ -4,14 +4,24 @@ import (
 	gobits "math/bits"
 	"testing"
 
-	"github.com/openacid/slim/bits"
+	. "github.com/openacid/slim/bits"
 )
 
-func TestOnesCount64Before(t *testing.T) {
+// Exported (global) variable serving as input for some
+// of the benchmarks to ensure side-effect free calls
+// are not optimized away.
+var Input uint64 = 0x03f79d71b4ca8b09
+
+// Exported (global) variable to store function results
+// during benchmarking to ensure side-effect free calls
+// are not optimized away.
+var Output int
+
+func TestOnesCount64AndBefore(t *testing.T) {
 	var cases = []struct {
 		n    uint64
 		iBit uint
-		expN int
+		want int
 	}{
 		{0, 0, 0},                    // 0b00
 		{1, 0, 0},                    // 0b01
@@ -29,19 +39,28 @@ func TestOnesCount64Before(t *testing.T) {
 		{0xffffffffffffffff, 66, 64}, // 0b11....
 	}
 	for _, c := range cases {
-		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bits.OnesCount64Before(n, iBit)
-		if actN != expN {
-			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
+		n, iBit, want := c.n, c.iBit, c.want
+
+		rst := OnesCount64Before(n, iBit)
+		if rst != want {
+			t.Fatalf("failed, case:%+v, rst:%d", c, rst)
+		}
+
+		// uint test
+		if UintSize == 64 {
+			rst := OnesCountBefore(uint(n), iBit)
+			if rst != want {
+				t.Fatalf("failed, case:%+v, rst:%d", c, rst)
+			}
 		}
 	}
 }
 
-func TestOnesCount32Before(t *testing.T) {
+func TestOnesCount32AndBefore(t *testing.T) {
 	var cases = []struct {
 		n    uint32
 		iBit uint
-		expN int
+		want int
 	}{
 		{0, 0, 0},            // 0b00
 		{1, 0, 0},            // 0b01
@@ -59,19 +78,28 @@ func TestOnesCount32Before(t *testing.T) {
 		{0xffffffff, 33, 32}, // 0b11....
 	}
 	for _, c := range cases {
-		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bits.OnesCount32Before(n, iBit)
-		if actN != expN {
-			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
+		n, iBit, want := c.n, c.iBit, c.want
+
+		rst := OnesCount32Before(n, iBit)
+		if rst != want {
+			t.Fatalf("failed, case:%+v, rst:%d", c, rst)
+		}
+
+		// uint test
+		if UintSize == 32 {
+			rst := OnesCountBefore(uint(n), iBit)
+			if rst != want {
+				t.Fatalf("failed, case:%+v, rst:%d", c, rst)
+			}
 		}
 	}
 }
 
-func TestOnesCount16Before(t *testing.T) {
+func TestOnesCount16AndBefore(t *testing.T) {
 	var cases = []struct {
 		n    uint16
 		iBit uint
-		expN int
+		want int
 	}{
 		{0, 0, 0},        // 0b00
 		{1, 0, 0},        // 0b01
@@ -88,19 +116,20 @@ func TestOnesCount16Before(t *testing.T) {
 		{0xffff, 17, 16}, // 0b11....
 	}
 	for _, c := range cases {
-		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bits.OnesCount16Before(n, iBit)
-		if actN != expN {
-			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
+		n, iBit, want := c.n, c.iBit, c.want
+
+		rst := OnesCount16Before(n, iBit)
+		if rst != want {
+			t.Fatalf("failed, case:%+v, rst:%d", c, rst)
 		}
 	}
 }
 
-func TestOnesCount8Before(t *testing.T) {
+func TestOnesCount8AndBefore(t *testing.T) {
 	var cases = []struct {
 		n    uint8
 		iBit uint
-		expN int
+		want int
 	}{
 		{0, 0, 0},    // 0b00
 		{1, 0, 0},    // 0b01
@@ -116,74 +145,89 @@ func TestOnesCount8Before(t *testing.T) {
 		{0xff, 9, 8}, // 0b11....
 	}
 	for _, c := range cases {
-		n, iBit, expN := c.n, c.iBit, c.expN
-		actN := bits.OnesCount8Before(n, iBit)
-		if actN != expN {
-			t.Fatalf("failed, case:%+v, actN:%d", c, actN)
+		n, iBit, want := c.n, c.iBit, c.want
+
+		rst := OnesCount8Before(n, iBit)
+		if rst != want {
+			t.Fatalf("failed, case:%+v, rst:%d", c, rst)
 		}
 	}
 }
 
 func BenchmarkOnesCount64Before(b *testing.B) {
 
-	var n uint64 = 12334567890
-
+	var s int
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount64Before(n+uint64(i), uint(i)%64)
+		s += OnesCount64Before(uint64(Input), 15)
 	}
+
+	Output = s
 }
 
 func BenchmarkOnesCount32Before(b *testing.B) {
 
-	var n uint32 = 123345678
-
+	var s int
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount32Before(n+uint32(i), uint(i)%32)
+		s += OnesCount32Before(uint32(Input), 15)
 	}
+	Output = s
 }
 
 func BenchmarkOnesCount16Before(b *testing.B) {
 
+	var s int
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount16Before(uint16(i), uint(i)%16)
+		s += OnesCount16Before(uint16(Input), 15)
 	}
+	Output = s
 }
 
 func BenchmarkOnesCount8Before(b *testing.B) {
 
+	var s int
 	for i := 0; i < b.N; i++ {
-		bits.OnesCount8Before(uint8(i), uint(i)%8)
+		s += OnesCount8Before(uint8(Input), 6)
 	}
+	Output = s
 }
 
-func BenchmarkGoOnesCount64(b *testing.B) {
+func BenchmarkOnesCountBefore(b *testing.B) {
 
-	var n uint64 = 12334567890
-
+	var s int
 	for i := 0; i < b.N; i++ {
-		gobits.OnesCount64(n + uint64(i))
+		s += OnesCountBefore(uint(Input), 6)
 	}
-}
-
-func BenchmarkGoOnesCount32(b *testing.B) {
-
-	var n uint32 = 123345678
-
-	for i := 0; i < b.N; i++ {
-		gobits.OnesCount32(n + uint32(i))
-	}
-}
-
-func BenchmarkGoOnesCount16(b *testing.B) {
-
-	for i := 0; i < b.N; i++ {
-		gobits.OnesCount16(uint16(i))
-	}
+	Output = s
 }
 
 func BenchmarkGoOnesCount8(b *testing.B) {
-
+	var s int
 	for i := 0; i < b.N; i++ {
-		gobits.OnesCount8(uint8(i))
+		s += gobits.OnesCount8(uint8(Input))
 	}
+	Output = s
+}
+
+func BenchmarkGoOnesCount16(b *testing.B) {
+	var s int
+	for i := 0; i < b.N; i++ {
+		s += gobits.OnesCount16(uint16(Input))
+	}
+	Output = s
+}
+
+func BenchmarkGoOnesCount32(b *testing.B) {
+	var s int
+	for i := 0; i < b.N; i++ {
+		s += gobits.OnesCount32(uint32(Input))
+	}
+	Output = s
+}
+
+func BenchmarkGoOnesCount64(b *testing.B) {
+	var s int
+	for i := 0; i < b.N; i++ {
+		s += gobits.OnesCount64(uint64(Input))
+	}
+	Output = s
 }
