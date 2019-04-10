@@ -157,16 +157,15 @@ func main() {
 	benGet()
 
 	fmt.Println("generating get() benchmark chart...")
-	scriptGet := benchhelper.Fformat.JPGHistogram +
-		benchhelper.LineStyles.Green + `
+	scriptGet := `
+fn = "report/bench_get.data"
 set yr [5:20]
 set xlabel 'key-count (n)'
 set ylabel 'Get() ns/op' offset 1,0
-
-plot "report/bench_get.data" using 2:xtic(1) with histogram linestyle 1 title "u16", \
-     ''						 using 3:xtic(1) with histogram linestyle 2 title "u32", \
-     ''						 using 4:xtic(1) with histogram linestyle 3 title "u64"
 `
+	scriptGet += benchhelper.Fformat.JPGHistogramSmall
+	scriptGet += benchhelper.LineStyles.Green
+	scriptGet += benchhelper.Plot.Histogram
 
 	benchhelper.Fplot("report/bench_get.jpg", scriptGet)
 }

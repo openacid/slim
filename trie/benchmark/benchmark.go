@@ -34,6 +34,59 @@ type SearchResult struct {
 	NonexsitentKeyNsPerOp int64
 }
 
+// GetResult represent the ns/Get() for virous key count and several predefined
+// key length = 64, 128, 256
+type GetResult struct {
+	KeyCount int
+	K64      int
+	K128     int
+	K256     int
+}
+
+var Rec byte
+
+// BenchGet benchmark the Get() of present key.
+func GetPresent(keyCounts []int) []GetResult {
+
+	var spents = make([]GetResult, 0, len(keyCounts))
+
+	for _, n := range keyCounts {
+
+		r := GetResult{
+			KeyCount: n,
+			K64:      benchGetPresent(MakeTestSrc(n, 64, 2)),
+			K128:     benchGetPresent(MakeTestSrc(n, 128, 2)),
+			K256:     benchGetPresent(MakeTestSrc(n, 256, 2)),
+		}
+
+		spents = append(spents, r)
+	}
+
+	return spents
+}
+
+func benchGetPresent(setting *testSrcType) int {
+
+	rst := testing.Benchmark(
+		func(b *testing.B) {
+
+			st := setting.Slim
+			n := len(setting.Keys)
+
+			var rec byte
+
+			for i := 0; i < b.N; i++ {
+				v := getTestKV(st, setting.Keys[i%n])
+				rec += v[0]
+			}
+
+			Rec = rec
+		})
+
+	return int(rst.NsPerOp())
+
+}
+
 // MakeTrieSearchBench benchmark the trie search with existing and nonexistent
 // key, return a slice of `TrieSearchCost`.
 // `go test ...` conveniently.
@@ -231,7 +284,7 @@ func makeKVElts(srcKeys []string, srcVals [][]byte) []*TrieBenchKV {
 	return vals
 }
 
-func trieSearchTestKV(ct *trie.SlimTrie, key string) []byte {
+func getTestKV(ct *trie.SlimTrie, key string) []byte {
 
 	eq := ct.Get(key)
 	if eq == nil {
@@ -252,7 +305,7 @@ func MakeTrieBenchFunc(st *trie.SlimTrie, searchKey string) func(*testing.B) {
 	return func(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
-			_ = trieSearchTestKV(st, searchKey)
+			_ = getTestKV(st, searchKey)
 		}
 
 	}

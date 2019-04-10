@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/trie/benchmark"
 )
 
 func main() {
 	keyCntLenSearch()
-	keyCntIncrSearch()
+	keyGetPresent()
 }
 
 func keyCntLenSearch() {
@@ -39,26 +40,29 @@ func keyCntLenSearch() {
 	fmt.Println("result also wirte to", resultFn)
 }
 
-func keyCntIncrSearch() {
-	kl := int(256)
-	vl := int(2)
-	var runs = []benchmark.Config{
-		{KeyCnt: 1, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 10, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 100, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 1000, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 2000, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 5000, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 10000, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 15000, KeyLen: kl, ValLen: vl},
-		{KeyCnt: 20000, KeyLen: kl, ValLen: vl},
-	}
-	trieCostTb := benchmark.MakeTrieSearchBench(runs)
-	chart := benchmark.OutputToChart(
-		"search benchmark - key count",
+func keyGetPresent() {
+	// TODO add absent key search bench
+
+	keyCounts := []int{1, 10, 100, 1000, 2000, 5000, 10000, 20000}
+	trieCostTb := benchmark.GetPresent(keyCounts)
+
+	benchhelper.WriteMDFile("bench_get_present.md", trieCostTb)
+	benchhelper.WriteDataFile("bench_get_present.data",
+		[]string{"key-count", "k=64", "k=128", "k=256"},
 		trieCostTb)
 
-	fmt.Println(chart)
+	scriptGetPresent := `
+fn = "bench_get_present.data"
+set yr [50:250]
+set xlabel 'key-count (n)'
+set ylabel 'Get() present key ns/op' offset 1,0
+`
+	scriptGetPresent += benchhelper.Fformat.JPGHistogramMid
+	scriptGetPresent += benchhelper.LineStyles.Green
+	scriptGetPresent += benchhelper.Plot.Histogram
+
+	benchhelper.Fplot("bench_get_present.jpg", scriptGetPresent)
+
 }
 
 // writeToFile wirte a string body to file.

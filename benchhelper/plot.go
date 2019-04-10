@@ -2,16 +2,24 @@ package benchhelper
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os/exec"
 )
 
 var Fformat = struct {
-	JPGHistogram string
+	JPGHistogramSmall string
+	JPGHistogramMid   string
 }{
-	JPGHistogram: `
+	JPGHistogramSmall: `
 set terminal jpeg size 400,300;
+set boxwidth 0.8;
+set style fill solid;
+set grid ytics;
+`,
+	JPGHistogramMid: `
+set terminal jpeg size 800,600;
 set boxwidth 0.8;
 set style fill solid;
 set grid ytics;
@@ -46,6 +54,21 @@ set style line 10 lc rgb '#ebb700' pt 6 ps 1 lt 1 lw 2;
 `,
 }
 
+var Plot = struct {
+	Histogram string
+}{
+	Histogram: `
+stats fn skip 1 nooutput
+max_col = STATS_columns
+
+plot for [col=2:max_col] fn \
+using col:xtic(1) \
+with histogram \
+linestyle col-1 \
+title columnheader
+`,
+}
+
 // Plot a image by gnuplot script "script" and output it to "fn".
 func Fplot(fn, script string) {
 	gp := exec.Command("gnuplot")
@@ -56,6 +79,9 @@ func Fplot(fn, script string) {
 
 	var stdout bytes.Buffer
 	gp.Stdout = &stdout
+
+	var stderr bytes.Buffer
+	gp.Stderr = &stderr
 
 	err = gp.Start()
 	if err != nil {
@@ -73,6 +99,8 @@ func Fplot(fn, script string) {
 
 	err = gp.Wait()
 	if err != nil {
+		fmt.Println(stdout.String())
+		fmt.Println(stderr.String())
 		panic(err)
 	}
 

@@ -47,8 +47,7 @@ func RandI32SliceBetween(min int32, max int32, factor float64) []int32 {
 	return indexes
 }
 
-func NewMDFileTable(fn string) (*os.File, *tablewriter.Table) {
-
+func newFile(fn string) *os.File {
 	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
@@ -58,11 +57,45 @@ func NewMDFileTable(fn string) (*os.File, *tablewriter.Table) {
 	if err != nil {
 		panic(err)
 	}
+	return f
+}
 
-	table := tablewriter.NewWriter(f)
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
+func NewMDFileTable(fn string) (*os.File, *tablewriter.Table) {
 
-	return f, table
+	f := newFile(fn)
+	tb := tablewriter.NewWriter(f)
+	tb.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	tb.SetCenterSeparator("|")
 
+	return f, tb
+}
+
+func NewDataFileTable(fn string) (*os.File, *tablewriter.Table) {
+
+	f := newFile(fn)
+	tb := tablewriter.NewWriter(f)
+	tb.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
+	tb.SetCenterSeparator("")
+	tb.SetColumnSeparator("")
+
+	return f, tb
+}
+
+func WriteMDFile(fn string, content interface{}) {
+	f, tb := NewMDFileTable(fn)
+	defer f.Close()
+
+	tb.SetContent(content)
+	tb.Render()
+}
+
+func WriteDataFile(fn string, headers []string, content interface{}) {
+	f, tb := NewDataFileTable(fn)
+	defer f.Close()
+
+	tb.SetContent(content)
+	tb.ClearHeader()
+	tb.SetHeader(headers)
+	tb.SetHeaderLine(false)
+	tb.Render()
 }
