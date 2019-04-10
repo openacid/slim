@@ -119,6 +119,37 @@ func NewWriter(writer io.Writer) *Table {
 	return t
 }
 
+func (t *Table) SetContent(rows interface{}) {
+	rs := reflect.ValueOf(rows)
+	if rs.Kind() != reflect.Slice {
+		panic("rows is not slice")
+	}
+
+	// set header
+	headers := []string{}
+	et := rs.Type().Elem()
+	for i := 0; i < et.NumField(); i++ {
+		ft := et.Field(i)
+		headers = append(headers, ft.Name)
+	}
+
+	strRows := [][]string{}
+	for i := 0; i < rs.Len(); i++ {
+		strRow := []string{}
+		row := rs.Index(i)
+
+		for j := 0; j < row.NumField(); j++ {
+			v := row.Field(j).Interface()
+			strRow = append(strRow, fmt.Sprintf("%v", v))
+		}
+
+		strRows = append(strRows, strRow)
+	}
+
+	t.SetHeader(headers)
+	t.AppendBulk(strRows)
+}
+
 // Render table output
 func (t *Table) Render() {
 	if t.borders.Top {

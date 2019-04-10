@@ -19,6 +19,8 @@ github.com/openacid/errors v0.8.1 h1:Hrj9WENDoj5jP27ZfF60SY5LShbxei+sxKZa0EP+oDw
 github.com/openacid/errors v0.8.1/go.mod h1:GUQEJJOJE3W9skHm8E8Y4phdl2LLEN8iD7c5gcGgdx0=
 github.com/openacid/tablewriter v0.0.0-20190403062637-eae587ad7165 h1:pcp1uwZiNZn2Xk8q5G1dlkSkrrcR7R6NywlPIkHuvAg=
 github.com/openacid/tablewriter v0.0.0-20190403062637-eae587ad7165/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
+github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc h1:F34tPxFjFRM23Km1YhSquQk0tvxCfktfAu0GXL1XxJw=
+github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/openacid/tablewriter v0.0.1 h1:EXox3cjZmzegh+TcPXIKXEpicsk8jp2Ue0lFQYy3u58=
 github.com/openacid/tablewriter v0.0.1/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
