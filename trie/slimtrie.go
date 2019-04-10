@@ -506,8 +506,8 @@ func (st *SlimTrie) getMarshalSize() int64 {
 	return cSize + sSize + lSize
 }
 
-// encode serializes it to byte stream.
-func (st *SlimTrie) encode(writer io.Writer) (cnt int64, err error) {
+// marshal serializes it to byte stream.
+func (st *SlimTrie) marshal(writer io.Writer) (cnt int64, err error) {
 	var n int64
 
 	if n, err = serialize.Marshal(writer, &st.Children); err != nil {

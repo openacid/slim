@@ -502,7 +502,7 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	size := ctrie.getMarshalSize()
 
-	n, err := ctrie.encode(rw)
+	n, err := ctrie.marshal(rw)
 	if err != nil {
 		t.Fatalf("failed to encode ctrie: %v", err)
 	}
