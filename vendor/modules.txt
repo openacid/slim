@@ -12,5 +12,5 @@ github.com/mattn/go-runewidth
 github.com/modood/table
 # github.com/openacid/errors v0.8.1
 github.com/openacid/errors
-# github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc
+# github.com/openacid/tablewriter v0.0.0-20190410090823-96f726cc5370
 github.com/openacid/tablewriter
