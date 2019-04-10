@@ -3,9 +3,11 @@
 package benchhelper
 
 import (
+	crand "crypto/rand"
 	"math/rand"
 	"os"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/openacid/tablewriter"
@@ -45,6 +47,43 @@ func RandI32SliceBetween(min int32, max int32, factor float64) []int32 {
 	}
 
 	return indexes
+}
+
+func RandSortedStrings(cnt, leng int) []string {
+	rsts := make([]string, cnt)
+
+	for i := 0; i < cnt; i++ {
+		rsts[i] = RandString(leng)
+	}
+
+	sort.Strings(rsts)
+	return rsts
+}
+
+func RandByteSlices(cnt, leng int) [][]byte {
+	rsts := make([][]byte, cnt)
+
+	for i := int(0); i < cnt; i++ {
+		rsts[i] = RandBytes(leng)
+	}
+
+	return rsts
+}
+
+func RandString(leng int) string {
+	return string(RandBytes(leng))
+}
+
+func RandBytes(leng int) []byte {
+	bs := make([]byte, leng)
+	n, err := crand.Read(bs)
+	if err != nil {
+		panic(err)
+	}
+	if n != leng {
+		panic("not read enough")
+	}
+	return bs
 }
 
 func newFile(fn string) *os.File {

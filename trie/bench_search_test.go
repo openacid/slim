@@ -19,7 +19,7 @@ var runs = []benchmark.Config{
 func BenchmarkTrieSearch(b *testing.B) {
 
 	for _, r := range runs {
-		testSrc := benchmark.MakeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
+		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
 
 		tr := testSrc.Slim
 
@@ -36,7 +36,7 @@ func BenchmarkTrieSearch(b *testing.B) {
 func BenchmarkMapSearch(b *testing.B) {
 
 	for _, r := range runs {
-		testSrc := benchmark.MakeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
+		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
 
 		m := testSrc.Map
 
@@ -52,7 +52,7 @@ func BenchmarkMapSearch(b *testing.B) {
 func BenchmarkArraySearch(b *testing.B) {
 
 	for _, r := range runs {
-		testSrc := benchmark.MakeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
+		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
 
 		keys := testSrc.Keys
 		values := testSrc.Values
@@ -69,7 +69,7 @@ func BenchmarkArraySearch(b *testing.B) {
 func BenchmarkBTreeSearch(b *testing.B) {
 
 	for _, r := range runs {
-		testSrc := benchmark.MakeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
+		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
 		bt := testSrc.Btree
 
 		name := fmt.Sprintf("%d-keys-%d-length: btree search existing", r.KeyCnt, r.KeyLen)

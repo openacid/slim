@@ -2,9 +2,7 @@
 package benchmark
 
 import (
-	crand "crypto/rand"
 	"encoding/binary"
-	"fmt"
 	"math/rand"
 	"sort"
 	"strings"
@@ -13,7 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/google/btree"
-	"github.com/modood/table"
+	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/trie"
 )
 
@@ -48,24 +46,51 @@ var Rec byte
 // BenchGet benchmark the Get() of present key.
 func GetPresent(keyCounts []int) []GetResult {
 
-	var spents = make([]GetResult, 0, len(keyCounts))
+	var rst = make([]GetResult, 0, len(keyCounts))
 
 	for _, n := range keyCounts {
 
 		r := GetResult{
 			KeyCount: n,
-			K64:      benchGetPresent(MakeTestSrc(n, 64, 2)),
-			K128:     benchGetPresent(MakeTestSrc(n, 128, 2)),
-			K256:     benchGetPresent(MakeTestSrc(n, 256, 2)),
+			K64:      benchGet(NewGetSetting(n, 64, 2), "present"),
+			K128:     benchGet(NewGetSetting(n, 128, 2), "present"),
+			K256:     benchGet(NewGetSetting(n, 256, 2), "present"),
 		}
 
-		spents = append(spents, r)
+		rst = append(rst, r)
 	}
 
-	return spents
+	return rst
 }
 
-func benchGetPresent(setting *testSrcType) int {
+func GetAbsent(keyCounts []int) []GetResult {
+
+	var rst = make([]GetResult, 0, len(keyCounts))
+
+	for _, n := range keyCounts {
+
+		r := GetResult{
+			KeyCount: n,
+			K64:      benchGet(NewGetSetting(n, 64, 2), "absent"),
+			K128:     benchGet(NewGetSetting(n, 128, 2), "absent"),
+			K256:     benchGet(NewGetSetting(n, 256, 2), "absent"),
+		}
+
+		rst = append(rst, r)
+	}
+
+	return rst
+}
+
+func benchGet(setting *GetSetting, typ string) int {
+
+	var keys []string
+
+	if typ == "present" {
+		keys = setting.Keys
+	} else {
+		keys = setting.AbsentKeys
+	}
 
 	rst := testing.Benchmark(
 		func(b *testing.B) {
@@ -76,7 +101,7 @@ func benchGetPresent(setting *testSrcType) int {
 			var rec byte
 
 			for i := 0; i < b.N; i++ {
-				v := getTestKV(st, setting.Keys[i%n])
+				v := getTestKV(st, keys[i%n])
 				rec += v[0]
 			}
 
@@ -87,43 +112,23 @@ func benchGetPresent(setting *testSrcType) int {
 
 }
 
-// MakeTrieSearchBench benchmark the trie search with existing and nonexistent
-// key, return a slice of `TrieSearchCost`.
-// `go test ...` conveniently.
-func MakeTrieSearchBench(runs []Config) []*SearchResult {
+func NewGetSetting(cnt int, keyLen, valLen int) *GetSetting {
 
-	var spents = make([]*SearchResult, len(runs))
+	ks := benchhelper.RandSortedStrings(cnt*2, keyLen)
 
-	for i, r := range runs {
-		testSrc := MakeTestSrc(r.KeyCnt, r.KeyLen, r.ValLen)
+	keys := make([]string, cnt)
+	absentkeys := make([]string, cnt)
 
-		tr := testSrc.Slim
-
-		// existing key
-		existingRst := testing.Benchmark(MakeTrieBenchFunc(tr, testSrc.SearchKey))
-
-		// nonexistent key
-		searchKey := fmt.Sprintf("%snot found", testSrc.SearchKey)
-		nonexistentRst := testing.Benchmark(MakeTrieBenchFunc(tr, searchKey))
-
-		spents[i] = &SearchResult{
-			KeyCnt:                r.KeyCnt,
-			KeyLen:                r.KeyLen,
-			ExsitingKeyNsPerOp:    existingRst.NsPerOp(),
-			NonexsitentKeyNsPerOp: nonexistentRst.NsPerOp(),
-		}
+	for i := 0; i < cnt; i++ {
+		keys[i] = ks[i*2]
+		absentkeys[i] = ks[i*2+1]
 	}
 
-	return spents
-}
-func MakeTestSrc(cnt int, keyLen, valLen int) *testSrcType {
+	vals := benchhelper.RandByteSlices(cnt, valLen)
 
-	keys := makeSortedStrings(cnt, keyLen)
-	srcVals := makeByteSlices(cnt, valLen)
+	elts := makeKVElts(keys, vals)
 
-	vals := makeKVElts(keys, srcVals)
-
-	st, err := trie.NewSlimTrie(testKVConv{keySize: keyLen, valSize: valLen}, keys, vals)
+	st, err := trie.NewSlimTrie(testKVConv{keySize: keyLen, valSize: valLen}, keys, elts)
 	if err != nil {
 		panic(err)
 	}
@@ -131,13 +136,13 @@ func MakeTestSrc(cnt int, keyLen, valLen int) *testSrcType {
 	// make test map
 	m := make(map[string][]byte, cnt)
 	for i := 0; i < len(keys); i++ {
-		m[keys[i]] = srcVals[i]
+		m[keys[i]] = vals[i]
 	}
 
 	// make test btree
 	bt := btree.New(2)
 
-	for _, v := range vals {
+	for _, v := range elts {
 		bt.ReplaceOrInsert(v)
 	}
 
@@ -146,11 +151,13 @@ func MakeTestSrc(cnt int, keyLen, valLen int) *testSrcType {
 	idx := r.Int63n(int64(cnt))
 
 	searchKey := keys[idx]
-	searchVal := srcVals[idx]
+	searchVal := vals[idx]
 
-	return &testSrcType{
+	return &GetSetting{
 		Keys:   keys,
-		Values: srcVals,
+		Values: vals,
+
+		AbsentKeys: absentkeys,
 
 		Slim:  st,
 		Map:   m,
@@ -161,10 +168,12 @@ func MakeTestSrc(cnt int, keyLen, valLen int) *testSrcType {
 	}
 }
 
-// testSrcType defines benchmark data source.
-type testSrcType struct {
+// GetSetting defines benchmark data source.
+type GetSetting struct {
 	Keys   []string
 	Values [][]byte
+
+	AbsentKeys []string
 
 	Slim  *trie.SlimTrie
 	Map   map[string][]byte
@@ -230,50 +239,6 @@ func (c testKVConv) GetSize(d interface{}) int {
 
 func (c testKVConv) GetEncodedSize(b []byte) int {
 	return 8
-}
-
-// OutputToChart output the benchmark result to a chart.
-func OutputToChart(header string, body []*SearchResult) string {
-
-	b := table.Table(body)
-	return fmt.Sprintf("%s:\n%s\n", header, b)
-}
-
-func makeSortedStrings(cnt, leng int) []string {
-	rsts := make([]string, cnt)
-
-	for i := 0; i < cnt; i++ {
-		rsts[i] = RandomString(leng)
-	}
-
-	sort.Strings(rsts)
-	return rsts
-}
-
-func makeByteSlices(cnt, leng int) [][]byte {
-	rsts := make([][]byte, cnt)
-
-	for i := int(0); i < cnt; i++ {
-		rsts[i] = RandomBytes(leng)
-	}
-
-	return rsts
-}
-
-func RandomString(leng int) string {
-	return string(RandomBytes(leng))
-}
-
-func RandomBytes(leng int) []byte {
-	bs := make([]byte, leng)
-	n, err := crand.Read(bs)
-	if err != nil {
-		panic(err)
-	}
-	if n != leng {
-		panic("not read enough")
-	}
-	return bs
 }
 
 func makeKVElts(srcKeys []string, srcVals [][]byte) []*TrieBenchKV {
