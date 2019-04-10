@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -14,8 +13,6 @@ import (
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/strhelper"
 )
-
-var testDataFn = "data"
 
 type searchRst struct {
 	ltVal interface{}
@@ -523,101 +520,6 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	// check
 	checkSlimTrie(ctrie, rCtrie, t)
-}
-
-func TestSlimTrieMarshalAtUnmarshalAt(t *testing.T) {
-	key := [][]byte{
-		{1, 2, 3},
-		{1, 2, 4},
-		{2, 3, 4},
-		{2, 3, 5},
-		{3, 4, 5},
-	}
-
-	value1 := []interface{}{
-		uint16(0),
-		uint16(1),
-		uint16(2),
-		uint16(3),
-		uint16(4),
-	}
-
-	value2 := []interface{}{
-		uint16(10),
-		uint16(11),
-		uint16(12),
-		uint16(13),
-		uint16(14),
-	}
-
-	trie1, _ := NewTrie(key, value1, false)
-	trie2, _ := NewTrie(key, value2, false)
-
-	ctrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
-	err := ctrie1.LoadTrie(trie1)
-	if err != nil {
-		t.Fatalf("compact trie error: %v", err)
-	}
-
-	ctrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
-	err = ctrie2.LoadTrie(trie2)
-	if err != nil {
-		t.Fatalf("compact trie error: %v", err)
-	}
-
-	// marshalat
-	wOFlags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	writer, err := os.OpenFile(testDataFn, wOFlags, 0755)
-	if err != nil {
-		t.Fatalf("failed to create file: %s, %v", testDataFn, err)
-	}
-	defer os.Remove(testDataFn)
-
-	offset1 := int64(0)
-	n, err := ctrie1.marshalAt(writer, offset1)
-	if err != nil {
-		t.Fatalf("failed to encode ctrie: %v", err)
-	}
-
-	size := ctrie1.getMarshalSize()
-	if n != size {
-		t.Fatalf("wrong encode size: %d, %d", n, size)
-	}
-
-	offset2 := offset1 + n
-	n, err = ctrie2.marshalAt(writer, offset2)
-	if err != nil {
-		t.Fatalf("failed to encode ctrie: %v", err)
-	}
-	size = ctrie1.getMarshalSize()
-	if n != size {
-		t.Fatalf("wrong encode size: %d, %d", n, size)
-	}
-
-	writer.Close()
-
-	// unmarshalat
-	reader, err := os.OpenFile(testDataFn, os.O_RDONLY, 0755)
-	if err != nil {
-		t.Fatalf("failed to read file: %s, %v", testDataFn, err)
-	}
-	defer reader.Close()
-
-	rCtrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
-	_, err = rCtrie1.unmarshalAt(reader, offset1)
-	if err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
-	}
-
-	checkSlimTrie(ctrie1, rCtrie1, t)
-
-	rCtrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
-	_, err = rCtrie2.unmarshalAt(reader, offset2)
-	if err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
-	}
-
-	checkSlimTrie(ctrie2, rCtrie2, t)
 }
 
 func TestSlimTrieBinaryCompatible(t *testing.T) {

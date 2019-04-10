@@ -11,9 +11,7 @@
 package trie
 
 import (
-	"bytes"
 	"io"
-	"os"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
@@ -530,23 +528,6 @@ func (st *SlimTrie) encode(writer io.Writer) (cnt int64, err error) {
 	return cnt, nil
 }
 
-// marshalAt serializes it to byte stream and write the stream at specified
-// offset.
-// TODO change to io.WriterAt
-func (st *SlimTrie) marshalAt(f *os.File, offset int64) (cnt int64, err error) {
-
-	buf := new(bytes.Buffer)
-	if cnt, err = st.encode(buf); err != nil {
-		return 0, err
-	}
-
-	if _, err = f.WriteAt(buf.Bytes(), offset); err != nil {
-		return 0, err
-	}
-
-	return cnt, nil
-}
-
 // unmarshal de-serializes and loads SlimTrie from a byte stream.
 func (st *SlimTrie) unmarshal(reader io.Reader) error {
 	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
@@ -562,29 +543,4 @@ func (st *SlimTrie) unmarshal(reader io.Reader) error {
 	}
 
 	return nil
-}
-
-// Unmarshal de-serializes and loads SlimTrie from a byte stream at
-// specified offset.
-// TODO change to io.ReaderAt
-func (st *SlimTrie) unmarshalAt(f *os.File, offset int64) (n int64, err error) {
-	childrenSize, err := serialize.UnmarshalAt(f, offset, &st.Children)
-	if err != nil {
-		return n, err
-	}
-	offset += childrenSize
-
-	stepsSize, err := serialize.UnmarshalAt(f, offset, &st.Steps)
-	if err != nil {
-		return n, err
-	}
-	offset += stepsSize
-
-	leavesSize, err := serialize.UnmarshalAt(f, offset, &st.Leaves)
-	if err != nil {
-		return n, err
-	}
-
-	n = childrenSize + stepsSize + leavesSize
-	return n, nil
 }
