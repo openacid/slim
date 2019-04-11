@@ -70,12 +70,12 @@ func TestTrie(t *testing.T) {
 
 	for _, c := range cases {
 
-		trie, _ := NewTrie(c.key, c.value)
+		trie, _ := NewTrie(c.key, c.value, false)
 		for _, ex := range c.expected {
 			_, rst, _ := trie.Search(ex.key)
 
 			if !reflect.DeepEqual(ex.rst, rst) {
-				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+				t.Fatal("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
 			}
 		}
 
@@ -90,6 +90,15 @@ func TestTrie(t *testing.T) {
 
 		trie.Squash()
 		trie.Squash()
+		for _, ex := range c.expected {
+			_, rst, _ := trie.Search(ex.key)
+
+			if !reflect.DeepEqual(ex.rst, rst) {
+				t.Error("ks: ", ex.key, "expected value: ", ex.rst, "rst: ", rst)
+			}
+		}
+
+		trie, _ = NewTrie(c.key, c.value, true)
 		for _, ex := range c.expected {
 			_, rst, _ := trie.Search(ex.key)
 
@@ -123,7 +132,7 @@ func TestTrieSearch(t *testing.T) {
 		7,
 	}
 
-	var trie, _ = NewTrie(key, value)
+	var trie, _ = NewTrie(key, value, false)
 
 	type ExpectType struct {
 		ltVal interface{}
@@ -304,7 +313,7 @@ func TestTrieNew(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		_, err := NewTrie(c.keys, c.values)
+		_, err := NewTrie(c.keys, c.values, false)
 		if errors.Cause(err) != errors.Cause(c.expectedErr) {
 			t.Fatalf("new trie: expectedErr: %v, got: %v", c.expectedErr, err)
 		}
@@ -331,7 +340,7 @@ func TestNewError(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		_, err := NewTrie(c.keys, c.vals)
+		_, err := NewTrie(c.keys, c.vals, false)
 		if c.wanterr != errors.Cause(err) {
 			t.Fatalf("%d-th: input: keys:%v; vals: %v; wanterr: %v; actual: %v",
 				i+1, c.keys, c.vals, c.wanterr, err)
@@ -341,7 +350,7 @@ func TestNewError(t *testing.T) {
 
 func TestAppend(t *testing.T) {
 
-	tr, err := NewTrie([][]byte{{2, 3}, {2, 5}}, []int{1, 2})
+	tr, err := NewTrie([][]byte{{2, 3}, {2, 5}}, []int{1, 2}, false)
 	if err != nil {
 		t.Fatalf("expect no error but: %v", err)
 	}
@@ -361,10 +370,121 @@ func TestAppend(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		_, err := tr.Append(c.keys, 1, false, false)
+		_, err := tr.Append(c.keys, 1, false)
 		if c.wanterr != errors.Cause(err) {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.keys, c.wanterr, err)
+		}
+	}
+}
+
+func TestAppendOneKeySquash(t *testing.T) {
+
+	keys := [][]byte{
+		{1, 2, 3},
+	}
+	values := []int{
+		3,
+	}
+
+	type ExpectType struct {
+		key   []byte
+		value interface{}
+	}
+
+	rt, err := NewTrie(keys, values, true)
+	if err != nil {
+		t.Error("NewTrie failed: ", err)
+	}
+
+	cases := []ExpectType{
+		{[]byte{1, 2, 2}, 3},
+		{[]byte{1, 2, 3}, 3},
+		{[]byte{1, 3, 3}, 3},
+		{[]byte{3, 3, 3}, 3},
+		{[]byte{4, 4, 4}, 3},
+		{[]byte{1, 2}, nil},
+		{[]byte{1, 2, 3, 4}, nil},
+	}
+
+	for _, c := range cases {
+		_, rst, _ := rt.Search(c.key)
+		if rst != c.value {
+			t.Error("ks: ", c.key, "expected value: ", c.value, "rst: ", rst)
+		}
+	}
+
+}
+
+func TestNewTrieSquash(t *testing.T) {
+	keys := [][]byte{
+		{1, 2, 3, 4, 0},
+		{1, 2, 3, 4, 1},
+		{1, 2, 3, 4, 2},
+		{1, 2, 3, 4, 3},
+		{1, 3, 3, 5, 4},
+	}
+
+	values := []int{
+		0,
+		1,
+		2,
+		3,
+		4,
+	}
+
+	type ExpectType struct {
+		key   []byte
+		value interface{}
+	}
+
+	// NewTrie with squash==true
+	rt, err := NewTrie(keys, values, true)
+	if err != nil {
+		t.Error("NewTrie failed: ", err)
+	}
+
+	cases := []ExpectType{
+		{[]byte{1, 2, 3, 4, 0}, 0},
+		{[]byte{1, 2, 3, 5, 0}, 0},
+		{[]byte{1, 2, 3, 4, 1}, 1},
+		{[]byte{1, 2, 3, 5, 1}, 1},
+		{[]byte{1, 2, 3, 4, 2}, 2},
+		{[]byte{1, 2, 3, 5, 2}, 2},
+		{[]byte{1, 2, 3, 4, 3}, 3},
+		{[]byte{1, 2, 3, 5, 3}, 3},
+		{[]byte{1, 3, 3, 5, 4}, 4},
+	}
+
+	for _, c := range cases {
+		_, rst, _ := rt.Search(c.key)
+		if rst != c.value {
+			t.Error("ks: ", c.key, "expected value: ", c.value, "rst: ", rst)
+		}
+	}
+
+	// NewTrie with squash==false
+	rt, err = NewTrie(keys, values, false)
+	if err != nil {
+		t.Error("NewTri failed: ", err)
+	}
+
+	cases = []ExpectType{
+		{[]byte{1, 2, 3, 4, 0}, 0},
+		{[]byte{1, 2, 3, 5, 0}, nil},
+		{[]byte{1, 2, 3, 4, 1}, 1},
+		{[]byte{1, 2, 3, 5, 1}, nil},
+		{[]byte{1, 2, 3, 4, 2}, 2},
+		{[]byte{1, 2, 3, 5, 2}, nil},
+		{[]byte{1, 2, 3, 4, 3}, 3},
+		{[]byte{1, 2, 3, 5, 3}, nil},
+		{[]byte{1, 3, 3, 5, 4}, 4},
+	}
+
+	for _, c := range cases {
+		_, rst, _ := rt.Search(c.key)
+		if rst != c.value {
+			t.Error("ks: ", c.key, "expected value: ", c.value, "rst: ", rst)
 		}
 	}
 }
@@ -440,10 +560,10 @@ func TestRangeTrie(t *testing.T) {
 		},
 	}
 
-	rt := newRangeTrie()
+	rt := newRangeTrie(true)
 
 	for _, s := range srcs {
-		_, err := rt.Append(s.key, s.value, s.isStart, true)
+		_, err := rt.Append(s.key, s.value, s.isStart)
 		if err == ErrTooManyTrieNodes {
 			fmt.Printf("warn: %v\n", err)
 			break
@@ -512,7 +632,7 @@ func TestRangeTrie(t *testing.T) {
 
 func TestToStrings(t *testing.T) {
 	// TODO
-	trie, err := NewTrie([][]byte{}, []int{})
+	trie, err := NewTrie([][]byte{}, []int{}, false)
 	if err != nil {
 		t.Fatalf("expect no err: %s", err)
 	}

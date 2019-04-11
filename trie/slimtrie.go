@@ -95,12 +95,11 @@ func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
 
 func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
 
-	trie, err := NewTrie(keys, values)
+	trie, err := NewTrie(keys, values, true)
 	if err != nil {
 		return err
 	}
 
-	trie.Squash()
 	err = st.LoadTrie(trie)
 	return err
 }
@@ -109,6 +108,10 @@ func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
 func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 	if root == nil {
 		return
+	}
+
+	if root.NodeCnt > MaxNodeCnt {
+		return ErrTooManyTrieNodes
 	}
 
 	childIndex, childData := []int32{}, []uint32{}
@@ -205,9 +208,19 @@ func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
 	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
 	ltLeaf := false
 
-	for idx := uint16(0); ; {
+	lenWords := len(key)
+
+	for idx := -1; ; {
+		idx += int(st.getStep(uint16(eqIdx)))
+
+		if lenWords < idx {
+			gtIdx = eqIdx
+			eqIdx = -1
+			break
+		}
+
 		var word byte
-		if uint16(len(key)) == idx {
+		if lenWords == idx {
 			word = LeafWord
 		} else {
 			word = (key[idx] & WordMask)
@@ -229,14 +242,6 @@ func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
 		}
 
 		if word == LeafWord {
-			break
-		}
-
-		idx += st.getStep(uint16(eqIdx))
-
-		if idx > uint16(len(key)) {
-			gtIdx = eqIdx
-			eqIdx = -1
 			break
 		}
 	}
@@ -274,14 +279,22 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 	ltLeaf := false
 
 	// string to 4-bit words
-	lenWords := 2 * uint16(len(key))
+	lenWords := 2 * len(key)
 
-	for idx := uint16(0); ; {
+	for idx := -1; ; {
+		idx += int(st.getStep(uint16(eqIdx)))
+
+		if lenWords < idx {
+			gtIdx = eqIdx
+			eqIdx = -1
+			break
+		}
+
 		var word byte
 		if lenWords == idx {
 			word = LeafWord
 		} else {
-			if idx&uint16(1) == uint16(1) {
+			if idx&1 == 1 {
 				word = (key[idx>>1] & 0x0f)
 			} else {
 				word = (key[idx>>1] & 0xf0) >> 4
@@ -304,14 +317,6 @@ func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
 		}
 
 		if word == LeafWord {
-			break
-		}
-
-		idx += st.getStep(uint16(eqIdx))
-
-		if idx > lenWords {
-			gtIdx = eqIdx
-			eqIdx = -1
 			break
 		}
 	}
@@ -351,9 +356,15 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 	eqIdx := int32(0)
 
 	// string to 4-bit words
-	lenWords := 2 * uint16(len(key))
+	lenWords := 2 * len(key)
 
-	for idx := uint16(0); ; {
+	for idx := -1; ; {
+		idx += int(st.getStep(uint16(eqIdx)))
+		if lenWords < idx {
+			eqIdx = -1
+			break
+		}
+
 		if lenWords == idx {
 			break
 		}
@@ -361,17 +372,10 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}) {
 		// Get a 4-bit word from 8-bit words.
 		// Use arithmetic to avoid branch missing.
 		shift := 4 - (idx&1)*4
-		word = ((key[idx>>1] >> shift) & 0x0f)
+		word = ((key[idx>>1] >> uint(shift)) & 0x0f)
 
 		eqIdx = st.nextBranch(uint16(eqIdx), word)
 		if eqIdx == -1 {
-			break
-		}
-
-		idx += st.getStep(uint16(eqIdx))
-
-		if idx > lenWords {
-			eqIdx = -1
 			break
 		}
 	}
