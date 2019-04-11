@@ -30,6 +30,7 @@ type Node struct {
 	Value    interface{}
 
 	isStartLeaf bool
+	squash      bool
 
 	NodeCnt int
 }
@@ -39,9 +40,11 @@ const leafBranch = -1
 // NewTrie creates a Trie from a serial of ascendingly ordered keys and corresponding values.
 //
 // `values` must be a slice.
-func NewTrie(keys [][]byte, values interface{}) (root *Node, err error) {
+// if `squash` is `true`, indicate this trie to squash preceding branches every time after Append a new
+// key.
+func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err error) {
 
-	root = &Node{Children: make(map[int]*Node), Step: 1}
+	root = &Node{Children: make(map[int]*Node), Step: 1, squash: squash}
 
 	if keys == nil {
 		return
@@ -60,11 +63,15 @@ func NewTrie(keys [][]byte, values interface{}) (root *Node, err error) {
 
 	for i := 0; i < len(keys); i++ {
 		key := keys[i]
-		_, err = root.Append(key, valSlice[i], false, false)
+		_, err = root.Append(key, valSlice[i], false)
 		if err != nil {
 			err = errors.Wrapf(err, "trie failed to add kvs")
 			return
 		}
+	}
+
+	if squash {
+		root.Squash()
 	}
 
 	return
@@ -109,18 +116,16 @@ func (r *Node) Squash() int {
 
 	var cnt int
 
-	for k, n := range r.Children {
+	for _, n := range r.Children {
 		cnt += n.Squash()
+	}
 
-		if len(n.Branches) == 1 {
-			if n.Branches[0] == leafBranch {
-				continue
-			}
-			child := n.Children[n.Branches[0]]
-			child.Step++
-			r.Children[k] = child
-			cnt++
-		}
+	if len(r.Branches) == 1 && r.Branches[0] != leafBranch {
+		child := r.Children[r.Branches[0]]
+		r.Branches = child.Branches
+		r.Children = child.Children
+		r.Step = child.Step + 1
+		cnt++
 	}
 
 	return cnt
@@ -140,10 +145,19 @@ func (r *Node) Search(key []byte) (ltValue, eqValue, gtValue interface{}) {
 	var ltNode *Node
 	var gtNode *Node
 
-	for i := 0; ; {
+	lenKey := len(key)
+
+	for i := -1; ; {
+		i += int(eqNode.Step)
+
+		if lenKey < i {
+			gtNode = eqNode
+			eqNode = nil
+			break
+		}
 
 		var br int
-		if len(key) == i {
+		if lenKey == i {
 			br = leafBranch
 		} else {
 			br = int(key[i])
@@ -164,14 +178,6 @@ func (r *Node) Search(key []byte) (ltValue, eqValue, gtValue interface{}) {
 		}
 
 		if br == leafBranch {
-			break
-		}
-
-		i += int(eqNode.Step)
-
-		if i > len(key) {
-			gtNode = eqNode
-			eqNode = nil
 			break
 		}
 	}
@@ -257,10 +263,9 @@ func (r *Node) rightMost() *Node {
 // The key to add must be greater than any existent key in the Trie.
 //
 // `isStartLeaf` indicates if it should not be removed.
-// `needSquash` indicates whether to compress the Trie after adding.
 //
 // It returns the leaf node representing the added key.
-func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquash bool) (leaf *Node, err error) {
+func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool) (leaf *Node, err error) {
 
 	var node = r
 	var j int
@@ -293,7 +298,6 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 	}
 
 	commonNode := node
-	newBranch := int(key[j])
 
 	var ltNode *Node
 	numBr := len(commonNode.Branches)
@@ -303,7 +307,7 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 
 	for _, b := range key[j:] {
 		br := int(b)
-		n := &Node{Children: make(map[int]*Node), Step: 1}
+		n := &Node{Children: make(map[int]*Node), Step: 1, squash: node.squash}
 
 		node.Children[br] = n
 		node.Branches = append(node.Branches, br)
@@ -317,16 +321,9 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 	node.Children[leafBranch] = leaf
 	node.Branches = append(node.Branches, leafBranch)
 
-	if needSquash {
+	if commonNode.squash {
 		if ltNode != nil {
 			r.NodeCnt -= ltNode.Squash()
-		}
-
-		if r.NodeCnt > MaxNodeCnt {
-			delete(commonNode.Children, newBranch)
-			commonNode.removeBranch(newBranch)
-			err = errors.Wrapf(ErrTooManyTrieNodes, "append %q", key)
-			return nil, err
 		}
 	}
 
@@ -335,8 +332,8 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool, needSquas
 
 // newRangeTrie creates a range-serach Trie.
 // TODO explain.
-func newRangeTrie() *Node {
-	return &Node{Children: make(map[int]*Node), Step: 1}
+func newRangeTrie(squash bool) *Node {
+	return &Node{Children: make(map[int]*Node), Step: 1, squash: squash}
 }
 
 // removeNonboundaryLeaves removes leaf nodes and ancestor nodes that reach only
