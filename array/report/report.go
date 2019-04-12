@@ -50,7 +50,11 @@ func memUsage() {
 	table.Render()
 }
 
+// Exported (global) variable to store function results
+// during benchmarking to ensure side-effect free calls
+// are not optimized away.
 var Output int
+var _ = Output
 
 func benGet() {
 
