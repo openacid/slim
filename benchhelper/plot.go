@@ -29,6 +29,7 @@ set grid ytics;
 var LineStyles = struct {
 	Green  string
 	Yellow string
+	Orange string
 }{
 	Green: `
 set style line 1 lc rgb '#aaffa5' pt 1 ps 1 lt 1 lw 2;
@@ -41,16 +42,24 @@ set style line 7 lc rgb '#42a33d' pt 6 ps 1 lt 1 lw 2;
 set style line 8 lc rgb '#31942c' pt 6 ps 1 lt 1 lw 2;
 `,
 	Yellow: `
-set style line 1  lc rgb '#fffc85' pt 1 ps 1 lt 1 lw 2;
-set style line 2  lc rgb '#fdf476' pt 6 ps 1 lt 1 lw 2;
-set style line 3  lc rgb '#fbed67' pt 6 ps 1 lt 1 lw 2;
-set style line 4  lc rgb '#f8e559' pt 6 ps 1 lt 1 lw 2;
-set style line 5  lc rgb '#f6dd4a' pt 6 ps 1 lt 1 lw 2;
-set style line 6  lc rgb '#f4d63b' pt 6 ps 1 lt 1 lw 2;
-set style line 7  lc rgb '#f2ce2c' pt 6 ps 1 lt 1 lw 2;
-set style line 8  lc rgb '#efc61e' pt 6 ps 1 lt 1 lw 2;
-set style line 9  lc rgb '#edbf0f' pt 6 ps 1 lt 1 lw 2;
-set style line 10 lc rgb '#ebb700' pt 6 ps 1 lt 1 lw 2;
+set style line 1  lc rgb '#e6f082' pt 1 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#e2ee71' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#dfeb5f' pt 6 ps 1 lt 1 lw 2;
+set style line 4  lc rgb '#dbe94e' pt 6 ps 1 lt 1 lw 2;
+set style line 5  lc rgb '#d8e73c' pt 6 ps 1 lt 1 lw 2;
+set style line 6  lc rgb '#d4e52b' pt 6 ps 1 lt 1 lw 2;
+`,
+	Orange: `
+set style line 1  lc rgb '#ffdd00' pt 1 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#f9d000' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#f4c300' pt 6 ps 1 lt 1 lw 2;
+set style line 4  lc rgb '#eeb500' pt 6 ps 1 lt 1 lw 2;
+set style line 5  lc rgb '#e8a800' pt 6 ps 1 lt 1 lw 2;
+set style line 6  lc rgb '#e39b00' pt 6 ps 1 lt 1 lw 2;
+set style line 7  lc rgb '#dd8e00' pt 6 ps 1 lt 1 lw 2;
+set style line 8  lc rgb '#d78000' pt 6 ps 1 lt 1 lw 2;
+set style line 9  lc rgb '#d27300' pt 6 ps 1 lt 1 lw 2;
+set style line 10 lc rgb '#cc6600' pt 6 ps 1 lt 1 lw 2;
 `,
 }
 
@@ -99,7 +108,7 @@ func Fplot(fn, script string) {
 
 	err = gp.Wait()
 	if err != nil {
-		fmt.Println(stdout.String())
+		// fmt.Println(stdout.String())
 		fmt.Println(stderr.String())
 		panic(err)
 	}

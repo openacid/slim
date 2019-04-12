@@ -253,13 +253,13 @@ func getTestKV(ct *trie.SlimTrie, key string) []byte {
 
 	eq := ct.Get(key)
 	if eq == nil {
-		return nil
+		return []byte{0}
 	}
 
 	val := eq.(*TrieBenchKV)
 
 	if strings.Compare(val.Key, key) != 0 {
-		return nil
+		return []byte{0}
 	}
 
 	return val.Val
