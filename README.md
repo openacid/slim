@@ -120,7 +120,7 @@ Comparison of `SlimTrie` and native golang-map.
 
 Memory overhead per key is stable with different key length(`k`) and key count(`n`):
 
-![benchmark-mem-kn-png][]
+![](trie/report/mem_usage.jpg)
 
 **SlimTrie memory does not increase when key become longer**.
 
@@ -181,7 +181,7 @@ func Example() {
 
 	// Accelerate external data accessing (in memory or on disk) by indexing
 	// them with a SlimTrie:
-	//
+
 	// `data` is a sample of some unindexed data. In our example it is a comma
 	// separated key value series.
 	//
@@ -476,8 +476,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- benchmark -->
 
 [benchmark-get-png]: docs/trie/charts/search_existing.png
-
-[benchmark-mem-kn-png]: docs/trie/charts/mem_usage_k_n.png
 
 <!-- links to other resource -->
 
