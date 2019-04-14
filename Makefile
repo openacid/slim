@@ -58,11 +58,6 @@ gofmt:
 	@echo Checking code is gofmted
 	@test -z "$(shell gofmt -s -l -d -e $(GOFILES) | tee /dev/stderr)"
 
-toc:
-	# brew install nodejs
-	# npm install -g doctoc
-	doctoc --title '' --github README.md
-
 ben: test
 	$(GO) test ./... -run=none -bench=. -benchmem
 
@@ -71,6 +66,9 @@ gen:
 
 readme:
 	python ./scripts/build_readme.py
+	# brew install nodejs
+	# npm install -g doctoc
+	doctoc --title '' --github README.md
 
 fix:
 	gofmt -s -w $(GOFILES)

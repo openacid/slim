@@ -25,7 +25,6 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 - [Performance benchmark](#performance-benchmark)
 - [Status](#status)
 - [Synopsis](#synopsis)
-  - [Use SlimIndex to index external data](#use-slimindex-to-index-external-data)
 - [Getting started](#getting-started)
 - [Who are using slim](#who-are-using-slim)
 - [Roadmap](#roadmap)
