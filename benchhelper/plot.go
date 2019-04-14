@@ -17,12 +17,18 @@ set terminal jpeg size 400,300;
 set boxwidth 0.8;
 set style fill solid;
 set grid ytics;
+
+set style line 101 lc rgb '#909090' lt 1 lw 1
+set border 3 front ls 101
 `,
 	JPGHistogramMid: `
-set terminal jpeg size 800,600;
-set boxwidth 0.8;
+set terminal jpeg size 600,400;
+set boxwidth 0.7;
 set style fill solid;
 set grid ytics;
+
+set style line 101 lc rgb '#909090' lt 1 lw 1
+set border 3 front ls 101
 `,
 }
 
@@ -43,11 +49,8 @@ set style line 8 lc rgb '#31942c' pt 6 ps 1 lt 1 lw 2;
 `,
 	Yellow: `
 set style line 1  lc rgb '#e6f082' pt 1 ps 1 lt 1 lw 2;
-set style line 2  lc rgb '#e2ee71' pt 6 ps 1 lt 1 lw 2;
-set style line 3  lc rgb '#dfeb5f' pt 6 ps 1 lt 1 lw 2;
-set style line 4  lc rgb '#dbe94e' pt 6 ps 1 lt 1 lw 2;
-set style line 5  lc rgb '#d8e73c' pt 6 ps 1 lt 1 lw 2;
-set style line 6  lc rgb '#d4e52b' pt 6 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#dfeb5f' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#d4e52b' pt 6 ps 1 lt 1 lw 2;
 `,
 	Orange: `
 set style line 1  lc rgb '#ffdd00' pt 1 ps 1 lt 1 lw 2;

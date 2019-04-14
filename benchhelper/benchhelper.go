@@ -103,6 +103,7 @@ func NewMDFileTable(fn string) (*os.File, *tablewriter.Table) {
 
 	f := newFile(fn)
 	tb := tablewriter.NewWriter(f)
+	tb.SetAutoFormatHeaders(false)
 	tb.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	tb.SetCenterSeparator("|")
 
@@ -113,6 +114,7 @@ func NewDataFileTable(fn string) (*os.File, *tablewriter.Table) {
 
 	f := newFile(fn)
 	tb := tablewriter.NewWriter(f)
+	tb.SetAutoFormatHeaders(false)
 	tb.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
 	tb.SetCenterSeparator("")
 	tb.SetColumnSeparator("")

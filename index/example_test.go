@@ -19,11 +19,9 @@ func (d Data) Read(offset int64, key string) (string, bool) {
 
 func Example() {
 
-	// SlimTrie is a memory efficient index data type.
-	//
-	// In this example, we show how to accelerate external data accessing
-	// (in memory or on disk) by indexing them with a SlimTrie:
-	//
+	// Accelerate external data accessing (in memory or on disk) by indexing
+	// them with a SlimTrie:
+
 	// `data` is a sample of some unindexed data. In our example it is a comma
 	// separated key value series.
 	//
@@ -42,8 +40,7 @@ func Example() {
 		{Key: "Alison", Offset: 43},
 	}
 
-	// Create a index `index.SlimIndex`, which is simply a container of SlimTrie
-	// and its data.
+	// `SlimIndex` is simply a container of SlimTrie and its data.
 	st, err := index.NewSlimIndex(keyOffsets, data)
 	if err != nil {
 		fmt.Println(err)

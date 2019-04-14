@@ -146,9 +146,9 @@ It is about **2.6 times faster** than the [btree][] by google.
 
 Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
 
-![benchmark-get-kn-png][]
+![](trie/report/bench_get_present.jpg)
 
-See: [benchmark-get-md][].
+See: [trie/report/](trie/report/)
 
 ## Status
 
@@ -159,63 +159,70 @@ See: [benchmark-get-md][].
 ### Use SlimIndex to index external data
 
 ```go
-package main
+package index_test
+
 import (
-        "fmt"
-        "strings"
-        "github.com/openacid/slim/index"
+	"fmt"
+	"strings"
+
+	"github.com/openacid/slim/index"
 )
 
 type Data string
 
 func (d Data) Read(offset int64, key string) (string, bool) {
-        kv := strings.Split(string(d)[offset:], ",")[0:2]
-        if kv[0] == key {
-                return kv[1], true
-        }
-        return "", false
+	kv := strings.Split(string(d)[offset:], ",")[0:2]
+	if kv[0] == key {
+		return kv[1], true
+	}
+	return "", false
 }
 
-func main() {
-        // `data` is a sample external data.
-        // In order to let SlimIndex be able to read data, `data` should have
-        // a `Read` method:
-        //     Read(offset int64, key string) (string, bool)
-        data := Data("Aaron,1,Agatha,1,Al,2,Albert,3,Alexander,5,Alison,8")
+func Example() {
 
-        // keyOffsets is a prebuilt index that stores key and its offset in data accordingly.
-        keyOffsets := []index.OffsetIndexItem{
-                {Key: "Aaron",     Offset: 0},
-                {Key: "Agatha",    Offset: 8},
-                {Key: "Al",        Offset: 17},
-                {Key: "Albert",    Offset: 22},
-                {Key: "Alexander", Offset: 31},
-                {Key: "Alison",    Offset: 43},
-        }
+	// Accelerate external data accessing (in memory or on disk) by indexing
+	// them with a SlimTrie:
+	//
+	// `data` is a sample of some unindexed data. In our example it is a comma
+	// separated key value series.
+	//
+	// In order to let SlimTrie be able to read data, `data` should have
+	// a `Read` method:
+	//     Read(offset int64, key string) (string, bool)
+	data := Data("Aaron,1,Agatha,1,Al,2,Albert,3,Alexander,5,Alison,8")
 
-        // Create an index
-        st, err := index.NewSlimIndex(keyOffsets, data)
-        if err != nil {
-                fmt.Println(err)
-        }
+	// keyOffsets is a prebuilt index that stores key and its offset in data accordingly.
+	keyOffsets := []index.OffsetIndexItem{
+		{Key: "Aaron", Offset: 0},
+		{Key: "Agatha", Offset: 8},
+		{Key: "Al", Offset: 17},
+		{Key: "Albert", Offset: 22},
+		{Key: "Alexander", Offset: 31},
+		{Key: "Alison", Offset: 43},
+	}
 
-        // Lookup by SlimIndex
-        v, found := st.Get("Alison")
-        fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "Alison", found, v)
+	// `SlimIndex` is simply a container of SlimTrie and its data.
+	st, err := index.NewSlimIndex(keyOffsets, data)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-        v, found = st.Get("foo")
-        fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "foo", found, v)
+	// Lookup
+	v, found := st.Get("Alison")
+	fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "Alison", found, v)
 
-        // Output:
-        // key: "Alison"
-        //   found: true
-        //   value: "8"
-        // key: "foo"
-        //   found: false
-        //   value: ""
+	v, found = st.Get("foo")
+	fmt.Printf("key: %q\n  found: %t\n  value: %q\n", "foo", found, v)
+
+	// Output:
+	// key: "Alison"
+	//   found: true
+	//   value: "8"
+	// key: "foo"
+	//   found: false
+	//   value: ""
 }
 ```
-
 
 <!-- ## FAQ -->
 
@@ -470,8 +477,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- benchmark -->
 
 [benchmark-get-png]: docs/trie/charts/search_existing.png
-[benchmark-get-kn-png]: docs/trie/charts/search_k_n.png
-[benchmark-get-md]: docs/trie/benchmark_result.md
 
 [benchmark-mem-kn-png]: docs/trie/charts/mem_usage_k_n.png
 
