@@ -15,6 +15,9 @@ func main() {
 	flg = benchhelper.InitCmdFlag()
 	getPresent()
 	getAbsent()
+
+	memX()
+
 }
 
 func getPresent() {
@@ -67,4 +70,32 @@ set ylabel 'Get() present key ns/op' offset 1,0
 
 		benchhelper.Fplot("report/bench_get_absent.jpg", script)
 	}
+}
+
+func memX() {
+	if flg.BenchMem {
+		keyCounts := []int{1000, 2000, 5000}
+		results := benchmark.Mem(keyCounts)
+
+		benchhelper.WriteMDFile("report/mem_usage.md", results)
+		benchhelper.WriteDataFile("report/mem_usage.data",
+			[]string{"key-count", "k=64", "k=128", "k=256"},
+			results)
+	}
+
+	if flg.Plot {
+		script := `
+fn = "report/mem_usage.data"
+set yr [0:20]
+set xlabel 'key-count (n)'
+set ylabel 'memory usage' offset 1,0
+`
+		script += benchhelper.Fformat.JPGHistogramMid
+		script += benchhelper.LineStyles.Green
+		script += benchhelper.Plot.Histogram
+
+		benchhelper.Fplot("report/mem_usage.jpg", script)
+
+	}
+
 }

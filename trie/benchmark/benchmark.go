@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/btree"
 	"github.com/openacid/slim/benchhelper"
+	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
 )
 
@@ -40,6 +41,9 @@ type GetResult struct {
 	K128     int
 	K256     int
 }
+
+// MemResult is a alias of GetResult
+type MemResult GetResult
 
 var Rec byte
 
@@ -80,6 +84,52 @@ func GetAbsent(keyCounts []int) []GetResult {
 	}
 
 	return rst
+}
+
+func Mem(keyCounts []int) []MemResult {
+
+	rst := make([]MemResult, 0)
+	for _, n := range keyCounts {
+		r := MemResult{
+			KeyCount: n,
+			K64:      int(slimtrieMem(n, 64)) / n,
+			K128:     int(slimtrieMem(n, 128)) / n,
+			K256:     int(slimtrieMem(n, 256)) / n,
+		}
+
+		rst = append(rst, r)
+	}
+	return rst
+}
+
+func slimtrieMem(keyCnt, keyLen int) int64 {
+
+	memStart := benchhelper.Allocated()
+
+	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
+	vals := make([]uint16, keyCnt)
+
+	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
+	if err != nil {
+		panic(err)
+	}
+
+	keys = nil
+	vals = nil
+
+	memEnd := benchhelper.Allocated()
+
+	size := memEnd - memStart
+
+	_ = keys
+	_ = vals
+
+	// reference them or memory is freed
+	_ = t.Children
+	_ = t.Steps
+	_ = t.Leaves
+
+	return size
 }
 
 func benchGet(setting *GetSetting, typ string) int {
