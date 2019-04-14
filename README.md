@@ -155,7 +155,8 @@ See: [trie/report/](trie/report/)
 
 ## Synopsis
 
-### Use SlimIndex to index external data
+<details>
+<summary>Use SlimIndex to index external data</summary>
 
 ```go
 package index_test
@@ -222,6 +223,8 @@ func Example() {
 	//   value: ""
 }
 ```
+
+</details>
 
 <!-- ## FAQ -->
 
