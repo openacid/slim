@@ -168,6 +168,15 @@ func (a *Base) InitElts(elts interface{}, encoder encode.Encoder) (int, error) {
 	return n, nil
 }
 
+// MemSize returns the memory this array occupies.
+// It includes .Cnt, .Bitmaps, .Offsets and .Elts, not includes the meomory of
+// the structure itself.
+//
+// Since 0.3.1
+func (a *Base) MemSize() int {
+	return 4 + 8*len(a.Bitmaps) + 4*len(a.Offsets) + len(a.Elts)
+}
+
 // Get retrieves the value at "idx" and return it.
 // If this array has a value at "idx" it returns the value and "true",
 // otherwise it returns "nil" and "false".
