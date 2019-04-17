@@ -1,0 +1,41 @@
+digraph slim_final
+{
+    graph [ranksep="0.05"];
+
+    node [shape=circle, style=filled, fillcolor="white", fixedsize=true]
+    edge [arrowhead=none]
+
+    root [label="''"]
+
+    abd_leaf   [fillcolor="grey", style=filled, label="", width=0.2]
+    abdef_leaf [fillcolor="grey", style=filled, label="", width=0.2]
+    abdeg_leaf [fillcolor="grey", style=filled, label="", width=0.2]
+    abdfg_leaf [fillcolor="grey", style=filled, label="", width=0.2]
+    b123_leaf  [fillcolor="grey", style=filled, label="", width=0.2]
+    b14_leaf   [fillcolor="grey", style=filled, label="", width=0.2]
+
+
+    root -> abd [label="a.{2}", fontcolor=red]
+            abd -> abd_leaf [label="$"]
+            abd -> abde [label=e]
+                   abde -> abdef [label=f]
+                           abdef -> abdef_leaf [label="$"]
+                   abde -> abdeg [label=g]
+                           abdeg -> abdeg_leaf [label="$"]
+            abd -> abdfg [label="f"]
+                   abdfg -> abdfg_leaf [label="$"]
+    root -> b1 [label="b.{1}", fontcolor=red]
+            b1 -> b123  [label="2"]
+                  b123 -> b123_leaf [label="$"]
+            b1 -> b14 [label=4]
+                  b14 -> b14_leaf [label="$"]
+
+    abd [label="a.."]
+    abde [label="a..e"]
+    abdef [label="a..ef"]
+    abdeg [label="a..eg"]
+    abdfg [label="a..f"]
+    b1 [label="b."]
+    b123 [label="b.2"]
+    b14 [label="b.4"]
+}
