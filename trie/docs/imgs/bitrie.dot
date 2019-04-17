@@ -1,0 +1,27 @@
+digraph bitrie
+{
+    graph [ranksep="0.05"];
+
+    node [shape=circle, style=filled, fillcolor="white", fixedsize=true]
+    edge [arrowhead=none]
+
+    root [label="''"]
+
+    root -> abd [label="0.{2}", fontcolor=red]
+            abd -> abde [label=0]
+                   abde -> abdef [label=0]
+                   abde -> abdeg [label=1]
+            abd -> abdfg [label="1"]
+    root -> b1 [label="1.{1}", fontcolor=red]
+            b1 -> b123  [label="0"]
+            b1 -> b14 [label=1]
+
+    abd [label="0.."]
+    abde [label="0..0"]
+    abdef [label="0..00"]
+    abdeg [label="0..01"]
+    abdfg [label="0..1"]
+    b1 [label="1."]
+    b123 [label="1.0"]
+    b14 [label="1.1"]
+}
