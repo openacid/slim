@@ -12,6 +12,7 @@ package trie
 
 import (
 	"io"
+	gobits "math/bits"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
@@ -190,6 +191,8 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 	return nil
 }
 
+// TODO remove searchWords, move tests to Search
+
 // searchWords for a key in SlimTrie.
 //
 // `key` is slice of 4-bit word each stored in a byte.
@@ -202,62 +205,76 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 //
 // A non-nil return value does not mean the `key` exists.
 // An in-existent `key` also could matches partial info stored in SlimTrie.
-func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
-	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
-	ltLeaf := false
+func (st *SlimTrie) searchWords(key []byte) (lVal, eqVal, rVal interface{}) {
+	eqID, lID, rID := int32(0), int32(-1), int32(-1)
+	lIsLeaf := false
 
 	lenWords := len(key)
 
-	for idx := -1; ; {
-		idx += int(st.getStep(uint16(eqIdx)))
-
-		if lenWords < idx {
-			gtIdx = eqIdx
-			eqIdx = -1
+	for i := -1; ; {
+		i += int(st.getStep(uint16(eqID)))
+		bitmap, child0Id, hasChildren := st.getChild(uint16(eqID))
+		if lenWords < i {
+			rID = eqID
+			eqID = -1
 			break
 		}
 
-		var word byte
-		if lenWords == idx {
-			word = LeafWord
+		if lenWords == i {
+			if hasChildren {
+				rID = int32(child0Id)
+			}
+			break
+		}
+
+		word := (key[i] & WordMask)
+		wordBit := uint16(1) << uint(word)
+		branchBit := bitmap & wordBit
+
+		// This is a inner node at eqIdx,
+		// update eq, and left right closest node
+
+		hasLeaf := st.Leaves.Has(eqID)
+
+		if hasLeaf {
+			lID = eqID
+			lIsLeaf = true
+		}
+
+		// Count of branch on the left
+		lCnt := gobits.OnesCount16(bitmap & (wordBit - 1))
+
+		if branchBit != 0 {
+			eqID = int32(child0Id) + int32(lCnt)
 		} else {
-			word = (key[idx] & WordMask)
+			eqID = -1
 		}
 
-		li, ei, ri, leaf := st.neighborBranches(uint16(eqIdx), word)
-		if li >= 0 {
-			ltIdx = li
-			ltLeaf = leaf
+		if lCnt > 0 {
+			lID = int32(child0Id) + int32(lCnt) - 1
+			lIsLeaf = false
+		}
+		if bitmap > (wordBit<<1)-1 {
+			rID = int32(child0Id) + int32(lCnt) + int32(branchBit>>uint16(word))
 		}
 
-		if ri >= 0 {
-			gtIdx = ri
-		}
-
-		eqIdx = ei
-		if eqIdx == -1 {
-			break
-		}
-
-		if word == LeafWord {
+		if branchBit == 0 {
 			break
 		}
 	}
 
-	if ltIdx != -1 {
-		if ltLeaf {
-			ltVal, _ = st.Leaves.Get(ltIdx)
-		} else {
-			rmIdx := st.rightMost(uint16(ltIdx))
-			ltVal, _ = st.Leaves.Get(int32(rmIdx))
+	if lID != -1 {
+		if !lIsLeaf {
+			lID = int32(st.rightMost(uint16(lID)))
 		}
+		lVal, _ = st.Leaves.Get(lID)
 	}
-	if gtIdx != -1 {
-		fmIdx := st.leftMost(uint16(gtIdx))
-		gtVal, _ = st.Leaves.Get(int32(fmIdx))
+	if rID != -1 {
+		rID = int32(st.leftMost(uint16(rID)))
+		rVal, _ = st.Leaves.Get(rID)
 	}
-	if eqIdx != -1 {
-		eqVal, _ = st.Leaves.Get(eqIdx)
+	if eqID != -1 {
+		eqVal, _ = st.Leaves.Get(eqID)
 	}
 
 	return
@@ -272,67 +289,80 @@ func (st *SlimTrie) searchWords(key []byte) (ltVal, eqVal, gtVal interface{}) {
 //
 // A non-nil return value does not mean the `key` exists.
 // An in-existent `key` also could matches partial info stored in SlimTrie.
-func (st *SlimTrie) Search(key string) (ltVal, eqVal, gtVal interface{}) {
-	eqIdx, ltIdx, gtIdx := int32(0), int32(-1), int32(-1)
-	ltLeaf := false
+func (st *SlimTrie) Search(key string) (lVal, eqVal, rVal interface{}) {
+	eqID, lID, rID := int32(0), int32(-1), int32(-1)
+	lIsLeaf := false
 
 	// string to 4-bit words
 	lenWords := 2 * len(key)
 
-	for idx := -1; ; {
-		idx += int(st.getStep(uint16(eqIdx)))
+	for i := -1; ; {
+		i += int(st.getStep(uint16(eqID)))
+		bitmap, child0Id, hasChildren := st.getChild(uint16(eqID))
 
-		if lenWords < idx {
-			gtIdx = eqIdx
-			eqIdx = -1
+		if lenWords < i {
+			rID = eqID
+			eqID = -1
 			break
 		}
 
-		var word byte
-		if lenWords == idx {
-			word = LeafWord
-		} else {
-			if idx&1 == 1 {
-				word = (key[idx>>1] & 0x0f)
-			} else {
-				word = (key[idx>>1] & 0xf0) >> 4
+		if lenWords == i {
+			if hasChildren {
+				rID = int32(child0Id)
 			}
-		}
-
-		li, ei, ri, leaf := st.neighborBranches(uint16(eqIdx), word)
-		if li >= 0 {
-			ltIdx = li
-			ltLeaf = leaf
-		}
-
-		if ri >= 0 {
-			gtIdx = ri
-		}
-
-		eqIdx = ei
-		if eqIdx == -1 {
 			break
 		}
 
-		if word == LeafWord {
-			break
-		}
-	}
+		shift := 4 - (i&1)*4
+		word := ((key[i>>1] >> uint(shift)) & 0x0f)
+		wordBit := uint16(1) << uint(word)
+		branchBit := bitmap & wordBit
 
-	if ltIdx != -1 {
-		if ltLeaf {
-			ltVal, _ = st.Leaves.Get(ltIdx)
+		// This is a inner node at eqIdx,
+		// update eq, and left right closest node
+
+		hasLeaf := st.Leaves.Has(eqID)
+
+		if hasLeaf {
+			lID = eqID
+			lIsLeaf = true
+		}
+
+		// Count of branch on the left
+		lCnt := gobits.OnesCount16(bitmap & (wordBit - 1))
+
+		if branchBit != 0 {
+			eqID = int32(child0Id) + int32(lCnt)
 		} else {
-			rmIdx := st.rightMost(uint16(ltIdx))
-			ltVal, _ = st.Leaves.Get(int32(rmIdx))
+			eqID = -1
+		}
+
+		if lCnt > 0 {
+			lID = int32(child0Id) + int32(lCnt) - 1
+			lIsLeaf = false
+		}
+		// Might overflow but ok
+		if bitmap > (wordBit<<1)-1 {
+			rID = int32(child0Id) + int32(lCnt) + int32(branchBit>>uint16(word))
+		}
+
+		if branchBit == 0 {
+			break
 		}
 	}
-	if gtIdx != -1 {
-		fmIdx := st.leftMost(uint16(gtIdx))
-		gtVal, _ = st.Leaves.Get(int32(fmIdx))
+
+	if lID != -1 {
+		if !lIsLeaf {
+			lID = int32(st.rightMost(uint16(lID)))
+		}
+		lVal, _ = st.Leaves.Get(lID)
 	}
-	if eqIdx != -1 {
-		eqVal, _ = st.Leaves.Get(eqIdx)
+	if rID != -1 {
+		rID = int32(st.leftMost(uint16(rID)))
+		rVal, _ = st.Leaves.Get(rID)
+	}
+	if eqID != -1 {
+		eqVal, _ = st.Leaves.Get(eqID)
 	}
 
 	return
@@ -407,56 +437,6 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 func getChildIdx(bm uint16, of uint16, word uint16) uint16 {
 	chNum := bits.OnesCount64Before(uint64(bm), uint(word))
 	return of + uint16(chNum)
-}
-
-func (st *SlimTrie) neighborBranches(idx uint16, word byte) (ltIdx, eqIdx, rtIdx int32, ltLeaf bool) {
-	ltIdx, eqIdx, rtIdx = int32(-1), int32(-1), int32(-1)
-	ltLeaf = false
-
-	isLeaf := st.Leaves.Has(int32(idx))
-
-	if word == LeafWord {
-		if isLeaf {
-			eqIdx = int32(idx)
-		}
-	} else {
-		if isLeaf {
-			ltIdx = int32(idx)
-			ltLeaf = true
-		}
-	}
-
-	bm, of, found := st.getChild(idx)
-	if !found {
-		return
-	}
-
-	if (bm >> word & 1) == 1 {
-		eqIdx = int32(getChildIdx(bm, of, uint16(word)))
-	}
-
-	ltStart := word & WordMask
-	for i := int8(ltStart) - 1; i >= 0; i-- {
-		if (bm >> uint8(i) & 1) == 1 {
-			ltIdx = int32(getChildIdx(bm, of, uint16(i)))
-			ltLeaf = false
-			break
-		}
-	}
-
-	rtStart := word + 1
-	if word == LeafWord {
-		rtStart = uint8(0)
-	}
-
-	for i := rtStart; i < LeafWord; i++ {
-		if (bm >> i & 1) == 1 {
-			rtIdx = int32(getChildIdx(bm, of, uint16(i)))
-			break
-		}
-	}
-
-	return
 }
 
 func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
