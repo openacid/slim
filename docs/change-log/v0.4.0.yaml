@@ -1,0 +1,10 @@
+api-changes:
+  trie:
+  - trie.Node add squash; by wenbo; 2019-04-11
+  - remove marshalAt and unmarshalAt; use SectionReader and SectionWriter; by drdr
+    xp; 2019-04-10
+  - fix method name encode->marshal; by drdr xp; 2019-04-10
+  - SlimTrie.Get returns value and found in bool; by drdr xp; 2019-03-27
+new-feature:
+  array:
+  - add MemSize() to get memory occupied by array; by drdr xp; 2019-04-15

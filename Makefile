@@ -42,7 +42,7 @@ unconvert:
 
 ineffassign:
 	$(GO) get github.com/gordonklaus/ineffassign
-	find $(SRCDIRS) -name '*.go' | xargs ineffassign
+	find $(SRCDIRS) -name '*.go' | grep -v "\bvendor/" | xargs ineffassign
 
 pedantic: check errcheck
 
