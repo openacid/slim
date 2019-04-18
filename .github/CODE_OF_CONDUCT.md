@@ -29,7 +29,7 @@ when an individual is representing the project or its community.
 
 ## Our Standards
 
-Examples of behaviour that contributes to creating a positive environment
+Examples of behavior that contributes to creating a positive environment
 include:
 
 * Using welcoming and inclusive language
@@ -38,7 +38,7 @@ include:
 * Focusing on what is best for the community
 * Showing empathy towards other community members
 
-Examples of unacceptable behaviour by participants include:
+Examples of unacceptable behavior by participants include:
 
 * The use of sexualized language or imagery and unwelcome sexual attention or
   advances
@@ -124,7 +124,7 @@ under-represented groups feel less welcome.
 
 Feedback is negatively critical when it surfaces something wrong with someone or
 something they produced, especially without any mention of ways to make their
-behaviour or their product better.
+behavior or their product better.
 
 - **Critical feedback** on work often looks like "you don't write enough tests" or
   "your code quality isn't good enough".
@@ -151,8 +151,8 @@ Technical critiques are integral, and should be hard on the product, not on the
 producer.
 While it is important to care about your work and producing the best thing you
 can, this can make review difficult.
-It is important to realise that it’s better to find errors in review than in
-production and recognise that your work fits into a larger whole.
+It is important to realize that it’s better to find errors in review than in
+production and recognize that your work fits into a larger whole.
 
 **Go about your review under the assumption that the decisions were made for a
 reason, not in a vacuum**.

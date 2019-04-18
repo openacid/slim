@@ -1,12 +1,12 @@
 # SlimTrie Search Performance
 
-We make benchmarks to test the performance of trie search, and, we also benchmark the serach of
-B-tree and Map in the same environment to make a comparision.
+We make benchmarks to test the performance of trie search, and, we also benchmark the search of
+B-tree and Map in the same environment to make a comparison.
 
-Benchmarks search one-key in diffrent key length-count pair and get the one-key-search cost.
+Benchmarks search one-key in different key length-count pair and get the one-key-search cost.
 It can be considered that the less cost the better performance in slimtrie, map and Btree.
 
-There is a [benchmark comparision](benchmark_result.md) report.
+There is a [benchmark comparison](benchmark_result.md) report.
 Benchmark uses the Go language built-in `map` and the [BTree implementation for Go](https://github.com/google/btree).
 
 Benchmark and optimization steps are as follows:

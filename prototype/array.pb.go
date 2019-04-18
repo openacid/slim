@@ -19,7 +19,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type Array32 struct {
-	// compatiblity gurantee:
+	// compatibility guarantee:
 	//     reserved field number: 1, 2, 3, 4
 	//     reserved field name: Cnt, Bitmaps, Offsets, Elts
 	//

@@ -1,15 +1,15 @@
-# Search performance comparision between trie, map and btree
+# Search performance comparison between trie, map and btree
 
-## chart of search cost comparision
+## chart of search cost comparison
 
 There are smooth line charts drew on the search cost data. The less time cost the better
 performance.
 
-1. comparision of searching existing key:
+1. comparison of searching existing key:
 
 ![search-existing result](charts/search_existing.png)
 
-2. comparision of searching nonexistent key:
+2. comparison of searching nonexistent key:
 
 ![search-nonexistent result](charts/search_nonexistent.png)
 

@@ -28,7 +28,7 @@ staticcheck:
 
 misspell:
 	$(GO) get github.com/client9/misspell/cmd/misspell
-	find $(SRCDIRS) -name '*.go' -or -name '*.md' | xargs misspell \
+	find $(SRCDIRS) -name '*.go' -or -name '*.md' | grep -v "\bvendor/" | xargs misspell \
 		-locale US \
 		-error
 	misspell \
