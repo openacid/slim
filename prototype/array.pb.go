@@ -3,9 +3,11 @@
 
 package prototype
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Array32 struct {
 	// compatiblity gurantee:
@@ -36,16 +38,17 @@ func (m *Array32) Reset()         { *m = Array32{} }
 func (m *Array32) String() string { return proto.CompactTextString(m) }
 func (*Array32) ProtoMessage()    {}
 func (*Array32) Descriptor() ([]byte, []int) {
-	return fileDescriptor_array_7797c25f6abb7d2e, []int{0}
+	return fileDescriptor_6bd08b6c373ffa45, []int{0}
 }
+
 func (m *Array32) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Array32.Unmarshal(m, b)
 }
 func (m *Array32) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Array32.Marshal(b, m, deterministic)
 }
-func (dst *Array32) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Array32.Merge(dst, src)
+func (m *Array32) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Array32.Merge(m, src)
 }
 func (m *Array32) XXX_Size() int {
 	return xxx_messageInfo_Array32.Size(m)
@@ -88,9 +91,9 @@ func init() {
 	proto.RegisterType((*Array32)(nil), "Array32")
 }
 
-func init() { proto.RegisterFile("array.proto", fileDescriptor_array_7797c25f6abb7d2e) }
+func init() { proto.RegisterFile("array.proto", fileDescriptor_6bd08b6c373ffa45) }
 
-var fileDescriptor_array_7797c25f6abb7d2e = []byte{
+var fileDescriptor_6bd08b6c373ffa45 = []byte{
 	// 131 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0x2c, 0x2a, 0x4a,
 	0xac, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x57, 0x4a, 0xe6, 0x62, 0x77, 0x04, 0x71, 0x8d, 0x8d,

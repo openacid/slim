@@ -525,6 +525,54 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	// check
 	checkSlimTrie(ctrie, rCtrie, t)
+
+	buf, err := ctrie.Marshal()
+	if err != nil {
+		t.Fatalf("failed to marshal ctrie: %v", err)
+	}
+	if proto.Size(ctrie) != len(buf) {
+		t.Fatalf("size mismatch: %v != %v", proto.Size(ctrie), len(buf))
+	}
+
+	rCtrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = proto.Unmarshal(buf, rCtrie1)
+	if err != nil {
+		t.Fatalf("failed to unmarshal ctrie: %v", err)
+	}
+
+	checkSlimTrie(ctrie, rCtrie1, t)
+
+	rCtrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = rCtrie2.Unmarshal(buf)
+	if err != nil {
+		t.Fatalf("failed to unmarshal ctrie: %v", err)
+	}
+
+	checkSlimTrie(ctrie, rCtrie2, t)
+
+	buf, err = proto.Marshal(ctrie)
+	if err != nil {
+		t.Fatalf("failed to marshal ctrie: %v", err)
+	}
+	if proto.Size(ctrie) != len(buf) {
+		t.Fatalf("size mismatch: %v != %v", proto.Size(ctrie), len(buf))
+	}
+
+	rCtrie3, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = proto.Unmarshal(buf, rCtrie3)
+	if err != nil {
+		t.Fatalf("failed to unmarshal ctrie: %v", err)
+	}
+
+	checkSlimTrie(ctrie, rCtrie3, t)
+
+	rCtrie4, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = rCtrie4.Unmarshal(buf)
+	if err != nil {
+		t.Fatalf("failed to unmarshal ctrie: %v", err)
+	}
+
+	checkSlimTrie(ctrie, rCtrie4, t)
 }
 
 func TestSlimTrieBinaryCompatible(t *testing.T) {

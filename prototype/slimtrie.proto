@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "prototype";
+
+import "array.proto";
+
+message SlimTrie{
+    Array32 Children    = 1;
+    Array32 Steps       = 2;
+    Array32 Leaves      = 3;
+}

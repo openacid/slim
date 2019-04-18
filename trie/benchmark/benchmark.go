@@ -301,8 +301,8 @@ func makeKVElts(srcKeys []string, srcVals [][]byte) []*TrieBenchKV {
 
 func getTestKV(ct *trie.SlimTrie, key string) []byte {
 
-	eq, found := ct.Get(key)
-	if !found {
+	eq := ct.Get(key)
+	if eq == nil {
 		return []byte{0}
 	}
 

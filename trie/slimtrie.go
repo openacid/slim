@@ -14,10 +14,12 @@ import (
 	"io"
 	gobits "math/bits"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/bits"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/slim/prototype"
 	"github.com/openacid/slim/serialize"
 	"github.com/openacid/slim/strhelper"
 )
@@ -525,3 +527,33 @@ func (st *SlimTrie) unmarshal(reader io.Reader) error {
 
 	return nil
 }
+
+func (st *SlimTrie) Marshal() (buf []byte, err error) {
+	st_msg := &prototype.SlimTrie{
+		Children: &(st.Children.Array32),
+		Steps:    &(st.Steps.Array32),
+		Leaves:   &(st.Leaves.Array32),
+	}
+	if buf, err = proto.Marshal(st_msg); err != nil {
+		return nil, errors.Wrapf(err, "failed to proto marshal")
+	}
+	return buf, nil
+}
+
+func (st *SlimTrie) Unmarshal(buf []byte) (err error) {
+	st_msg := &prototype.SlimTrie{}
+	if err = proto.Unmarshal(buf, st_msg); err != nil {
+		return errors.Wrapf(err, "failed to proto unmarshal")
+	}
+	st.Children.Array32 = *(st_msg.Children)
+	st.Steps.Array32 = *(st_msg.Steps)
+	st.Leaves.Array32 = *(st_msg.Leaves)
+	return nil
+}
+
+func (st *SlimTrie) Reset() {
+	st, _ = NewSlimTrie(st.Leaves.EltEncoder, nil, nil)
+}
+
+func (st *SlimTrie) String() string { return "" }
+func (st *SlimTrie) ProtoMessage()  {}
