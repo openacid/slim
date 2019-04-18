@@ -66,7 +66,7 @@ func FromBitWords(bs []byte, n int) string {
 			if i*m+j < len(bs) {
 				b = (b << uint(n)) + bs[i*m+j]
 			} else {
-				b = b <<uint(n)
+				b = b << uint(n)
 			}
 		}
 		strbs[i] = b

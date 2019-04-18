@@ -143,6 +143,8 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 			brs = brs[1:]
 		}
 
+		// TODO leaf node does need to record step.
+		// But this modification leads to too many changes.
 		if node.Step > 1 {
 			stepIndex = append(stepIndex, nID)
 			stepElts = append(stepElts, node.Step)
