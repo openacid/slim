@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestTo4BitWords(t *testing.T) {
+func TestToAndFromBitWords(t *testing.T) {
 	cases := []struct {
 		src  string
 		n    int
@@ -68,6 +68,19 @@ func TestTo4BitWords(t *testing.T) {
 			t.Errorf("test %d: got %#v, want %#v",
 				i+1, res, c.want)
 		}
+
+		str := FromBitWords(res, c.n)
+		if str != c.src {
+			t.Fatalf(" expect: %v; but: %v", c.src, str)
+		}
+	}
+}
+
+func TestFromBitWordsIncomplete(t *testing.T) {
+	rst := FromBitWords([]byte{1, 2, 3}, 4)
+	expect := "\x12\x30"
+	if expect != rst {
+		t.Fatalf("expect: %v; but: %v", expect, rst)
 	}
 }
 
@@ -81,7 +94,7 @@ func testPanic(t *testing.T, f func(), msg string) {
 	f()
 }
 
-func TestTo4BitWordsPanic(t *testing.T) {
+func TestToAndFromBitWordsPanic(t *testing.T) {
 
 	testPanic(t, func() { ToBitWords("1", -1) }, "ToBitWords, n= -1")
 	testPanic(t, func() { ToBitWords("1", 0) }, "ToBitWords, n= 0")
@@ -90,9 +103,17 @@ func TestTo4BitWordsPanic(t *testing.T) {
 	testPanic(t, func() { ToBitWords("1", 6) }, "ToBitWords, n= 6")
 	testPanic(t, func() { ToBitWords("1", 7) }, "ToBitWords, n= 7")
 	testPanic(t, func() { ToBitWords("1", 9) }, "ToBitWords, n= 9")
+
+	testPanic(t, func() { FromBitWords([]byte{1}, -1) }, "ToBitWords, n= -1")
+	testPanic(t, func() { FromBitWords([]byte{1}, 0) }, "ToBitWords, n= 0")
+	testPanic(t, func() { FromBitWords([]byte{1}, 3) }, "ToBitWords, n= 3")
+	testPanic(t, func() { FromBitWords([]byte{1}, 5) }, "ToBitWords, n= 5")
+	testPanic(t, func() { FromBitWords([]byte{1}, 6) }, "ToBitWords, n= 6")
+	testPanic(t, func() { FromBitWords([]byte{1}, 7) }, "ToBitWords, n= 7")
+	testPanic(t, func() { FromBitWords([]byte{1}, 9) }, "ToBitWords, n= 9")
 }
 
-func TestSliceToBitWords(t *testing.T) {
+func TestSliceToAndFromBitWords(t *testing.T) {
 
 	cases := []struct {
 		input []string
@@ -120,6 +141,11 @@ func TestSliceToBitWords(t *testing.T) {
 		if !reflect.DeepEqual(c.want, rst) {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, rst)
+		}
+
+		strs := SliceFromBitWords(rst, c.n)
+		if !reflect.DeepEqual(c.input, strs) {
+			t.Fatalf("%d-th expect: %v; but: %v", i+1, c.input, strs)
 		}
 	}
 }

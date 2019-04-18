@@ -46,3 +46,40 @@ func SliceToBitWords(strs []string, n int) [][]byte {
 	}
 	return rst
 }
+
+// FromBitWords is the reverse of ToBitWords.
+// It composes a string of which each byte is formed from 8/n words from bs.
+func FromBitWords(bs []byte, n int) string {
+	if wordMask[n] == 0 {
+		panic("n must be one of 1, 2, 4, 8")
+	}
+
+	// number of words per char
+	m := 8 / n
+	sz := (len(bs) + m - 1) / m
+	strbs := make([]byte, sz)
+
+	var b byte
+	for i := 0; i < len(strbs); i++ {
+		b = 0
+		for j := 0; j < m; j++ {
+			if i*m+j < len(bs) {
+				b = (b << uint(n)) + bs[i*m+j]
+			} else {
+				b = b <<uint(n)
+			}
+		}
+		strbs[i] = b
+	}
+
+	return string(strbs)
+}
+
+// SliceFromBitWords converts a `[][]byte` back to a `[]string`.
+func SliceFromBitWords(bytesslice [][]byte, n int) []string {
+	rst := make([]string, len(bytesslice))
+	for i, s := range bytesslice {
+		rst[i] = FromBitWords(s, n)
+	}
+	return rst
+}
