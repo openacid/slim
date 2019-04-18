@@ -11,6 +11,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/slim/prototype"
 	"github.com/openacid/slim/strhelper"
 )
 
@@ -532,6 +533,67 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	// check
 	checkSlimTrie(st, rCtrie, t)
+
+	marshalSize := proto.Size(st)
+	buf, err := st.Marshal()
+	if err != nil {
+		t.Fatalf("failed to marshal st: %v", err)
+	}
+
+	buf1, err := proto.Marshal(st)
+	if err != nil {
+		t.Fatalf("failed to marshal st: %v", err)
+	}
+
+	if !reflect.DeepEqual(buf, buf1) {
+		t.Fatalf("st.Marshal != proto.Marshal(st)")
+	}
+
+	if marshalSize != len(buf) {
+		t.Fatalf("size mismatch: %v != %v", marshalSize, len(buf))
+	}
+
+	rCtrie1, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = proto.Unmarshal(buf, rCtrie1)
+	if err != nil {
+		t.Fatalf("failed to unmarshal st: %v", err)
+	}
+
+	checkSlimTrie(st, rCtrie1, t)
+
+	// double check proto.Unmarshal
+	err = proto.Unmarshal(buf, rCtrie1)
+	if err != nil {
+		t.Fatalf("failed to unmarshal st: %v", err)
+	}
+
+	checkSlimTrie(st, rCtrie1, t)
+
+	rCtrie2, _ := NewSlimTrie(encode.U16{}, nil, nil)
+	err = rCtrie2.Unmarshal(buf)
+	if err != nil {
+		t.Fatalf("failed to unmarshal st: %v", err)
+	}
+
+	checkSlimTrie(st, rCtrie2, t)
+
+	// test slimtrie Reset()
+	rCtrie2.Reset()
+	if !reflect.DeepEqual(&(rCtrie2.Children.Array32), &(prototype.Array32{})) {
+		t.Fatalf("reset children error")
+	}
+	if !reflect.DeepEqual(&(rCtrie2.Steps.Array32), &(prototype.Array32{})) {
+		t.Fatalf("reset steps error")
+	}
+	if !reflect.DeepEqual(&(rCtrie2.Leaves.Array32), &(prototype.Array32{})) {
+		t.Fatalf("reset leaves error")
+	}
+
+	// test slimtrie String()
+	stStr := st.String()
+	if stStr != string(buf) {
+		t.Fatalf("slimtrie.String error")
+	}
 }
 
 func TestSlimTrieBinaryCompatible(t *testing.T) {

@@ -11,6 +11,7 @@
 package trie
 
 import (
+	"bytes"
 	"io"
 	gobits "math/bits"
 
@@ -436,3 +437,58 @@ func (st *SlimTrie) unmarshal(reader io.Reader) error {
 
 	return nil
 }
+
+func (st *SlimTrie) Marshal() ([]byte, error) {
+	var buf []byte
+	writer := bytes.NewBuffer(buf)
+
+	if _, err := serialize.Marshal(writer, &st.Children); err != nil {
+		return nil, errors.WithMessage(err, "failed to marshal children")
+	}
+
+	if _, err := serialize.Marshal(writer, &st.Steps); err != nil {
+		return nil, errors.WithMessage(err, "failed to marshal steps")
+	}
+
+	if _, err := serialize.Marshal(writer, &st.Leaves); err != nil {
+		return nil, errors.WithMessage(err, "failed to marshal leaves")
+	}
+
+	return writer.Bytes(), nil
+}
+
+func (st *SlimTrie) Unmarshal(buf []byte) error {
+	reader := bytes.NewReader(buf)
+
+	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
+		return errors.WithMessage(err, "failed to unmarshal children")
+	}
+
+	if err := serialize.Unmarshal(reader, &st.Steps); err != nil {
+		return errors.WithMessage(err, "failed to unmarshal steps")
+	}
+
+	if err := serialize.Unmarshal(reader, &st.Leaves); err != nil {
+		return errors.WithMessage(err, "failed to unmarshal leaves")
+	}
+
+	return nil
+}
+
+func (st *SlimTrie) Reset() {
+	st.Children.Array32.Reset()
+	st.Steps.Array32.Reset()
+	st.Leaves.Array32.Reset()
+}
+
+func (st *SlimTrie) String() string {
+	var buf []byte
+	var err error
+	if buf, err = st.Marshal(); err != nil {
+		return ""
+	}
+
+	return string(buf)
+}
+
+func (st *SlimTrie) ProtoMessage() {}
