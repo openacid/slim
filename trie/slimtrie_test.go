@@ -422,6 +422,66 @@ func TestSquashedSearch(t *testing.T) {
 	}
 }
 
+func TestRangeGet(t *testing.T) {
+
+	keys := []string{
+		"abc",
+		"abcd",
+
+		"abd",
+		"abde",
+
+		"bc",
+
+		"bcd",
+		"bce",
+
+		"cde",
+	}
+	values := []int{
+		0, 0,
+		1, 1,
+		2,
+		3, 3,
+		4,
+	}
+	searches := []struct {
+		key       string
+		want      interface{}
+		wantfound bool
+	}{
+		{"ab", nil, false},
+		{"abc", 0, true},
+		{"abcde", nil, false},
+		{"abd", 1, true},
+		{"ac", nil, false},
+		{"acb", nil, false},
+		{"acd", 1, true}, // false positive
+		{"adc", 0, true}, // false positive
+		{"bcd", 3, true},
+		{"bce", 3, true},
+		{"c", nil, false},
+		{"cde", 4, true},
+		{"cfe", 4, true},    // false positive
+		{"cff", 4, true},    // false positive
+		{"def", nil, false}, // false positive
+	}
+
+	st, err := NewSlimTrie(encode.Int{}, keys, values)
+	if err != nil {
+		t.Fatalf("expected no error but: %+v", err)
+	}
+	for i, c := range searches {
+		rst, found := st.RangeGet(c.key)
+		if c.want != rst {
+			t.Fatalf("%d-th key: %s expect: %v; but: %v", i+1, c.key, c.want, rst)
+		}
+		if c.wantfound != found {
+			t.Fatalf("%d-th key: %s expect: %v; but: %v", i+1, c.key, c.wantfound, found)
+		}
+	}
+}
+
 func TestNewSlimTrie(t *testing.T) {
 
 	st, err := NewSlimTrie(encode.Int{}, []string{"ab", "cd"}, []int{1, 2})

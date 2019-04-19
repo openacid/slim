@@ -1,13 +1,42 @@
-// Package trie provides slimtrie implementation.
+// Package trie provides SlimTrie implementation.
 //
-// A slimtrie is a static, compressed Trie implementation.
+// A SlimTrie is a static, compressed Trie implementation.
 // It is created from a standard Trie by removing unnecessary Trie-node.
-// And it uses SlimArray to store Trie.
+// And it internally uses 3 compacted array to store a Trie.
 //
-// slimtrie memory overhead is about 6 byte per key, or less.
+// SlimTrie memory overhead is about 6 bytes per key, or less.
 //
 // TODO benchmark
 // TODO detail explain.
+//
+// Key value map or key-range value map
+//
+// SlimTrie is natively something like a key value map.
+// Actually besides as a key value map,
+// to index a map of key range to value with SlimTrie is also very simple:
+//
+// Just give two adjacent keys the same value, then SlimTrie
+// knows these keys belong to a "range".
+// These two keys are left and right boundaries of a range, and are both
+// inclusive.
+//
+//     // a to g --> 1
+//     // h      --> 2
+//     st, err := NewSlimTrie(encode.Int{}, []string{"a", "g", "h"}, []int{1, 1, 2})
+//
+//     st.Get("a")      // 1,   true   A normal key-value Get()
+//     st.Get("c")      // nil, false  A key-value Get() got nothing.
+//     st.RangeGet("c") // 1,   true   A range get got 1
+//     st.RangeGet("g") // 1,   true
+//     st.RangeGet("h") // 2,   true
+//
+// See SlimTrie.RangeGet .
+//
+// False Positive
+//
+// Just like Bloomfilter, SlimTrie does not contain full information of keys,
+// thus there could be a false positive return:
+// It returns some value and "true" but the key is not in there.
 package trie
 
 import (
@@ -190,6 +219,50 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 	}
 
 	return nil
+}
+
+// RangeGet look for a range that contains a key in SlimTrie.
+//
+// A range that contains a key means range-start <= key <= range-end.
+//
+// It returns the value the range maps to, and a bool indicate if a range is
+// found.
+//
+// A positive return value does not mean the range absolutely exists, which in
+// this case, is a "false positive".
+func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
+
+	lID, eqID, rID := st.searchID(key)
+
+	// an "equal" macth means key is a prefix of either start or end of a range.
+	if eqID != -1 {
+		return st.Leaves.Get(eqID)
+	}
+
+	// key is smaller than any range-start or range-end.
+	if lID == -1 {
+		return nil, false
+	}
+
+	// key is greater than any range-start or range-end.
+	if rID == -1 {
+		return nil, false
+	}
+
+	lVal, _ := st.Leaves.Get(lID)
+	rVal, _ := st.Leaves.Get(rID)
+
+	// If left-value != right-value, the key is between a range-end and next
+	// range-start.
+	if lVal != rVal {
+		return nil, false
+	}
+
+	// If range[i].end == range[i+1].start, it is a false positive.
+	// SlimTrie can not distinguish this from a positive match.
+	//
+	// Otherwise, lVal and rVal must be the start and end of a single range.
+	return lVal, true
 }
 
 // Search for a key in SlimTrie.
