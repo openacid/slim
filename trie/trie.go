@@ -77,8 +77,13 @@ func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err er
 	return
 }
 
+// String outputs multiline trie structure.
+func (r *Node) String() string {
+	lines := r.toStrings(0)
+	return strings.Join(lines, "\n")
+}
+
 // toStrings convert a Trie to human readalble representation.
-// TODO add example.
 func (r *Node) toStrings(cc int) []string {
 
 	var line string
