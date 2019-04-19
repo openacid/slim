@@ -202,7 +202,29 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 // A non-nil return value does not mean the `key` exists.
 // An in-existent `key` also could matches partial info stored in SlimTrie.
 func (st *SlimTrie) Search(key string) (lVal, eqVal, rVal interface{}) {
-	eqID, lID, rID := int32(0), int32(-1), int32(-1)
+
+	lID, eqID, rID := st.searchID(key)
+
+	if lID != -1 {
+		lVal, _ = st.Leaves.Get(lID)
+	}
+	if eqID != -1 {
+		eqVal, _ = st.Leaves.Get(eqID)
+	}
+	if rID != -1 {
+		rVal, _ = st.Leaves.Get(rID)
+	}
+
+	return
+}
+
+// searchID searches for key and returns 3 leaf node id:
+//
+// The id of greatest key < `key`. It is -1 if `key` is the smallest.
+// The id of `key`. It is -1 if there is not a matching.
+// The id of smallest key > `key`. It is -1 if `key` is the greatest.
+func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
+	lID, eqID, rID = -1, 0, -1
 	lIsLeaf := false
 
 	// string to 4-bit words
@@ -267,14 +289,9 @@ func (st *SlimTrie) Search(key string) (lVal, eqVal, rVal interface{}) {
 		if !lIsLeaf {
 			lID = int32(st.rightMost(uint16(lID)))
 		}
-		lVal, _ = st.Leaves.Get(lID)
 	}
 	if rID != -1 {
 		rID = int32(st.leftMost(uint16(rID)))
-		rVal, _ = st.Leaves.Get(rID)
-	}
-	if eqID != -1 {
-		eqVal, _ = st.Leaves.Get(eqID)
 	}
 
 	return
