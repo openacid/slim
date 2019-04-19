@@ -44,7 +44,7 @@ def list_tags():
 def changes(frm, to):
     # subject, author time, author name, email.
     out = cmd(["git", "log", '--format=%s ||| %ai ||| %an ||| %ae', '--reverse', frm + '..' + to])
-    lines = out.split("\n")
+    lines = out.splitlines()
     lines = [x for x in lines if x != '']
     rst = []
     for line in lines:
@@ -86,7 +86,7 @@ def norm_changes(changes):
 
     return rst
 
-def doit(newver):
+def build_ver_changelog(newver):
     tags = list_tags()
     tags.sort()
 
@@ -104,6 +104,28 @@ def doit(newver):
     with open('docs/change-log/v{newver}.yaml'.format(newver=newver), 'w') as f:
         f.write(changelog)
 
+def build_changelog():
+
+    out = cmd(["ls", "docs/change-log"])
+    vers = out.splitlines()
+    # remove "yaml"
+    vers = [x.rsplit('.', 1)[0] for x in vers if x != '']
+    vers.sort()
+
+    with open('docs/change-log.yaml', 'w') as f:
+        for v in vers:
+            f.write(v + ':\n')
+            with open('docs/change-log/{v}.yaml'.format(v=v), 'r') as vf:
+                cont = vf.read()
+
+            cont = cont.splitlines()
+            cont = ['  ' + x for x in cont]
+            cont = '\n'.join(cont)
+
+            f.write(cont + '\n')
+
 if __name__ == "__main__":
     newver = sys.argv[1]
-    doit(newver)
+    build_ver_changelog(newver)
+    build_changelog()
+
