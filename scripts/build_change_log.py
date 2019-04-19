@@ -113,7 +113,7 @@ def build_changelog():
     vers.sort()
 
     with open('docs/change-log.yaml', 'w') as f:
-        for v in vers:
+        for v in reversed(vers):
             f.write(v + ':\n')
             with open('docs/change-log/{v}.yaml'.format(v=v), 'r') as vf:
                 cont = vf.read()

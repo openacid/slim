@@ -1,3 +1,11 @@
+v0.4.1:
+  new-feature:
+    encode:
+    - add encode.Int to convert int to byte and back; by drdr xp; 2019-04-18
+    slimtrie:
+    - add proto.Marshaler and proto.Unmarshaler interface; by liubaohai; 2019-04-18
+    strhelper:
+    - add func to convert word of bits back to string; by drdr xp; 2019-04-19
 v0.4.0:
   api-changes:
     trie:
@@ -9,11 +17,3 @@ v0.4.0:
   new-feature:
     array:
     - add MemSize() to get memory occupied by array; by drdr xp; 2019-04-15
-v0.4.1:
-  new-feature:
-    encode:
-    - add encode.Int to convert int to byte and back; by drdr xp; 2019-04-18
-    slimtrie:
-    - add proto.Marshaler and proto.Unmarshaler interface; by liubaohai; 2019-04-18
-    strhelper:
-    - add func to convert word of bits back to string; by drdr xp; 2019-04-19
