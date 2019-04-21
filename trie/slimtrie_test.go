@@ -547,7 +547,7 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 	empty := &SlimTrie{}
 	empty.Leaves.EltEncoder = encode.Int{}
 	if !reflect.DeepEqual(st2, empty) {
-		t.Fatalf("reset children error")
+		t.Fatalf("reset slimtrie error")
 	}
 
 	// test slimtrie String()

@@ -316,8 +316,14 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 		shift := 4 - (idx&1)*4
 		word = ((key[idx>>1] >> uint(shift)) & 0x0f)
 
-		eqIdx = st.nextBranch(uint16(eqIdx), word)
-		if eqIdx == -1 {
+		bm, of, _ := st.getChild(uint16(eqIdx))
+
+		// if not found, bm == 0, thus no need to check if child found.
+		if (bm >> word & 1) == 1 {
+			chNum := gobits.OnesCount16(bm & ((uint16(1) << word) - 1))
+			eqIdx = int32(of) + int32(chNum)
+		} else {
+			eqIdx = -1
 			break
 		}
 	}
@@ -343,27 +349,6 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 		return step
 	}
 	return uint16(1)
-}
-
-// getChildIdx returns the id of the specified child.
-// This function does not check if the specified child `offset` exists or not.
-func getChildIdx(bm uint16, of uint16, word uint16) uint16 {
-	chNum := bits.OnesCount64Before(uint64(bm), uint(word))
-	return of + uint16(chNum)
-}
-
-func (st *SlimTrie) nextBranch(idx uint16, word byte) int32 {
-
-	bm, of, found := st.getChild(idx)
-	if !found {
-		return -1
-	}
-
-	if (bm >> word & 1) == 1 {
-		return int32(getChildIdx(bm, of, uint16(word)))
-	}
-
-	return -1
 }
 
 func (st *SlimTrie) leftMost(idx uint16) uint16 {
