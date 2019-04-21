@@ -12,7 +12,6 @@ package trie
 
 import (
 	"bytes"
-	"io"
 	gobits "math/bits"
 
 	"github.com/openacid/errors"
@@ -392,54 +391,7 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 	}
 }
 
-// getMarshalSize returns the serialized length in byte of a SlimTrie.
-func (st *SlimTrie) getMarshalSize() int64 {
-	cSize := serialize.GetMarshalSize(&st.Children)
-	sSize := serialize.GetMarshalSize(&st.Steps)
-	lSize := serialize.GetMarshalSize(&st.Leaves)
-
-	return cSize + sSize + lSize
-}
-
-// marshal serializes it to byte stream.
-func (st *SlimTrie) marshal(writer io.Writer) (cnt int64, err error) {
-	var n int64
-
-	if n, err = serialize.Marshal(writer, &st.Children); err != nil {
-		return 0, err
-	}
-	cnt += n
-
-	if n, err = serialize.Marshal(writer, &st.Steps); err != nil {
-		return 0, err
-	}
-	cnt += n
-
-	if n, err = serialize.Marshal(writer, &st.Leaves); err != nil {
-		return 0, err
-	}
-	cnt += n
-
-	return cnt, nil
-}
-
-// unmarshal de-serializes and loads SlimTrie from a byte stream.
-func (st *SlimTrie) unmarshal(reader io.Reader) error {
-	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
-		return err
-	}
-
-	if err := serialize.Unmarshal(reader, &st.Steps); err != nil {
-		return err
-	}
-
-	if err := serialize.Unmarshal(reader, &st.Leaves); err != nil {
-		return err
-	}
-
-	return nil
-}
-
+// Marshal serializes it to byte stream.
 func (st *SlimTrie) Marshal() ([]byte, error) {
 	var buf []byte
 	writer := bytes.NewBuffer(buf)
@@ -459,6 +411,7 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 	return writer.Bytes(), nil
 }
 
+// Unmarshal de-serializes and loads SlimTrie from a byte stream.
 func (st *SlimTrie) Unmarshal(buf []byte) error {
 	reader := bytes.NewReader(buf)
 

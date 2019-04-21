@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -501,34 +500,18 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
 	st1 := unsquashedIntSlimTrie(t, marshalCase.keys, marshalCase.values)
 
-	rw := new(bytes.Buffer)
-
-	size := st1.getMarshalSize()
-
-	n, err := st1.marshal(rw)
-	if err != nil {
-		t.Fatalf("failed to encode st: %v", err)
-	}
-
-	if n != size || int64(rw.Len()) != size {
-		t.Fatalf("wrong encode size: %d, %d, %d", n, size, rw.Len())
-	}
-
-	// unmarshal
-	st2, _ := NewSlimTrie(encode.Int{}, nil, nil)
-	err = st2.unmarshal(rw)
-	if err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
-	}
-
-	// check
-	checkSlimTrie(st1, st2, t)
+	// marshal
 
 	marshalSize := proto.Size(st1)
 	buf, err := st1.Marshal()
 	if err != nil {
 		t.Fatalf("failed to marshal st: %v", err)
 	}
+	if len(buf) != marshalSize {
+		t.Fatalf("size not correct expect: %v; but: %v", len(buf), marshalSize)
+	}
+
+	// marshal twice
 
 	buf1, err := proto.Marshal(st1)
 	if err != nil {
@@ -539,43 +522,36 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 		t.Fatalf("st.Marshal != proto.Marshal(st)")
 	}
 
-	if marshalSize != len(buf) {
-		t.Fatalf("size mismatch: %v != %v", marshalSize, len(buf))
-	}
+	// unmarshal
 
-	rCtrie1, _ := NewSlimTrie(encode.Int{}, nil, nil)
-	err = proto.Unmarshal(buf, rCtrie1)
+	st2, _ := NewSlimTrie(encode.Int{}, nil, nil)
+	err = proto.Unmarshal(buf, st2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal st: %v", err)
 	}
 
-	checkSlimTrie(st1, rCtrie1, t)
+	checkSlimTrie(st1, st2, t)
 
-	// double check proto.Unmarshal
-	err = proto.Unmarshal(buf, rCtrie1)
+	// proto.Unmarshal twice
+
+	err = proto.Unmarshal(buf, st2)
 	if err != nil {
 		t.Fatalf("failed to unmarshal st: %v", err)
 	}
 
-	checkSlimTrie(st1, rCtrie1, t)
+	checkSlimTrie(st1, st2, t)
 
-	rCtrie2, _ := NewSlimTrie(encode.Int{}, nil, nil)
-	err = rCtrie2.Unmarshal(buf)
-	if err != nil {
-		t.Fatalf("failed to unmarshal st: %v", err)
-	}
+	// Reset()
 
-	checkSlimTrie(st1, rCtrie2, t)
-
-	// test slimtrie Reset()
-	rCtrie2.Reset()
+	st2.Reset()
 	empty := &SlimTrie{}
 	empty.Leaves.EltEncoder = encode.Int{}
-	if !reflect.DeepEqual(rCtrie2, empty) {
+	if !reflect.DeepEqual(st2, empty) {
 		t.Fatalf("reset children error")
 	}
 
 	// test slimtrie String()
+
 	stStr := st1.String()
 	if stStr != string(buf) {
 		t.Fatalf("slimtrie.String error")
@@ -610,12 +586,11 @@ func TestSlimTrieBinaryCompatible(t *testing.T) {
 		t.Fatalf("expect no error but: %v", err)
 	}
 
-	b := bytes.NewBuffer(marshaled)
 	st2, err := NewSlimTrie(encode.Int{}, nil, nil)
 	if err != nil {
 		t.Fatalf("expect no error but: %v", err)
 	}
-	err = st2.unmarshal(b)
+	err = proto.Unmarshal(marshaled, st2)
 	if err != nil {
 		t.Fatalf("expect no error but: %v", err)
 	}
