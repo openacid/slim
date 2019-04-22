@@ -610,12 +610,33 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 		t.Fatalf("reset slimtrie error")
 	}
 
-	// test slimtrie String()
+	// ensure slimtrie.String()
 
-	stStr := st1.String()
-	if stStr != string(buf) {
-		t.Fatalf("slimtrie.String error")
+	_ = st1.String()
+}
+
+func TestSlimTrieString(t *testing.T) {
+
+	st, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
 	}
+
+	want := `
+000->#000+2*3
+         001->#001+4*2
+                  003->#004+1=0
+                           006->#007+2=1
+                  004->#005+1=2
+                           006->#008+2=3
+         002->#002+3=4
+                  006->#006+2=5
+                           006->#009+2=6
+         003->#003+5=7`[1:]
+	if want != st.String() {
+		t.Fatalf("expect: %v; but: %v", want, st.String())
+	}
+
 }
 
 func TestSlimTrieBinaryCompatible(t *testing.T) {

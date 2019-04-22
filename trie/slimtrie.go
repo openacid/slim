@@ -41,7 +41,9 @@ package trie
 
 import (
 	"bytes"
+	"fmt"
 	"math/bits"
+	"strings"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
@@ -476,6 +478,45 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 	}
 }
 
+// toStrings convert a Trie to human readalble representation.
+func (st *SlimTrie) toStrings(branch byte, id int32) []string {
+
+	bitmap, child0ID, _ := st.getChild(uint16(id))
+	step := st.getStep(uint16(id))
+	v, isLeaf := st.Leaves.Get(id)
+
+	brCnt := bits.OnesCount16(bitmap)
+	line := fmt.Sprintf("%03d->#%03d", branch, id)
+	indent := strings.Repeat(" ", len(line))
+	line += fmt.Sprintf("+%d", step)
+	if brCnt > 1 {
+		line += fmt.Sprintf("*%d", brCnt)
+	}
+	if isLeaf {
+		line += fmt.Sprintf("=%v", v)
+	}
+
+	rst := make([]string, 0, 64)
+	rst = append(rst, line)
+
+	if brCnt > 0 {
+
+		nth := uint16(0)
+		for b := byte(0); b < 16; b++ {
+			if bitmap&(1<<b) == 0 {
+				continue
+			}
+			childID := child0ID + nth
+			sub := st.toStrings(b, int32(childID))
+			for _, s := range sub {
+				rst = append(rst, indent+s)
+			}
+			nth++
+		}
+	}
+	return rst
+}
+
 // Marshal serializes it to byte stream.
 //
 // Since 0.4.3
@@ -528,17 +569,27 @@ func (st *SlimTrie) Reset() {
 	st.Leaves.Array32.Reset()
 }
 
-// String implements proto.Message
+// String implements proto.Message and output human readable multiline
+// representation.
+//
+// A node is in form of
+//   <income-label>-><node-id>+<step>*<fanout-count>=<value>
+// E.g.:
+//   000->#000+2*3
+//            001->#001+4*2
+//                     003->#004+1=0
+//                              006->#007+2=1
+//                     004->#005+1=2
+//                              006->#008+2=3
+//            002->#002+3=4
+//                     006->#006+2=5
+//                              006->#009+2=6
+//            003->#003+5=7`[1:]
 //
 // Since 0.4.3
 func (st *SlimTrie) String() string {
-	var buf []byte
-	var err error
-	if buf, err = st.Marshal(); err != nil {
-		return ""
-	}
-
-	return string(buf)
+	lines := st.toStrings(0, 0)
+	return strings.Join(lines, "\n")
 }
 
 // ProtoMessage implements proto.Message
