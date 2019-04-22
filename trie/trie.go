@@ -2,7 +2,6 @@ package trie
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/openacid/errors"
@@ -29,8 +28,7 @@ type Node struct {
 	Step     uint16
 	Value    interface{}
 
-	isStartLeaf bool
-	squash      bool
+	squash bool
 
 	NodeCnt int
 }
@@ -63,7 +61,7 @@ func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err er
 
 	for i := 0; i < len(keys); i++ {
 		key := keys[i]
-		_, err = root.Append(key, valSlice[i], false)
+		_, err = root.Append(key, valSlice[i])
 		if err != nil {
 			err = errors.Wrapf(err, "trie failed to add kvs")
 			return
@@ -267,10 +265,8 @@ func (r *Node) rightMost() *Node {
 //
 // The key to add must be greater than any existent key in the Trie.
 //
-// `isStartLeaf` indicates if it should not be removed.
-//
 // It returns the leaf node representing the added key.
-func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool) (leaf *Node, err error) {
+func (r *Node) Append(key []byte, value interface{}) (leaf *Node, err error) {
 
 	var node = r
 	var j int
@@ -321,7 +317,7 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool) (leaf *No
 		r.NodeCnt++
 	}
 
-	leaf = &Node{Value: value, isStartLeaf: isStartLeaf}
+	leaf = &Node{Value: value}
 
 	node.Children[leafBranch] = leaf
 	node.Branches = append(node.Branches, leafBranch)
@@ -333,55 +329,4 @@ func (r *Node) Append(key []byte, value interface{}, isStartLeaf bool) (leaf *No
 	}
 
 	return
-}
-
-// newRangeTrie creates a range-serach Trie.
-// TODO explain.
-func newRangeTrie(squash bool) *Node {
-	return &Node{Children: make(map[int]*Node), Step: 1, squash: squash}
-}
-
-// removeNonboundaryLeaves removes leaf nodes and ancestor nodes that reach only
-// these leaf nodes.
-func (r *Node) removeNonboundaryLeaves() {
-	// remove leaves which are not start leaf
-
-	leaf := r.Children[leafBranch]
-	if leaf != nil {
-
-		if !leaf.isStartLeaf {
-
-			delete(r.Children, leafBranch)
-			r.removeBranch(leafBranch)
-		}
-	}
-
-	for k, n := range r.Children {
-
-		if len(n.Branches) == 0 {
-			// leaf node do not need to remove any branch
-			continue
-		}
-
-		n.removeNonboundaryLeaves()
-
-		if len(n.Branches) == 0 {
-			delete(r.Children, k)
-			r.removeBranch(k)
-		}
-	}
-}
-
-func (r *Node) removeBranch(br int) {
-
-	idx := sort.Search(
-		len(r.Branches),
-		func(i int) bool {
-			return r.Branches[i] >= br
-		},
-	)
-
-	if idx < len(r.Branches) && r.Branches[idx] == br {
-		r.Branches = append(r.Branches[:idx], r.Branches[idx+1:]...)
-	}
 }
