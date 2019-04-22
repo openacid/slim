@@ -12,11 +12,10 @@ package trie
 
 import (
 	"bytes"
-	gobits "math/bits"
+	"math/bits"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
-	"github.com/openacid/slim/bits"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/serialize"
 	"github.com/openacid/slim/strhelper"
@@ -242,7 +241,7 @@ func (st *SlimTrie) Search(key string) (lVal, eqVal, rVal interface{}) {
 		}
 
 		// Count of branch on the left
-		lCnt := gobits.OnesCount16(bitmap & (wordBit - 1))
+		lCnt := bits.OnesCount16(bitmap & (wordBit - 1))
 
 		if branchBit != 0 {
 			eqID = int32(child0Id) + int32(lCnt)
@@ -320,7 +319,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 
 		// if not found, bm == 0, thus no need to check if child found.
 		if (bm >> word & 1) == 1 {
-			chNum := gobits.OnesCount16(bm & ((uint16(1) << word) - 1))
+			chNum := bits.OnesCount16(bm & ((uint16(1) << word) - 1))
 			eqIdx = int32(of) + int32(chNum)
 		} else {
 			eqIdx = -1
@@ -369,8 +368,7 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 		}
 
 		// count number of all children
-		// TODO use bits.PopCntXX without before.
-		chNum := bits.OnesCount64Before(uint64(bm), 64)
+		chNum := bits.OnesCount16(bm)
 		idx = of + uint16(chNum-1)
 
 	}
