@@ -75,6 +75,8 @@ const (
 // `Leaves` stores user data.
 //
 // TODO add scenario.
+//
+// Since 0.2.0
 type SlimTrie struct {
 	Children array.U32
 	Steps    array.U16
@@ -96,6 +98,8 @@ var (
 // Leave it to nil if element in values are size fixed type.
 //	   int is not of fixed size.
 //	   struct { X int64; Y int32; } hax fixed size.
+//
+// Since 0.2.0
 func NewSlimTrie(m encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
 	st := &SlimTrie{
 		Children: array.U32{},
@@ -132,6 +136,8 @@ func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
 }
 
 // LoadTrie compress a standard Trie and store compressed data in it.
+//
+// Since 0.2.0
 func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 	if root == nil {
 		return
@@ -230,6 +236,8 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 //
 // A positive return value does not mean the range absolutely exists, which in
 // this case, is a "false positive".
+//
+// Since 0.4.3
 func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 
 	lID, eqID, rID := st.searchID(key)
@@ -274,6 +282,8 @@ func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 //
 // A non-nil return value does not mean the `key` exists.
 // An in-existent `key` also could matches partial info stored in SlimTrie.
+//
+// Since 0.2.0
 func (st *SlimTrie) Search(key string) (lVal, eqVal, rVal interface{}) {
 
 	lID, eqID, rID := st.searchID(key)
@@ -380,6 +390,8 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 // Because SlimTrie is a "index" but not a "kv-map", it does not stores complete
 // info of all keys.
 // SlimTrie tell you "WHERE IT POSSIBLY BE", rather than "IT IS JUST THERE".
+//
+// Since 0.2.0
 func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 
 	var word byte
@@ -465,6 +477,8 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 }
 
 // Marshal serializes it to byte stream.
+//
+// Since 0.4.3
 func (st *SlimTrie) Marshal() ([]byte, error) {
 	var buf []byte
 	writer := bytes.NewBuffer(buf)
@@ -485,6 +499,8 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 }
 
 // Unmarshal de-serializes and loads SlimTrie from a byte stream.
+//
+// Since 0.4.3
 func (st *SlimTrie) Unmarshal(buf []byte) error {
 	reader := bytes.NewReader(buf)
 
@@ -503,12 +519,18 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 	return nil
 }
 
+// Reset implements proto.Message
+//
+// Since 0.4.3
 func (st *SlimTrie) Reset() {
 	st.Children.Array32.Reset()
 	st.Steps.Array32.Reset()
 	st.Leaves.Array32.Reset()
 }
 
+// String implements proto.Message
+//
+// Since 0.4.3
 func (st *SlimTrie) String() string {
 	var buf []byte
 	var err error
@@ -519,4 +541,7 @@ func (st *SlimTrie) String() string {
 	return string(buf)
 }
 
+// ProtoMessage implements proto.Message
+//
+// Since 0.4.3
 func (st *SlimTrie) ProtoMessage() {}
