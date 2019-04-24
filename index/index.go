@@ -78,3 +78,16 @@ func (si *SlimIndex) Get(key string) (string, bool) {
 
 	return si.DataReader.Read(offset, key)
 }
+
+// RangeGet returns the value of `key` that is contained in a range,
+// and a bool value indicating if the `key` is found or not.
+func (si *SlimIndex) RangeGet(key string) (string, bool) {
+	o, found := si.SlimTrie.RangeGet(key)
+	if !found {
+		return "", false
+	}
+
+	offset := o.(int64)
+
+	return si.DataReader.Read(offset, key)
+}

@@ -157,10 +157,26 @@ See: [trie/report/](trie/report/)
 ## Synopsis
 
 <details>
-<summary>Use SlimIndex to index external data</summary>
+<summary>Index keys, get by key</summary>
 
 ```go
 {% include 'index/example_test.go' %}
+```
+
+</details>
+
+<details>
+<summary>Index key ranges, get by key</summary>
+
+Create an index item for every 4(or more as you wish) keys.
+
+Let several adjacent keys share one index item reduces a lot memory
+cost if there are huge amount keys in external data.
+Such as to index billions of 4KB objects on a 4TB disk(because one disk IO
+costs 20ms for either reading 4KB or reading 1MB).
+
+```go
+{% include 'index/example_range_test.go' %}
 ```
 
 </details>
