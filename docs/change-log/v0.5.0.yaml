@@ -1,0 +1,3 @@
+api-change:
+  trie:
+  - Append() do not need isStartLeaf; by drdr xp; 2019-04-22
