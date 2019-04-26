@@ -17,3 +17,4 @@ def rr(tmpl_path, tmpl_vars, output_path):
 
 if __name__ == "__main__":
     rr('docs/README.md.j2', {}, 'README.md')
+    rr('_tmpl/workflow.md.j2', {}, 'docs/workflow.md')

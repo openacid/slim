@@ -7,11 +7,23 @@ import semantic_version
 import yaml
 from collections import defaultdict
 
+with open('change-types.yaml', 'r') as f:
+    typs = yaml.load(f.read())
+
+# categories has another mapping to fix typo in commit message
 categories = {
-        'api-changes:' : 'api-changes',
-        'new-feature:': 'new-feature',
-        'doc:': 'doc',
-        'refactor:': 'refactor',
+        'api-change:':   typs['api-change'],
+        'new-feature:':  typs['new-feature'],
+        'doc:':          typs['doc'],
+        'refactor:':     typs['refactor'],
+        'fixbug:':       typs['fixbug'],
+        'fixdoc:':       typs['fixdoc'],
+
+        # fix typo
+        'api-changes:':  typs['api-change'],
+        'new-features:': typs['new-feature'],
+        'docs:':         typs['doc'],
+        'fix:':          typs['fixbug'],
 }
 
 to_display = {
