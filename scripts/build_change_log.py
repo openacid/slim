@@ -7,8 +7,10 @@ import semantic_version
 import yaml
 from collections import defaultdict
 
-with open('change-types.yaml', 'r') as f:
+with open('scripts/change-types.yaml', 'r') as f:
     typs = yaml.load(f.read())
+
+typs = {x:x for x in typs}
 
 # categories has another mapping to fix typo in commit message
 categories = {
