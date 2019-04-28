@@ -25,6 +25,8 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 - [Performance benchmark](#performance-benchmark)
 - [Status](#status)
 - [Synopsis](#synopsis)
+  - [Index keys, get by key](#index-keys-get-by-key)
+  - [Index key ranges, get by key](#index-key-ranges-get-by-key)
 - [Getting started](#getting-started)
 - [Who are using slim](#who-are-using-slim)
 - [Roadmap](#roadmap)
@@ -155,8 +157,10 @@ See: [trie/report/](trie/report/)
 
 ## Synopsis
 
+### Index keys, get by key
+
 <details>
-<summary>Index keys, get by key</summary>
+<summary>Show me the code</summary>
 
 ```go
 package index_test
@@ -226,8 +230,10 @@ func Example() {
 
 </details>
 
+### Index key ranges, get by key
+
 <details>
-<summary>Index key ranges, get by key</summary>
+<summary>Show me the code</summary>
 
 Create an index item for every 4(or more as you wish) keys.
 
