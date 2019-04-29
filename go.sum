@@ -23,6 +23,12 @@ github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc h1:F34tPxFjFR
 github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/openacid/tablewriter v0.0.0-20190410090823-96f726cc5370 h1:5tHFs/pFpmIGe5QNwvGKGOixIpoJyBPJvko4OPqZPVw=
 github.com/openacid/tablewriter v0.0.0-20190410090823-96f726cc5370/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
+github.com/openacid/tablewriter v0.0.0-20190429024444-7a426f2adefb h1:as4LdGE0zeu11NyfeSUyG9DCFZo7YNCQTZ7PTNcb8e0=
+github.com/openacid/tablewriter v0.0.0-20190429024444-7a426f2adefb/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
+github.com/openacid/tablewriter v0.0.0-20190429063609-5746aed6c9a5 h1:jxc4A1Y93VKvg9cl+vdCtfibDEoGOEV1flvZJFHVkeU=
+github.com/openacid/tablewriter v0.0.0-20190429063609-5746aed6c9a5/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
+github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86 h1:VDKQXFTUgOiucWNpIruW0TQAG6oAq9p2pVQGlXkgtT0=
+github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/openacid/tablewriter v0.0.1 h1:EXox3cjZmzegh+TcPXIKXEpicsk8jp2Ue0lFQYy3u58=
 github.com/openacid/tablewriter v0.0.1/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=

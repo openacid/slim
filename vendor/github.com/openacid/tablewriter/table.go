@@ -129,13 +129,24 @@ func (t *Table) SetContent(rows interface{}) {
 
 	// set header
 	headers := []string{}
+	fmts := []string{}
 	et := rs.Type().Elem()
 	if et.Kind() == reflect.Ptr {
 		et = et.Elem()
 	}
 	for i := 0; i < et.NumField(); i++ {
 		ft := et.Field(i)
-		headers = append(headers, ft.Name)
+		if v, ok := ft.Tag.Lookup("tw-title"); ok {
+			headers = append(headers, v)
+		} else {
+			headers = append(headers, ft.Name)
+		}
+
+		if v, ok := ft.Tag.Lookup("tw-fmt"); ok {
+			fmts = append(fmts, v)
+		} else {
+			fmts = append(fmts, "%v")
+		}
 	}
 
 	strRows := [][]string{}
@@ -145,7 +156,15 @@ func (t *Table) SetContent(rows interface{}) {
 
 		for j := 0; j < row.NumField(); j++ {
 			v := reflect.Indirect(row.Field(j)).Interface()
-			strRow = append(strRow, fmt.Sprintf("%v", v))
+
+			var s string
+			if fmts[j][len(fmts[j])-2:] == "%%" {
+				// special format: print as percentage.
+				s = fmt.Sprintf(fmts[j], v.(float64) * 100)
+			} else {
+				s = fmt.Sprintf(fmts[j], v)
+			}
+			strRow = append(strRow, s)
 		}
 
 		strRows = append(strRows, strRow)
@@ -159,7 +178,6 @@ func (t *Table) SetContent(rows interface{}) {
 func (t *Table) ClearHeader() {
 	t.headers = [][]string{}
 }
-
 
 // Render table output
 func (t *Table) Render() {
