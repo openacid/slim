@@ -178,15 +178,13 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 			brs = brs[1:]
 		}
 
-		// TODO leaf node does need to record step.
-		// But this modification leads to too many changes.
-		if node.Step > 1 {
-			stepIndex = append(stepIndex, nID)
-			stepElts = append(stepElts, node.Step)
-
-		}
-
 		if len(brs) > 0 {
+
+			if node.Step > 1 {
+				stepIndex = append(stepIndex, nID)
+				stepElts = append(stepElts, node.Step)
+			}
+
 			childIndex = append(childIndex, nID)
 			offset := uint16(nID) + uint16(len(tq)) + uint16(1)
 
@@ -316,8 +314,12 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 	lenWords := 2 * len(key)
 
 	for i := -1; ; {
+		bitmap, child0Id, hasChildren := st.getChild(eqID)
+		if !hasChildren {
+			break
+		}
+
 		i += int(st.getStep(uint16(eqID)))
-		bitmap, child0Id, hasChildren := st.getChild(uint16(eqID))
 
 		if lenWords < i {
 			rID = eqID
@@ -326,9 +328,7 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 		}
 
 		if lenWords == i {
-			if hasChildren {
-				rID = int32(child0Id)
-			}
+			rID = child0Id
 			break
 		}
 
@@ -351,18 +351,18 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 		lCnt := bits.OnesCount16(bitmap & (wordBit - 1))
 
 		if branchBit != 0 {
-			eqID = int32(child0Id) + int32(lCnt)
+			eqID = child0Id + int32(lCnt)
 		} else {
 			eqID = -1
 		}
 
 		if lCnt > 0 {
-			lID = int32(child0Id) + int32(lCnt) - 1
+			lID = child0Id + int32(lCnt) - 1
 			lIsLeaf = false
 		}
 		// Might overflow but ok
 		if bitmap > (wordBit<<1)-1 {
-			rID = int32(child0Id) + int32(lCnt) + int32(branchBit>>uint16(word))
+			rID = child0Id + int32(lCnt) + int32(branchBit>>uint16(word))
 		}
 
 		if branchBit == 0 {
@@ -372,11 +372,11 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 
 	if lID != -1 {
 		if !lIsLeaf {
-			lID = int32(st.rightMost(uint16(lID)))
+			lID = st.rightMost(lID)
 		}
 	}
 	if rID != -1 {
-		rID = int32(st.leftMost(uint16(rID)))
+		rID = st.leftMost(rID)
 	}
 
 	return
@@ -398,15 +398,22 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 
 	var word byte
 	found = false
-	eqIdx := int32(0)
+	eqID := int32(0)
 
 	// string to 4-bit words
 	lenWords := 2 * len(key)
 
 	for idx := -1; ; {
-		idx += int(st.getStep(uint16(eqIdx)))
+
+		bm, of, hasInner := st.getChild(eqID)
+		if !hasInner {
+			// maybe a leaf
+			break
+		}
+
+		idx += int(st.getStep(uint16(eqID)))
 		if lenWords < idx {
-			eqIdx = -1
+			eqID = -1
 			break
 		}
 
@@ -419,29 +426,26 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 		shift := 4 - (idx&1)*4
 		word = ((key[idx>>1] >> uint(shift)) & 0x0f)
 
-		bm, of, _ := st.getChild(uint16(eqIdx))
-
-		// if not found, bm == 0, thus no need to check if child found.
 		if (bm >> word & 1) == 1 {
 			chNum := bits.OnesCount16(bm & ((uint16(1) << word) - 1))
-			eqIdx = int32(of) + int32(chNum)
+			eqID = of + int32(chNum)
 		} else {
-			eqIdx = -1
+			eqID = -1
 			break
 		}
 	}
 
-	if eqIdx != -1 {
-		eqVal, found = st.Leaves.Get(eqIdx)
+	if eqID != -1 {
+		eqVal, found = st.Leaves.Get(eqID)
 	}
 
 	return
 }
 
-func (st *SlimTrie) getChild(idx uint16) (bitmap uint16, offset uint16, found bool) {
-	cval, found := st.Children.Get(int32(idx))
+func (st *SlimTrie) getChild(idx int32) (bitmap uint16, offset int32, found bool) {
+	cval, found := st.Children.Get(idx)
 	if found {
-		return uint16(cval), uint16(cval >> 16), true
+		return uint16(cval), int32(cval >> 16), true
 	}
 	return 0, 0, false
 }
@@ -451,12 +455,22 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 	if found {
 		return step
 	}
+
+	// // A checker: A leaf node should not have step
+	// _, hasLeaf := st.Leaves.Get(int32(idx))
+	// if hasLeaf {
+	//     if _, ok := st.Children.Get(int32(idx)); !ok {
+	//         fmt.Println(st)
+	//         fmt.Println(idx)
+	//         panic("trying to get step of a leaf")
+	//     }
+	// }
 	return uint16(1)
 }
 
-func (st *SlimTrie) leftMost(idx uint16) uint16 {
+func (st *SlimTrie) leftMost(idx int32) int32 {
 	for {
-		if st.Leaves.Has(int32(idx)) {
+		if st.Leaves.Has(idx) {
 			return idx
 		}
 
@@ -464,7 +478,7 @@ func (st *SlimTrie) leftMost(idx uint16) uint16 {
 	}
 }
 
-func (st *SlimTrie) rightMost(idx uint16) uint16 {
+func (st *SlimTrie) rightMost(idx int32) int32 {
 	for {
 		bm, of, found := st.getChild(idx)
 		if !found {
@@ -473,7 +487,7 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 
 		// count number of all children
 		chNum := bits.OnesCount16(bm)
-		idx = of + uint16(chNum-1)
+		idx = of + int32(chNum-1)
 
 	}
 }
@@ -481,14 +495,19 @@ func (st *SlimTrie) rightMost(idx uint16) uint16 {
 // toStrings convert a Trie to human readalble representation.
 func (st *SlimTrie) toStrings(branch byte, id int32) []string {
 
-	bitmap, child0ID, _ := st.getChild(uint16(id))
-	step := st.getStep(uint16(id))
+	bitmap, child0ID, _ := st.getChild(id)
+	step, hasStep := st.Steps.Get(id)
 	v, isLeaf := st.Leaves.Get(id)
 
 	brCnt := bits.OnesCount16(bitmap)
-	line := fmt.Sprintf("%03d->#%03d", branch, id)
+	line := fmt.Sprintf("-%03d->", branch)
+	line += fmt.Sprintf("#%03d", id)
 	indent := strings.Repeat(" ", len(line))
-	line += fmt.Sprintf("+%d", step)
+
+	if hasStep {
+		line += fmt.Sprintf("+%d", step)
+	}
+
 	if brCnt > 1 {
 		line += fmt.Sprintf("*%d", brCnt)
 	}
@@ -501,13 +520,13 @@ func (st *SlimTrie) toStrings(branch byte, id int32) []string {
 
 	if brCnt > 0 {
 
-		nth := uint16(0)
+		nth := int32(0)
 		for b := byte(0); b < 16; b++ {
 			if bitmap&(1<<b) == 0 {
 				continue
 			}
 			childID := child0ID + nth
-			sub := st.toStrings(b, int32(childID))
+			sub := st.toStrings(b, childID)
 			for _, s := range sub {
 				rst = append(rst, indent+s)
 			}

@@ -56,7 +56,7 @@ func ExampleSlimTrie_RangeGet() {
 		{"abc2", "in range [abc, abcd]"},
 		{"abcd", "in range [abc, abcd]"},
 
-		{"abcde", "not in any range"},
+		{"abcde", "FALSE POSITIVE: a suffix of abcd"},
 
 		{"acc", "FALSE POSITIVE: not in range [abc, abcd]"},
 
@@ -79,7 +79,7 @@ func ExampleSlimTrie_RangeGet() {
 	// abc1       1     true : in range [abc, abcd]
 	// abc2       1     true : in range [abc, abcd]
 	// abcd       1     true : in range [abc, abcd]
-	// abcde      <nil> false: not in any range
+	// abcde      1     true : FALSE POSITIVE: a suffix of abcd
 	// acc        1     true : FALSE POSITIVE: not in range [abc, abcd]
 	// bc         2     true : in single key range [bc]
 	// bc1        <nil> false: not in single key range [bc]

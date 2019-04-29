@@ -40,75 +40,6 @@ func from4bit(x ...byte) string {
 }
 
 var (
-	unsquashedCases = []slimCase{
-		{
-			keys: []string{
-				from8bit(1, 2, 3),
-				from8bit(1, 2, 4),
-				from8bit(2, 3, 4),
-				from8bit(2, 3, 5),
-				from8bit(3, 4, 5),
-			},
-			values: []int{0, 1, 2, 3, 4},
-			searches: []searchCase{
-				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
-				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
-				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
-				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
-				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
-			},
-		},
-		{
-			keys: []string{
-				from8bit(1, 2, 3),
-				from8bit(1, 2, 3, 4),
-				from8bit(2, 3),
-				from8bit(2, 3, 0),
-				from8bit(2, 3, 4),
-				from8bit(2, 3, 4, 5),
-				from8bit(2, 3, 15),
-			},
-			values: []int{0, 1, 2, 3, 4, 5, 6},
-			searches: []searchCase{
-				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
-				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
-				{from8bit(2, 3), searchRst{1, 2, 3}},
-				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
-				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
-				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
-				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
-			},
-		},
-		{
-			keys: []string{
-				"abc",
-				"abcd",
-				"abd",
-				"abde",
-				"bc",
-				"bcd",
-				"bcde",
-				"cde",
-			},
-			values: []int{0, 1, 2, 3, 4, 5, 6, 7},
-			searches: []searchCase{
-				{"ab", searchRst{nil, nil, 0}},
-				{"abc", searchRst{nil, 0, 1}},
-				{"abcde", searchRst{1, nil, 2}},
-				{"abd", searchRst{1, 2, 3}},
-				{"ac", searchRst{3, nil, 4}},
-				{"acb", searchRst{3, nil, 4}},
-				{"acd", searchRst{3, nil, 4}},
-				{"adc", searchRst{3, nil, 4}},
-				{"bcd", searchRst{4, 5, 6}},
-				{"bce", searchRst{6, nil, 7}},
-				{"c", searchRst{6, nil, 7}},
-				{"cde", searchRst{6, 7, nil}},
-				{"cfe", searchRst{7, nil, nil}},
-				{"cff", searchRst{7, nil, nil}},
-			},
-		},
-	}
 	// a squashed case and also as case for marshaling test
 	marshalCase = slimCase{
 		keys: []string{
@@ -125,7 +56,7 @@ var (
 		searches: []searchCase{
 			{"ab", searchRst{nil, nil, 0}},
 			{"abc", searchRst{nil, 0, 1}},
-			{"abcde", searchRst{1, nil, 2}},
+			{"abcde", searchRst{0, 1, 2}}, // false positive
 			{"abd", searchRst{1, 2, 3}},
 			{"ac", searchRst{nil, nil, 0}},
 			{"acb", searchRst{nil, nil, 0}},
@@ -133,52 +64,11 @@ var (
 			{"adc", searchRst{nil, 0, 1}},
 			{"bcd", searchRst{4, 5, 6}},
 			{"bce", searchRst{4, 5, 6}},
-			{"c", searchRst{6, nil, 7}},
+			{"c", searchRst{6, 7, nil}}, // false positive
 			{"cde", searchRst{6, 7, nil}},
 			{"cfe", searchRst{6, 7, nil}},
 			{"cff", searchRst{6, 7, nil}},
 		},
-	}
-	squashedCases = []slimCase{
-		{
-			keys: []string{
-				from8bit(1, 2, 3),
-				from8bit(1, 2, 4),
-				from8bit(2, 3, 4),
-				from8bit(2, 3, 5),
-				from8bit(3, 4, 5),
-			},
-			values: []int{0, 1, 2, 3, 4},
-			searches: []searchCase{
-				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
-				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
-				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
-				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
-				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
-			},
-		},
-		{
-			keys: []string{
-				from8bit(1, 2, 3),
-				from8bit(1, 2, 3, 4),
-				from8bit(2, 3),
-				from8bit(2, 3, 0),
-				from8bit(2, 3, 4),
-				from8bit(2, 3, 4, 5),
-				from8bit(2, 3, 15),
-			},
-			values: []int{0, 1, 2, 3, 4, 5, 6},
-			searches: []searchCase{
-				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
-				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
-				{from8bit(2, 3), searchRst{1, 2, 3}},
-				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
-				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
-				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
-				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
-			},
-		},
-		marshalCase,
 	}
 )
 
@@ -313,7 +203,77 @@ func TestMaxNode(t *testing.T) {
 
 func TestUnsquashedSearch(t *testing.T) {
 
-	for _, c := range unsquashedCases {
+	cases := []slimCase{
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 4),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 5),
+				from8bit(3, 4, 5),
+			},
+			values: []int{0, 1, 2, 3, 4},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
+				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
+			},
+		},
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 3, 4),
+				from8bit(2, 3),
+				from8bit(2, 3, 0),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 4, 5),
+				from8bit(2, 3, 15),
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
+				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
+				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
+				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
+			},
+		},
+		{
+			keys: []string{
+				"abc",
+				"abcd",
+				"abd",
+				"abde",
+				"bc",
+				"bcd",
+				"bcde",
+				"cde",
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6, 7},
+			searches: []searchCase{
+				{"ab", searchRst{nil, nil, 0}},
+				{"abc", searchRst{nil, 0, 1}},
+				{"abcde", searchRst{1, nil, 2}},
+				{"abd", searchRst{1, 2, 3}},
+				{"ac", searchRst{3, nil, 4}},
+				{"acb", searchRst{3, nil, 4}},
+				{"acd", searchRst{3, nil, 4}},
+				{"adc", searchRst{3, nil, 4}},
+				{"bcd", searchRst{4, 5, 6}},
+				{"bce", searchRst{6, nil, 7}},
+				{"c", searchRst{6, nil, 7}},
+				{"cde", searchRst{6, 7, nil}},
+				{"cfe", searchRst{7, nil, nil}},
+				{"cff", searchRst{7, nil, nil}},
+			},
+		},
+	}
+
+	for _, c := range cases {
 
 		keys := strhelper.SliceToBitWords(c.keys, 4)
 
@@ -334,25 +294,82 @@ func TestUnsquashedSearch(t *testing.T) {
 				t.Fatal("key: ", strhelper.ToBitWords(ex.key, 4), "expected value: ", ex.want, "rst: ", rst)
 			}
 		}
-
-		// Unsquashed SlimTrie
-
-		st := unsquashedIntSlimTrie(t, c.keys, c.values)
-
-		for _, ex := range c.searches {
-			lt, eq, gt := st.Search(ex.key)
-			rst := searchRst{lt, eq, gt}
-
-			if !reflect.DeepEqual(ex.want, rst) {
-				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
-			}
-		}
 	}
 }
 
-func TestSquashedSearch(t *testing.T) {
+func TestSquashedTrieSearch(t *testing.T) {
 
-	for _, c := range squashedCases {
+	cases := []slimCase{
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 4),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 5),
+				from8bit(3, 4, 5),
+			},
+			values: []int{0, 1, 2, 3, 4},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
+				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
+			},
+		},
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 3, 4),
+				from8bit(2, 3),
+				from8bit(2, 3, 0),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 4, 5),
+				from8bit(2, 3, 15),
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
+				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
+				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
+				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
+			},
+		},
+		{
+			keys: []string{
+				"abc",
+				"abcd",
+				"abd",
+				"abde",
+				"bc",
+				"bcd",
+				"bcde",
+				"cde",
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6, 7},
+			searches: []searchCase{
+				{"ab", searchRst{nil, nil, 0}},
+				{"abc", searchRst{nil, 0, 1}},
+				{"abcde", searchRst{1, nil, 2}},
+				{"abd", searchRst{1, 2, 3}},
+				{"ac", searchRst{nil, nil, 0}},
+				{"acb", searchRst{nil, nil, 0}},
+				{"acd", searchRst{1, 2, 3}},
+				{"adc", searchRst{nil, 0, 1}},
+				{"bcd", searchRst{4, 5, 6}},
+				{"bce", searchRst{4, 5, 6}},
+				{"c", searchRst{6, nil, 7}},
+				{"cde", searchRst{6, 7, nil}},
+				{"cfe", searchRst{6, 7, nil}},
+				{"cff", searchRst{6, 7, nil}},
+			},
+		},
+	}
+
+	for _, c := range cases {
 
 		keys := strhelper.SliceToBitWords(c.keys, 4)
 
@@ -383,8 +400,53 @@ func TestSquashedSearch(t *testing.T) {
 				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
 			}
 		}
+	}
+}
 
-		// Squashed SlimTrie
+func TestSlimTrieSearch(t *testing.T) {
+
+	cases := []slimCase{
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 4),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 5),
+				from8bit(3, 4, 5),
+			},
+			values: []int{0, 1, 2, 3, 4},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
+				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
+			},
+		},
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 3, 4),
+				from8bit(2, 3),
+				from8bit(2, 3, 0),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 4, 5),
+				from8bit(2, 3, 15),
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
+				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
+				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
+				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
+			},
+		},
+		marshalCase,
+	}
+	for _, c := range cases {
 
 		st, err := NewSlimTrie(encode.Int{}, c.keys, c.values)
 		if err != nil {
@@ -396,26 +458,8 @@ func TestSquashedSearch(t *testing.T) {
 			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.want, rst) {
-				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
-			}
-		}
-
-		// Load Squashed twice Trie
-
-		st, err = NewSlimTrie(encode.Int{}, nil, nil)
-		if err != nil {
-			t.Fatalf("expected no error but: %+v", err)
-		}
-		err = st.LoadTrie(trie)
-		if err != nil {
-			t.Error("compact trie error:", err)
-		}
-
-		for _, ex := range c.searches {
-			lt, eq, gt := st.Search(ex.key)
-			rst := searchRst{lt, eq, gt}
-
-			if !reflect.DeepEqual(ex.want, rst) {
+				fmt.Println(c.keys)
+				fmt.Println(st)
 				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
 			}
 		}
@@ -452,7 +496,7 @@ func TestRangeGet(t *testing.T) {
 	}{
 		{"ab", nil, false},
 		{"abc", 0, true},
-		{"abcde", nil, false},
+		{"abcde", 0, true}, // false positive
 		{"abd", 1, true},
 		{"ac", nil, false},
 		{"acb", nil, false},
@@ -460,7 +504,7 @@ func TestRangeGet(t *testing.T) {
 		{"adc", 0, true}, // false positive
 		{"bcd", 3, true},
 		{"bce", 3, true},
-		{"c", nil, false},
+		{"c", 4, true}, // false positive
 		{"cde", 4, true},
 		{"cfe", 4, true},    // false positive
 		{"cff", 4, true},    // false positive
@@ -623,29 +667,30 @@ func TestSlimTrieString(t *testing.T) {
 	}
 
 	want := `
-000->#000+2*3
-         001->#001+4*2
-                  003->#004+1=0
-                           006->#007+2=1
-                  004->#005+1=2
-                           006->#008+2=3
-         002->#002+3=4
-                  006->#006+2=5
-                           006->#009+2=6
-         003->#003+5=7`[1:]
+-000->#000+2*3
+          -001->#001+4*2
+                    -003->#004=0
+                              -006->#007=1
+                    -004->#005=2
+                              -006->#008=3
+          -002->#002+3=4
+                    -006->#006+2=5
+                              -006->#009=6
+          -003->#003=7`[1:]
 	if want != st.String() {
-		t.Fatalf("expect: %v; but: %v", want, st.String())
+		t.Fatalf("expect: \n%v\n; but: \n%v", want, st.String())
 	}
 
 }
 
 func TestSlimTrieBinaryCompatible(t *testing.T) {
 
-	// Made from:
-	// st, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
-	// b := &bytes.Buffer{}
-	// _, err = st.encode(b)
-	// fmt.Printf("%#v\n", b.Bytes())
+	// Made with v0.5.0 from:
+	//	   st, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
+	//	   b := &bytes.Buffer{}
+	//	   _, err = st.encode(b)
+	//	   fmt.Printf("%#v\n", b.Bytes())
+	// Before v0.5.0 a leaf has "step" on it.
 	marshaled := []byte{0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x8, 0x6, 0x12, 0x1, 0x77, 0x1a, 0x1, 0x0, 0x22, 0x18,
@@ -662,23 +707,25 @@ func TestSlimTrieBinaryCompatible(t *testing.T) {
 		0x0, 0x0, 0x0, 0x0, 0x5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 
-	st1, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
+	// An instance that loads data generated by an older version SlimTrie still works
+	st, err := NewSlimTrie(encode.Int{}, nil, nil)
+	if err != nil {
+		t.Fatalf("expect no error but: %v", err)
+	}
+	err = proto.Unmarshal(marshaled, st)
 	if err != nil {
 		t.Fatalf("expect no error but: %v", err)
 	}
 
-	st2, err := NewSlimTrie(encode.Int{}, nil, nil)
-	if err != nil {
-		t.Fatalf("expect no error but: %v", err)
-	}
-	err = proto.Unmarshal(marshaled, st2)
-	if err != nil {
-		t.Fatalf("expect no error but: %v", err)
-	}
+	for _, ex := range marshalCase.searches {
+		lt, eq, gt := st.Search(ex.key)
+		rst := searchRst{lt, eq, gt}
 
-	if !reflect.DeepEqual(st1, st2) {
-		fmt.Println(pretty.Diff(st1, st2))
-		t.Fatalf("unmarshaled is different")
+		if !reflect.DeepEqual(ex.want, rst) {
+			fmt.Println(marshalCase.keys)
+			fmt.Println(st)
+			t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
+		}
 	}
 }
 
@@ -724,8 +771,8 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 					{offset: uint16(1), bitmap: uint16(12)},
 					{offset: uint16(3), bitmap: uint16(15)},
 				},
-				stepIndex: []int32{0, 1, 2, 3, 4, 5, 6},
-				stepElts:  []uint16{2, 3, 5, 2, 2, 2, 2},
+				stepIndex: []int32{0, 1},
+				stepElts:  []uint16{2, 3},
 				leafIndex: []int32{2, 3, 4, 5, 6},
 				leafData:  []uint32{4, 0, 1, 2, 3},
 			},
@@ -739,8 +786,8 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 			ExpectType: ExpectType{
 				childIndex: []int32{},
 				childData:  []testChiledData{},
-				stepIndex:  []int32{0},
-				stepElts:   []uint16{5},
+				stepIndex:  []int32{},
+				stepElts:   []uint16{},
 				leafIndex:  []int32{0},
 				leafData:   []uint32{3},
 			},
@@ -780,15 +827,22 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 
 func checkSlimTrie(st1, st2 *SlimTrie, t *testing.T) {
 	if !proto.Equal(&(st1.Children), &(st2.Children)) {
+		fmt.Println(st1)
+		fmt.Println(st2)
+		fmt.Println(pretty.Diff(st1.Children, st2.Children))
 		t.Fatalf("Children not the same")
 	}
 
 	if !proto.Equal(&(st1.Steps), &(st2.Steps)) {
+		fmt.Println(st1)
+		fmt.Println(st2)
 		fmt.Println(pretty.Diff(st1.Steps, st2.Steps))
 		t.Fatalf("Step not the same")
 	}
 
 	if !proto.Equal(&st1.Leaves, &st2.Leaves) {
+		fmt.Println(st1)
+		fmt.Println(st2)
 		fmt.Println(pretty.Diff(st1.Leaves, st2.Leaves))
 		t.Fatalf("Leaves not the same")
 	}
