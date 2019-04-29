@@ -36,10 +36,16 @@ type SearchResult struct {
 // GetResult represent the ns/Get() for virous key count and several predefined
 // key length = 64, 128, 256
 type GetResult struct {
-	KeyCount int
-	K64      int
-	K128     int
-	K256     int
+	KeyCount int `tw-title:"key-count"`
+	K64      int `tw-title:"k=64"`
+	K128     int `tw-title:"k=128"`
+	K256     int `tw-title:"k=256"`
+}
+
+// FPRResult represent the false positive rate.
+type FPRResult struct {
+	KeyCount int     `tw-title:"key-count"`
+	FPR      float64 `tw-title:"fpr" tw-fmt:"%.3f%%"`
 }
 
 // MemResult is a alias of GetResult
@@ -47,7 +53,7 @@ type MemResult GetResult
 
 var Rec byte
 
-// BenchGet benchmark the Get() of present key.
+// GetPresent benchmark the Get() of present key.
 func GetPresent(keyCounts []int) []GetResult {
 
 	var rst = make([]GetResult, 0, len(keyCounts))
@@ -67,6 +73,7 @@ func GetPresent(keyCounts []int) []GetResult {
 	return rst
 }
 
+// GetAbsent benchmark the Get() of absent key.
 func GetAbsent(keyCounts []int) []GetResult {
 
 	var rst = make([]GetResult, 0, len(keyCounts))
@@ -78,6 +85,57 @@ func GetAbsent(keyCounts []int) []GetResult {
 			K64:      benchGet(NewGetSetting(n, 64, 2), "absent"),
 			K128:     benchGet(NewGetSetting(n, 128, 2), "absent"),
 			K256:     benchGet(NewGetSetting(n, 256, 2), "absent"),
+		}
+
+		rst = append(rst, r)
+	}
+
+	return rst
+}
+
+// GetFPR estimate false positive rate(FPR) for Get.
+func GetFPR(keyCounts []int) []FPRResult {
+
+	var rst = make([]FPRResult, 0, len(keyCounts))
+
+	keyLen := 64
+	r := 100
+	for _, n := range keyCounts {
+
+		keys := benchhelper.RandSortedStrings(n, keyLen)
+		nAbsent := n * r
+
+		present := map[string]bool{}
+		for _, k := range keys {
+			present[k] = true
+		}
+
+		vals := make([]uint16, n)
+		st, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
+		if err != nil {
+			panic(err)
+		}
+
+		fp := float64(0)
+
+		for i := 0; i < nAbsent; {
+			k := benchhelper.RandString(keyLen)
+			if _, ok := present[k]; ok {
+				continue
+			}
+
+			_, found := st.Get(k)
+			if found {
+				fp++
+			}
+			i++
+		}
+
+		fpr := fp / float64(nAbsent)
+
+		r := FPRResult{
+			KeyCount: n,
+			FPR:      fpr,
 		}
 
 		rst = append(rst, r)

@@ -9,9 +9,19 @@ import (
 )
 
 var Fformat = struct {
+	JPGHistogramTiny  string
 	JPGHistogramSmall string
 	JPGHistogramMid   string
 }{
+	JPGHistogramTiny: `
+set terminal jpeg size 300,200;
+set boxwidth 0.8;
+set style fill solid;
+set grid ytics;
+
+set style line 101 lc rgb '#909090' lt 1 lw 1
+set border 3 front ls 101
+`,
 	JPGHistogramSmall: `
 set terminal jpeg size 400,300;
 set boxwidth 0.8;

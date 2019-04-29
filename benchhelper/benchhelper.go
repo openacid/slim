@@ -50,10 +50,23 @@ func RandI32SliceBetween(min int32, max int32, factor float64) []int32 {
 }
 
 func RandSortedStrings(cnt, leng int) []string {
-	rsts := make([]string, cnt)
+
+	keys := make(map[string]bool, cnt)
 
 	for i := 0; i < cnt; i++ {
-		rsts[i] = RandString(leng)
+		k := RandString(leng)
+		if _, ok := keys[k]; ok {
+			i--
+		} else {
+			keys[k] = true
+		}
+	}
+
+	rsts := make([]string, cnt)
+	j := 0
+	for i := range keys {
+		rsts[j] = i
+		j++
 	}
 
 	sort.Strings(rsts)
@@ -118,25 +131,25 @@ func NewDataFileTable(fn string) (*os.File, *tablewriter.Table) {
 	tb.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
 	tb.SetCenterSeparator("")
 	tb.SetColumnSeparator("")
+	tb.SetHeaderLine(false)
 
 	return f, tb
 }
 
-func WriteMDFile(fn string, content interface{}) {
-	f, tb := NewMDFileTable(fn)
-	defer f.Close()
+// WriteTableFiles write a .md file and a .data file
+func WriteTableFiles(name string, content interface{}) {
+	{
+		f, tb := NewMDFileTable(name + ".md")
+		defer f.Close()
+		tb.SetContent(content)
+		tb.Render()
+	}
 
-	tb.SetContent(content)
-	tb.Render()
-}
+	{
+		f, tb := NewDataFileTable(name + ".data")
+		defer f.Close()
+		tb.SetContent(content)
+		tb.Render()
+	}
 
-func WriteDataFile(fn string, headers []string, content interface{}) {
-	f, tb := NewDataFileTable(fn)
-	defer f.Close()
-
-	tb.SetContent(content)
-	tb.ClearHeader()
-	tb.SetHeader(headers)
-	tb.SetHeaderLine(false)
-	tb.Render()
 }
