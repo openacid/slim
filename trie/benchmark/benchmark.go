@@ -150,9 +150,9 @@ func Mem(keyCounts []int) []MemResult {
 	for _, n := range keyCounts {
 		r := MemResult{
 			KeyCount: n,
-			K64:      int(slimtrieMem(n, 64)) / n,
-			K128:     int(slimtrieMem(n, 128)) / n,
-			K256:     int(slimtrieMem(n, 256)) / n,
+			K64:      int(slimtrieMem(n, 64)),
+			K128:     int(slimtrieMem(n, 128)),
+			K256:     int(slimtrieMem(n, 256)),
 		}
 
 		rst = append(rst, r)
@@ -187,7 +187,7 @@ func slimtrieMem(keyCnt, keyLen int) int64 {
 	_ = t.Steps
 	_ = t.Leaves
 
-	return size
+	return size * 8 / int64(keyCnt)
 }
 
 func benchGet(setting *GetSetting, typ string) int {

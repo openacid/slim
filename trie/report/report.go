@@ -76,11 +76,11 @@ func memX() {
 	if flg.Plot {
 		script := `
 fn = "report/mem_usage.data"
-set yr [0:20]
+set yr [0:160]
 set xlabel 'key-count (n)'
-set ylabel 'memory usage' offset 1,0
+set ylabel 'bits/key' offset 1,0
 `
-		script += benchhelper.Fformat.JPGHistogramMid
+		script += benchhelper.Fformat.JPGHistogramTiny
 		script += benchhelper.LineStyles.Green
 		script += benchhelper.Plot.Histogram
 
