@@ -23,13 +23,12 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 - [Why slim](#why-slim)
 - [Memory overhead](#memory-overhead)
 - [Performance benchmark](#performance-benchmark)
-- [Status](#status)
+- [Status, Roadmap and Change-log](#status-roadmap-and-change-log)
 - [Synopsis](#synopsis)
   - [Index keys, get by key](#index-keys-get-by-key)
   - [Index key ranges, get by key](#index-key-ranges-get-by-key)
 - [Getting started](#getting-started)
 - [Who are using slim](#who-are-using-slim)
-- [Roadmap](#roadmap)
 - [Feedback and contributions](#feedback-and-contributions)
 - [Authors](#authors)
 - [License](#license)
@@ -151,9 +150,66 @@ Time(in nano second) spent on a `get` with different key count(`n`) and key leng
 
 See: [trie/report/](trie/report/)
 
-## Status
+## Status, Roadmap and Change-log
 
--   `0.1.0`(Current): index structure.
+Currently `slim v0.5.0` APIs are stable,
+and has been used in a production env.
+
+Meanwhile we focus on optimizing memory usage and query performance.
+
+Internal data structure may change before `v1.0.0`.
+
+<details>
+<summary>Roadmap</summary>
+
+-   [ ] Large key set benchmark
+-   [ ] Query by range
+-   [ ] Support up to 2 billion keys
+-   [ ] Reduce false positive rate
+-   [ ] Reduce memory usage from 40 to 25 bits/key
+-   [x] **2019-04-20** v0.4.3 Range index: many keys share one index item
+-   [x] **2019-04-18** v0.4.1 Marshaling support
+-   [x] **2019-03-08** v0.1.0 SlimIndex SlimTrie
+
+</details>
+
+<details>
+<summary>Change-log</summary>
+
+```yaml
+v0.5.0:
+  api-change:
+    trie:
+    - Append() do not need isStartLeaf; by drdr xp; 2019-04-22
+v0.4.3:
+  new-feature:
+    slimtrie:
+    - RangeGet() to get value of a key in indexed range; by drdr xp; 2019-04-20
+    - String(); by drdr xp; 2019-04-23
+    trie:
+    - add String() to output human readable trie structure; by drdr xp; 2019-04-19
+v0.4.1:
+  new-feature:
+    encode:
+    - add encode.Int to convert int to byte and back; by drdr xp; 2019-04-18
+    slimtrie:
+    - add proto.Marshaler and proto.Unmarshaler interface; by liubaohai; 2019-04-18
+    strhelper:
+    - add func to convert word of bits back to string; by drdr xp; 2019-04-19
+v0.4.0:
+  api-changes:
+    trie:
+    - trie.Node add squash; by wenbo; 2019-04-11
+    - remove marshalAt and unmarshalAt; use SectionReader and SectionWriter; by drdr
+      xp; 2019-04-10
+    - fix method name encode->marshal; by drdr xp; 2019-04-10
+    - SlimTrie.Get returns value and found in bool; by drdr xp; 2019-03-27
+  new-feature:
+    array:
+    - add MemSize() to get memory occupied by array; by drdr xp; 2019-04-15
+```
+
+</details>
 
 ## Synopsis
 
@@ -400,12 +456,6 @@ All dependency packages are included in `vendor/` dir.
 
 <!-- ## Limitation -->
 <!-- [> TODO  <] -->
-
-## Roadmap
-
--   [x] **2019 Mar 08**: SlimIndex, SlimTrie
--   [ ] Marshaling support
--   [ ] SlimArray
 
 
 <!-- -   [ ] bitrie: 1 byte-per-key implementation. -->
