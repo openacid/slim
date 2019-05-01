@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/openacid/errors"
+	"github.com/openacid/slim/benchhelper"
 )
 
 func TestTrie(t *testing.T) {
@@ -296,20 +297,10 @@ func TestTrieNew(t *testing.T) {
 			values:      []int{0, 1, 2},
 			expectedErr: errors.Wrapf(ErrDuplicateKeys, "key: abc"),
 		},
-		{
-			keys: [][]byte{
-				{'a', 'b', 'c'},
-				{'b', 'c', 'd'},
-				{'c', 'd', 'e'},
-			},
-			values: map[string]int{
-				"abc": 0,
-				"bcd": 1,
-				"cde": 2,
-			},
-			expectedErr: ErrValuesNotSlice,
-		},
 	}
+	benchhelper.WantPanic(t, func() {
+		NewTrie([][]byte{{'a', 'b', 'c'}}, map[string]int{"abc": 0}, false)
+	}, "values is map")
 
 	for _, c := range cases {
 		_, err := NewTrie(c.keys, c.values, false)
@@ -321,16 +312,17 @@ func TestTrieNew(t *testing.T) {
 
 func TestNewError(t *testing.T) {
 
+	benchhelper.WantPanic(t, func() { NewTrie([][]byte{}, nil, false) }, "values is nil")
+	benchhelper.WantPanic(t, func() { NewTrie([][]byte{{1}}, 1, false) }, "values is int")
+
 	cases := []struct {
 		keys    [][]byte
 		vals    interface{}
 		wanterr error
 	}{
 		{nil, nil, nil},
-		{[][]byte{}, nil, ErrValuesNotSlice},
 		{nil, []int{}, nil},
 		{nil, 1, nil},
-		{[][]byte{{1}}, 1, ErrValuesNotSlice},
 		{[][]byte{}, []int{1}, ErrKVLenNotMatch},
 		{[][]byte{{1}}, []int{}, ErrKVLenNotMatch},
 		{[][]byte{{1, 2}, {1}}, []int{1, 2}, ErrKeyOutOfOrder},

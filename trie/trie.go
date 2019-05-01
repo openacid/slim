@@ -19,9 +19,9 @@ type Node struct {
 
 const leafBranch = -1
 
-// NewTrie creates a Trie from a serial of ascendingly ordered keys and corresponding values.
+// NewTrie creates a trie from a serial of ascendingly ordered keys and corresponding values.
 //
-// `values` must be a slice.
+// `values` must be a slice, or it panic.
 // if `squash` is `true`, indicate this trie to squash preceding branches every time after Append a new
 // key.
 func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err error) {
@@ -32,11 +32,7 @@ func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err er
 		return
 	}
 
-	valSlice, ok := typehelper.ToSlice(values)
-	if !ok {
-		err = ErrValuesNotSlice
-		return
-	}
+	valSlice := typehelper.ToSlice(values)
 
 	if len(keys) != len(valSlice) {
 		err = ErrKVLenNotMatch

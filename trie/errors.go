@@ -14,9 +14,6 @@ var (
 	// ErrDuplicateKeys indicates two keys are identical.
 	ErrDuplicateKeys = errors.New("keys can not be duplicate")
 
-	// ErrValuesNotSlice is returned if a value to create Trie is not slice type.
-	ErrValuesNotSlice = errors.New("values must be in a slice")
-
 	// ErrKVLenNotMatch means the keys and values to create Trie has different
 	// number of elements.
 	ErrKVLenNotMatch = errors.New("length of keys and values not equal")
