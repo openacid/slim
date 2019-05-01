@@ -61,7 +61,7 @@ const (
 
 // SlimTrie is a space efficient Trie index.
 //
-// The space overhead is about 6 byte per key and is irrelevant to key length.
+// The space overhead is less than 6 bytes per key and is irrelevant to key length.
 //
 // It does not store full key information, but only just enough info for
 // locating a record.
@@ -83,30 +83,22 @@ type SlimTrie struct {
 	Leaves   array.Array
 }
 
-var (
-	// ErrTooManyTrieNodes indicates the number of trie nodes(not number of
-	// keys) exceeded.
-	ErrTooManyTrieNodes = errors.New("compacted trie exceeds max node count=65536")
-	// ErrTrieBranchValueOverflow indicate input key consists of a word greater
-	// than the max 4-bit word(0x0f).
-	ErrTrieBranchValueOverflow = errors.New("compacted trie branch value must <=0x0f")
-)
-
-// NewSlimTrie create an empty SlimTrie.
-// Argument m implements a encode.Encoder to convert user data to serialized
+// NewSlimTrie create an SlimTrie.
+// Argument e implements a encode.Encoder to convert user data to serialized
 // bytes and back.
-// Leave it to nil if element in values are size fixed type.
+// Leave it nil if element in values are size fixed type and you do not really
+// care about performance.
 //	   int is not of fixed size.
 //	   struct { X int64; Y int32; } hax fixed size.
 //
 // Since 0.2.0
-func NewSlimTrie(m encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
+func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
 	st := &SlimTrie{
 		Children: array.U32{},
 		Steps:    array.U16{},
 		Leaves:   array.Array{},
 	}
-	st.Leaves.EltEncoder = m
+	st.Leaves.EltEncoder = e
 
 	if keys != nil {
 		return st, st.load(keys, values)

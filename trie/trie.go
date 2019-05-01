@@ -5,19 +5,6 @@ import (
 	"github.com/openacid/slim/typehelper"
 )
 
-// ErrDuplicateKeys indicates two keys are identical.
-var ErrDuplicateKeys = errors.New("keys can not be duplicate")
-
-// ErrValuesNotSlice is returned if a value to create Trie is not slice type.
-var ErrValuesNotSlice = errors.New("values must be in a slice")
-
-// ErrKVLenNotMatch means the keys and values to create Trie has different
-// number of elements.
-var ErrKVLenNotMatch = errors.New("length of keys and values not equal")
-
-// ErrKeyOutOfOrder means keys to create Trie are not ascendingly ordered.
-var ErrKeyOutOfOrder = errors.New("keys not ascending sorted")
-
 // Node is a Trie node.
 type Node struct {
 	Children map[int]*Node
