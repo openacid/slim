@@ -12,4 +12,5 @@ require (
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
+	github.com/stretchr/testify v1.3.0
 )

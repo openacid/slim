@@ -1,3 +1,5 @@
+# github.com/davecgh/go-spew v1.1.0
+github.com/davecgh/go-spew/spew
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
 # github.com/google/btree v1.0.0
@@ -12,3 +14,7 @@ github.com/mattn/go-runewidth
 github.com/openacid/errors
 # github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 github.com/openacid/tablewriter
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.3.0
+github.com/stretchr/testify/assert
