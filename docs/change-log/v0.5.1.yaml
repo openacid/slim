@@ -1,0 +1,5 @@
+new-feature:
+  slimtrie:
+  - do not store Step on leaf node; by drdr xp; 2019-04-29
+  trie:
+  - Tree convert a tree-like data strcture to string; by drdr xp; 2019-05-02
