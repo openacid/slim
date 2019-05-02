@@ -3,8 +3,11 @@ package iohelper
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Tests except TestSectionWriter_Write are copied from `io_test.go`.
@@ -54,6 +57,9 @@ func clamp(v, l, r int) int {
 }
 
 func TestSectionWriter_WriteAt(t *testing.T) {
+
+	ta := assert.New(t)
+
 	dat := "a long sample data, 1234567890"
 	tests := []struct {
 		data   string
@@ -88,13 +94,19 @@ func TestSectionWriter_WriteAt(t *testing.T) {
 		left := clamp(tt.off+tt.at, 0, len(w.Buf))
 		right := clamp(tt.off+tt.at+n, 0, len(w.Buf))
 
-		if n != len(tt.exp) || string(w.Buf[left:right]) != tt.exp || err != tt.err {
-			t.Fatalf("%d: WriteAt(%d) = %q, %v; expected %q, %v", i, tt.at, w.Buf[left:right], err, tt.exp, tt.err)
-		}
+		msg := fmt.Sprintf("%d: WriteAt(%d) = %q, %v; expected %q, %v",
+			i, tt.at, w.Buf[left:right], err, tt.exp, tt.err)
+
+		ta.Equal(len(tt.exp), n, msg)
+		ta.Equal(tt.exp, string(w.Buf[left:right]), msg)
+		ta.Equal(tt.err, err, msg)
 	}
 }
 
 func TestSectionWriter_Write(t *testing.T) {
+
+	ta := assert.New(t)
+
 	dat := "a long sample data, 1234567890"
 	tests := []struct {
 		data   string
@@ -123,13 +135,16 @@ func TestSectionWriter_Write(t *testing.T) {
 		left := clamp(tt.off, 0, len(w.Buf))
 		right := clamp(tt.off+n, 0, len(w.Buf))
 
-		if n != len(tt.exp) || string(w.Buf[left:right]) != tt.exp || err != tt.err {
-			t.Fatalf("%d: Write() = %q, %v; expected %q, %v", i, w.Buf[left:right], err, tt.exp, tt.err)
-		}
+		msg := fmt.Sprintf("%d: Write() = %q, %v; expected %q, %v", i, w.Buf[left:right], err, tt.exp, tt.err)
+
+		ta.Equal(len(tt.exp), n, msg)
+		ta.Equal(tt.exp, string(w.Buf[left:right]), msg)
+		ta.Equal(tt.err, err, msg)
 	}
 }
 
 func TestSectionWriter_Seek(t *testing.T) {
+
 	// Verifies that NewSectionWriter's Seeker behaves like bytes.NewReader (which is like strings.NewReader)
 	br := bytes.NewReader([]byte("foo"))
 	w := NewFooWriterAt(3)
@@ -159,6 +174,9 @@ func TestSectionWriter_Seek(t *testing.T) {
 }
 
 func TestSectionWriter_Size(t *testing.T) {
+
+	ta := assert.New(t)
+
 	tests := []struct {
 		data string
 		want int64
@@ -170,8 +188,10 @@ func TestSectionWriter_Size(t *testing.T) {
 	for _, tt := range tests {
 		w := &fooWriterAt{}
 		sw := NewSectionWriter(w, 0, int64(len(tt.data)))
-		if got := sw.Size(); got != tt.want {
-			t.Errorf("Size = %v; want %v", got, tt.want)
-		}
+
+		got := sw.Size()
+		msg := fmt.Sprintf("Size = %v; want %v", got, tt.want)
+
+		ta.Equal(tt.want, got, msg)
 	}
 }
