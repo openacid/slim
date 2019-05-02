@@ -41,9 +41,7 @@ package trie
 
 import (
 	"bytes"
-	"fmt"
 	"math/bits"
-	"strings"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
@@ -492,50 +490,6 @@ func (st *SlimTrie) rightMost(idx int32) int32 {
 	}
 }
 
-// toStrings convert a Trie to human readalble representation.
-func (st *SlimTrie) toStrings(branch byte, id int32) []string {
-
-	bitmap, child0ID, _ := st.getChild(id)
-	step, hasStep := st.Steps.Get(id)
-	v, isLeaf := st.Leaves.Get(id)
-
-	brCnt := bits.OnesCount16(bitmap)
-	line := fmt.Sprintf("-%03d->", branch)
-	line += fmt.Sprintf("#%03d", id)
-	indent := strings.Repeat(" ", len(line))
-
-	if hasStep {
-		line += fmt.Sprintf("+%d", step)
-	}
-
-	if brCnt > 1 {
-		line += fmt.Sprintf("*%d", brCnt)
-	}
-	if isLeaf {
-		line += fmt.Sprintf("=%v", v)
-	}
-
-	rst := make([]string, 0, 64)
-	rst = append(rst, line)
-
-	if brCnt > 0 {
-
-		nth := int32(0)
-		for b := byte(0); b < 16; b++ {
-			if bitmap&(1<<b) == 0 {
-				continue
-			}
-			childID := child0ID + nth
-			sub := st.toStrings(b, childID)
-			for _, s := range sub {
-				rst = append(rst, indent+s)
-			}
-			nth++
-		}
-	}
-	return rst
-}
-
 // Marshal serializes it to byte stream.
 //
 // Since 0.4.3
@@ -607,8 +561,8 @@ func (st *SlimTrie) Reset() {
 //
 // Since 0.4.3
 func (st *SlimTrie) String() string {
-	lines := st.toStrings(0, 0)
-	return strings.Join(lines, "\n")
+	s := &slimTrieStringly{st: st}
+	return ToString(s)
 }
 
 // ProtoMessage implements proto.Message
