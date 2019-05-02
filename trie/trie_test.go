@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -490,11 +489,49 @@ func TestNewTrieSquash(t *testing.T) {
 }
 
 func TestToStrings(t *testing.T) {
-	// TODO
-	trie, err := NewTrie([][]byte{}, []int{}, false)
+	var keys = [][]byte{
+		{'a', 'b', 'c'},
+		{'a', 'b', 'c', 'd'},
+		{'a', 'b', 'd'},
+		{'a', 'b', 'd', 'e'},
+		{'b', 'c'},
+		{'b', 'c', 'd'},
+		{'b', 'c', 'd', 'e'},
+		{'c', 'd', 'e'},
+	}
+	var values = []int{0, 1, 2, 3, 4, 5, 6, 7}
+
+	expect := `
+*3
+-097->
+      -098->*2
+            -099->*2
+                  -00$->=0
+                  -100->
+                        -00$->=1
+            -100->*2
+                  -00$->=2
+                  -101->
+                        -00$->=3
+-098->
+      -099->*2
+            -00$->=4
+            -100->*2
+                  -00$->=5
+                  -101->
+                        -00$->=6
+-099->
+      -100->
+            -101->
+                  -00$->=7`[1:]
+
+	var trie, _ = NewTrie(keys, values, false)
+	trie, err := NewTrie(keys, values, false)
 	if err != nil {
 		t.Fatalf("expect no err: %s", err)
 	}
 
-	fmt.Println(trie.toStrings(0))
+	if expect != trie.String() {
+		t.Fatalf("expect: \n%v\n; but: \n%v\n", expect, trie.String())
+	}
 }

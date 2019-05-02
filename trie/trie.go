@@ -1,9 +1,6 @@
 package trie
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/typehelper"
 )
@@ -77,41 +74,8 @@ func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err er
 
 // String outputs multiline trie structure.
 func (r *Node) String() string {
-	lines := r.toStrings(0)
-	return strings.Join(lines, "\n")
-}
-
-// toStrings convert a Trie to human readalble representation.
-func (r *Node) toStrings(cc int) []string {
-
-	var line string
-	if cc == leafBranch {
-		line = fmt.Sprintf("  $(%d):", len(r.Branches))
-	} else {
-		line = fmt.Sprintf("%03d(%d):", cc, len(r.Branches))
-	}
-
-	rst := make([]string, 0, 64)
-
-	if len(r.Branches) > 0 {
-
-		for _, b := range r.Branches {
-			subtrie := r.Children[b].toStrings(b)
-			indent := strings.Repeat(" ", len(line))
-			for _, s := range subtrie {
-				if len(rst) == 0 {
-					rst = append(rst, line+s)
-				} else {
-					rst = append(rst, indent+s)
-				}
-			}
-		}
-
-	} else {
-		rst = append(rst, line)
-	}
-
-	return rst
+	s := &trieStringly{tnode: r}
+	return ToString(s)
 }
 
 // Squash compresses a Trie by removing single-branch nodes.
