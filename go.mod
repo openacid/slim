@@ -13,4 +13,5 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/stretchr/testify v1.3.0
+	gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc
 )
