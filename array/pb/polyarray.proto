@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option go_package = "pb";
+
+// Segment compress elements with several polynomials.
+// Number of elements in a Segment must be power of 2 in order to speed up
+// Get().
+//
+// Since 0.5.2
+message Segment {
+    repeated double Polynomials = 1;
+    repeated int32 Starts       = 2; // from which index a polynomial Starts
+    repeated int64 Words        = 3; // stores 64/EltWidth EltWidth-bits elements in a uint64
+}
+
+// PolyArray uses one or more polynomial to compress and store an array of int64.
+//
+// Since 0.5.2
+message PolyArray {
+    //   wordsize = 64
+    //   wordsize / EltWidth = word capacity
+    uint32 EltWidth           = 1;
+    int32 EltMask            = 2;
+    uint32 WordCapWidth       = 3;
+    int32 WordCapMask        = 4;
+    uint32 SegWidth           = 5;
+    int32 SegMask            = 6;
+
+    int32  N                  = 10;
+    repeated Segment Segments = 20;
+}
