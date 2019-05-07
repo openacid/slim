@@ -38,15 +38,30 @@ func NewBytesSlices(eltSize int, n int) [][]byte {
 func RandI32SliceBetween(min int32, max int32, factor float64) []int32 {
 	rnd := rand.New(rand.NewSource(time.Now().Unix()))
 
-	indexes := make([]int32, 0)
+	rst := make([]int32, 0)
 
 	for i := min; i < max; i++ {
 		if rnd.Float64() < factor {
-			indexes = append(indexes, i)
+			rst = append(rst, i)
 		}
 	}
 
-	return indexes
+	return rst
+}
+
+func RandI64Slice(min, n, step int64) []int64 {
+	rnd := rand.New(rand.NewSource(time.Now().Unix()))
+
+	rst := make([]int64, 0)
+
+	p := min
+	for i := 0; i < int(n); i++ {
+		s := int64(rnd.Float64() * float64(step))
+		p += s
+		rst = append(rst, p)
+	}
+
+	return rst
 }
 
 func RandSortedStrings(cnt, leng int) []string {
