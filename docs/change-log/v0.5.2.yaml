@@ -1,0 +1,6 @@
+new-feature:
+  array:
+  - add Dense array to compress incremental ints; by drdr xp; 2019-05-06
+  benchhelper:
+  - add SizeOf() to get size of a value; by drdr xp; 2019-05-06
+  - add RandI32Slice; by drdr xp; 2019-05-07
