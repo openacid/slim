@@ -1,5 +1,5 @@
 # `grep -v` does not work on travis. No time to find out why -- xp 2019 Feb 22
-PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\)")
+PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\|array/pb\)")
 
 # PKGS := github.com/openacid/slim/array \
 #         github.com/openacid/slim/bit \
