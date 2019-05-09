@@ -7,7 +7,6 @@ import (
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/bits"
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/slim/prototype"
 )
 
 // endian is the default endian for array
@@ -22,7 +21,7 @@ var endian = binary.LittleEndian
 //
 // Since 0.2.0
 type Base struct {
-	prototype.Array32
+	Array32
 	EltEncoder encode.Encoder
 }
 

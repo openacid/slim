@@ -7,7 +7,6 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/slim/array"
-	"github.com/openacid/slim/prototype"
 )
 
 func TestMarshalUnmarshal(t *testing.T) {
@@ -161,14 +160,14 @@ func checkArrayEqual(t *testing.T, udArr *array.U16, convArr *array.Array, index
 }
 
 func TestMigrateToSignedCntAndOffsets(t *testing.T) {
-	// marshaled data from previous prototype.Array with uint32 Cnt and uint32 Offsets
+	// marshaled data from previous Array with uint32 Cnt and uint32 Offsets
 	// message Array32 {
 	//     uint32 Cnt              = 1;
 	//     repeated uint64 Bitmaps = 2;
 	//     repeated uint32 Offsets = 3;
 	//     bytes  Elts             = 4;
 	// }
-	// prototype.Array32{
+	// Array32{
 	//     Cnt: 0xffffffff,
 	//     Bitmaps: []uint64{0},
 	//     Offsets: []uint32{0xffffffff},
@@ -179,7 +178,7 @@ func TestMigrateToSignedCntAndOffsets(t *testing.T) {
 		0x0, 0x1a, 0x5, 0xff, 0xff, 0xff, 0xff, 0xf,
 	}
 
-	b := &prototype.Array32{}
+	b := &array.Array32{}
 	err := proto.Unmarshal(prevMarshalled, b)
 	if err != nil {
 		t.Errorf("expect no error but: %s", err)

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "prototype";
+option go_package = "array";
 
 message Array32 {
     // compatibility guarantee:
