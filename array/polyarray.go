@@ -14,17 +14,6 @@ const (
 	polyCoefCnt = polyDegree + 1
 )
 
-var (
-	// capByWidth maps EltWidth to log(word capacity, 2).
-	capByWidth = map[uint32]uint32{
-		1:  6,
-		2:  5,
-		4:  4,
-		8:  3,
-		16: 2,
-	}
-)
-
 // Dense is an array that uses one or more polynomial to compress and store a
 // series of int64.
 //
@@ -68,22 +57,18 @@ func NewDense(nums []int64, segmentSize int, eltWidth uint) *Dense {
 
 	pa := &Dense{
 		pb.PolyArray{
-			EltWidth:     width,
-			EltMask:      mask(width),
-			WordCapWidth: capByWidth[width],
-			WordCapMask:  mask(capByWidth[width]),
-			SegWidth:     segWidth,
-			SegMask:      mask(segWidth),
-			N:            int32(len(nums)),
+			SegWidth: segWidth,
+			SegMask:  mask(segWidth),
+			N:        int32(len(nums)),
 		},
 	}
 
 	for {
 		if len(nums) > segmentSize {
-			pa.newSeg(nums[:segmentSize])
+			pa.newSeg(nums[:segmentSize], width)
 			nums = nums[segmentSize:]
 		} else {
-			pa.newSeg(nums)
+			pa.newSeg(nums, width)
 			break
 		}
 	}
@@ -115,12 +100,12 @@ func (m *Dense) Get(i int32) int64 {
 	r := seg.Polynomials[j : j+polyCoefCnt]
 	v := int64(eval3(r, float64(i)))
 
-	d := seg.Words[i>>m.WordCapWidth]
+	d := seg.Words[i>>seg.WordCapWidth]
 
-	inWordIndex := i & m.WordCapMask
-	d = d >> (uint(inWordIndex) * uint(m.EltWidth))
+	inWordIndex := i & seg.WordCapMask
+	d = d >> (uint(inWordIndex) * uint(seg.EltWidth))
 
-	return v + d&int64(m.EltMask)
+	return v + d&int64(seg.EltMask)
 }
 
 // Len returns number of elements.
@@ -145,11 +130,13 @@ func (m *Dense) Stat() map[string]int64 {
 	nseg := len(m.Segments)
 	totalmem := benchhelper.SizeOf(m)
 
-	total := 0
+	polyCnt := 0
 	memWords := 0
+	widthAvg := 0
 	for _, seg := range m.Segments {
-		total += len(seg.Polynomials)
+		polyCnt += len(seg.Polynomials)
 		memWords += benchhelper.SizeOf(seg.Words)
+		widthAvg += int(seg.EltWidth)
 	}
 
 	n := m.Len()
@@ -160,11 +147,11 @@ func (m *Dense) Stat() map[string]int64 {
 	st := map[string]int64{
 		"seg_size":  int64(1 << m.SegWidth),
 		"seg_cnt":   int64(nseg),
-		"elt_width": int64(m.EltWidth),
+		"elt_width": int64(widthAvg / nseg),
 		"mem_total": int64(totalmem),
 		"mem_elts":  int64(memWords),
 		"bits/elt":  int64(totalmem * 8 / n),
-		"polys/seg": int64(total / nseg / polyCoefCnt),
+		"polys/seg": int64(polyCnt / nseg / polyCoefCnt),
 	}
 
 	return st
@@ -173,7 +160,7 @@ func (m *Dense) Stat() map[string]int64 {
 // newSeg creates a new segment with nums
 //
 // Since 0.5.2
-func (m *Dense) newSeg(nums []int64) {
+func (m *Dense) newSeg(nums []int64, width uint32) {
 
 	n := int32(len(nums))
 	xs := make([]float64, n)
@@ -184,11 +171,9 @@ func (m *Dense) newSeg(nums []int64) {
 		ys[i] = float64(v)
 	}
 
-	margin := (1 << m.EltWidth) - 1
+	seg := m.xSeg(n, width)
 
-	seg := &pb.Segment{
-		Words: m.makeWords(int(n)),
-	}
+	margin := (1 << seg.EltWidth) - 1
 
 	start := int32(0)
 	Starts := make([]int32, 0)
@@ -210,8 +195,8 @@ func (m *Dense) newSeg(nums []int64) {
 				panic(fmt.Sprintf("d=%d must smaller than %d and > 0", d, margin))
 			}
 
-			inWordIndex := j & m.WordCapMask
-			seg.Words[j>>m.WordCapWidth] |= d << uint(int32(m.EltWidth)*inWordIndex)
+			inWordIndex := j & seg.WordCapMask
+			seg.Words[j>>seg.WordCapWidth] |= d << uint(int32(seg.EltWidth)*inWordIndex)
 		}
 
 		start += nn
@@ -228,14 +213,23 @@ func (m *Dense) newSeg(nums []int64) {
 
 }
 
-// makeWords creates a just long enough int64 slice for all elements.
-//
-// Since 0.5.2
-func (m *Dense) makeWords(n int) []int64 {
-	eltPerWord := int(64 / m.EltWidth)
-	nWords := (n + eltPerWord - 1) / eltPerWord
+func (m *Dense) xSeg(n int32, width uint32) *pb.Segment {
 
-	return make([]int64, nWords)
+	wordCap := int32(64 / width)
+	wordCapWidth := log2u64(uint64(wordCap))
+
+	nWords := (n + wordCap - 1) / wordCap
+	words := make([]int64, nWords)
+
+	seg := &pb.Segment{
+		EltWidth:     width,
+		EltMask:      mask(width),
+		WordCapWidth: wordCapWidth,
+		WordCapMask:  mask(wordCapWidth),
+		Words:        words,
+	}
+
+	return seg
 }
 
 // polyFitByMargin finds a polynomial curve that covers as many points as possible so that
@@ -412,6 +406,15 @@ func eval(poly []float64, x float64) float64 {
 
 func mask(width uint32) int32 {
 	return (1 << width) - 1
+}
+
+func log2u64(i uint64) uint32 {
+
+	if i == 0 {
+		return 0
+	}
+
+	return uint32(63 - bits.LeadingZeros64(i))
 }
 
 // // polyStr convert a polynomial to string for human
