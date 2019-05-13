@@ -56,24 +56,20 @@ func denseMemUsage() {
 
 	if flg.BenchMem {
 
-		step := int64(128)
+		step := int32(128)
 
 		type rst struct {
-			N   int64 `tw-title:"elt-count"`
-			W4  int64 `tw-title:"4bit-elt"`
-			W8  int64 `tw-title:"8bit-elt"`
-			W16 int64 `tw-title:"16bit-elt"`
+			N         int32 `tw-title:"elt-count"`
+			BitPerElt int32 `tw-title:"bits/elt"`
 		}
 		r := []rst{}
 
-		for _, n := range []int64{1024, 64 * 1024, 1024 * 1024} {
-			ns := benchhelper.RandI64Slice(0, n, step)
+		for _, n := range []int32{1024, 64 * 1024, 1024 * 1024} {
+			ns := benchhelper.RandI32Slice(0, n, step)
 
 			r = append(r, rst{
-				N:   n,
-				W4:  array.NewDense(ns, 1024, 4).Stat()["bits/elt"],
-				W8:  array.NewDense(ns, 1024, 8).Stat()["bits/elt"],
-				W16: array.NewDense(ns, 1024, 16).Stat()["bits/elt"],
+				N:         n,
+				BitPerElt: array.NewDense(ns).Stat()["bits/elt"],
 			})
 		}
 

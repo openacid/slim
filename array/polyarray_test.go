@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var polyTestNums []int64 = []int64{
+var polyTestNums []int32 = []int32{
 	0, 16, 32, 48, 64, 79, 95, 111, 126, 142, 158, 174, 190, 206, 222, 236,
 	252, 268, 275, 278, 281, 283, 285, 289, 296, 301, 304, 307, 311, 313, 318,
 	321, 325, 328, 335, 339, 344, 348, 353, 357, 360, 364, 369, 372, 377, 383,
@@ -37,100 +37,130 @@ var polyTestNums []int64 = []int64{
 	1306, 1308, 1310, 1312, 1314, 1316, 1318, 1320, 1322, 1324, 1326, 1328,
 	1330, 1332, 1334, 1336, 1338, 1340, 1342, 1344, 1346, 1348, 1350, 1352}
 
-func TestPolyFit(t *testing.T) {
+func TestMarginWidth(t *testing.T) {
 
 	ta := assert.New(t)
 
-	xs := []float64{1, 2, 3, 4}
-	ys := []float64{6, 5, 7, 10}
-
 	cases := []struct {
-		input int
-		want  []float64
+		input int32
+		want  uint32
 	}{
-		{1, []float64{3.5, 1.4}},
-		{2, []float64{8.5, -3.6, 1}},
-		{3, []float64{12, -9.1666666, 3.5, -0.33333}},
-		{4, []float64{12, -9.1666666, 3.5, -0.33333, 0}},
-		{5, []float64{12, -9.1666666, 3.5, -0.33333, 0, 0}},
-		{6, []float64{12, -9.1666666, 3.5, -0.33333, 0, 0, 0}},
+		{0, 0},
+		{1, 1},
+		{2, 2},
+		{3, 2},
+		{4, 4},
+		{15, 4},
+		{16, 8},
+		{255, 8},
+		{256, 16},
+		{65535, 16},
 	}
 
 	for i, c := range cases {
-		rst := polyFit(xs, ys, c.input)
-
-		if c.want != nil {
-			ta.InDeltaSlice(c.want, rst, 0.0001,
-				"%d-th: input: %#v; want: %#v; actual: %#v",
-				i+1, c.input, c.want, rst)
-		}
-
-		if c.input >= len(xs)-1 {
-			// curve pass every point
-			for j, x := range xs {
-				v := eval(rst, x)
-
-				ta.InDelta(ys[j], v, 0.0001,
-					"%d-th: input: %#v; want: %#v; actual: %#v",
-					i+1, c.input, ys[j], v)
-			}
-		}
+		got := marginWidth(c.input)
+		ta.Equal(c.want, got,
+			"%d-th: input: %#v; want: %#v; got: %#v",
+			i+1, c.input, c.want, got)
 	}
+
+	ta.Panics(
+		func() {
+			marginWidth(int32(65536))
+		})
 }
 
 func TestDense_New(t *testing.T) {
 	ta := assert.New(t)
 
-	cases := [][]int64{
+	cases := [][]int32{
 		{},
 		{0},
 		{-1},
 		{-1, -2},
+		polyTestNums[:10],
+		polyTestNums[:50],
+		polyTestNums[:200],
 		polyTestNums,
 	}
 
 	for _, nums := range cases {
-		for _, width := range []uint{1, 2, 4, 8, 16} {
-			for _, segsize := range []int{-1, 0, 5, 1024} {
 
-				a := NewDense(nums, segsize, width)
-				for i, n := range nums {
-					r := a.Get(int32(i))
-					ta.Equal(n, r, "i=%d expect: %v; but: %v", i, n, r)
-				}
-
-				ta.Equal(len(nums), a.Len(), "Len() input: %+v", width)
-
-				// Stat() should work
-				_ = a.Stat()
-			}
+		a := NewPolyArray(nums)
+		for i, n := range nums {
+			r := a.Get(int32(i))
+			ta.Equal(n, r, "i=%d expect: %v; but: %v", i, n, r)
 		}
+
+		ta.Equal(len(nums), a.Len())
+
+		// Stat() should work
+		_ = a.Stat()
 	}
 }
 
-func TestDense_New_default(t *testing.T) {
+func TestNewDense_eltWidthSmall(t *testing.T) {
 
 	ta := assert.New(t)
 
-	a := NewDense(polyTestNums, 0, 0)
-	fmt.Println(a.Stat())
-	st := a.Stat()
-	ta.Equal(int64(1024), st["seg_size"])
-	ta.Equal(int64(8), st["elt_width"])
+	n := 500
+	nums := make([]int32, n)
+	for i := 0; i < n; i++ {
+		nums[i] = int32(15 * i)
+	}
+
+	a := NewPolyArray(nums[:2])
+	ta.Equal(uint32(0), a.Segments[0].Info[0])
+
+	a = NewPolyArray(nums)
+	ta.True(a.Stat()["bits/elt"] <= 2)
 
 }
 
-func TestDense_New_big(t *testing.T) {
+func TestNewDense_default(t *testing.T) {
 
 	ta := assert.New(t)
 
-	width := uint(8)
-	n := int64(1024 * 1024)
-	step := int64(64)
-	ns := benchhelper.RandI64Slice(0, n, step)
+	a := NewPolyArray(polyTestNums)
+	ta.Equal(int32(len(polyTestNums)), a.N)
 
-	a := NewDense(ns, 1024, width)
 	fmt.Println(a.Stat())
+	st := a.Stat()
+	ta.Equal(int32(3), st["elt_width"])
+
+}
+
+func TestNewDense_big(t *testing.T) {
+
+	ta := assert.New(t)
+
+	n := int32(1024 * 1024)
+	step := int32(64)
+	ns := benchhelper.RandI32Slice(0, n, step)
+
+	a := NewPolyArray(ns)
+
+	for i, n := range ns {
+		r := a.Get(int32(i))
+		ta.Equal(n, r, "i=%d ", i)
+	}
+}
+
+func TestNewDense_largenum(t *testing.T) {
+
+	ta := assert.New(t)
+
+	n := int32(1024 * 1024)
+	step := int32(64)
+	ns := benchhelper.RandI32Slice(1<<30, n, step)
+
+	for i := 0; i < len(ns); i++ {
+		if ns[i] < 0 {
+			panic("<0")
+		}
+	}
+
+	a := NewPolyArray(ns)
 
 	for i, n := range ns {
 		r := a.Get(int32(i))
@@ -141,7 +171,7 @@ func TestDense_New_big(t *testing.T) {
 func TestDense_Get_panic(t *testing.T) {
 	ta := assert.New(t)
 
-	a := NewDense(polyTestNums, 1024, 4)
+	a := NewPolyArray(polyTestNums)
 	ta.Panics(func() {
 		a.Get(int32(len(polyTestNums)))
 	})
@@ -153,14 +183,13 @@ func TestDense_Get_panic(t *testing.T) {
 func TestDense_Stat(t *testing.T) {
 	ta := assert.New(t)
 
-	a := NewDense(polyTestNums, 1024, 4)
+	a := NewPolyArray(polyTestNums)
 
 	st := a.Stat()
-	want := map[string]int64{
-		"seg_size":  1024,
+	want := map[string]int32{
 		"seg_cnt":   1,
-		"elt_width": 4,
-		"mem_elts":  184,
+		"elt_width": 3,
+		"mem_elts":  224,
 		"mem_total": st["mem_total"], // do not compare this
 		"polys/seg": 3,
 		"bits/elt":  7,
@@ -172,12 +201,12 @@ func TestDense_Stat(t *testing.T) {
 func TestDense_marshalUnmarshal(t *testing.T) {
 	ta := assert.New(t)
 
-	a := NewDense(polyTestNums, 1024, 4)
+	a := NewPolyArray(polyTestNums)
 
 	bytes, err := proto.Marshal(a)
 	ta.Nil(err, "want no error but: %+v", err)
 
-	b := &Dense{}
+	b := &PolyArray{}
 
 	err = proto.Unmarshal(bytes, b)
 	ta.Nil(err, "want no error but: %+v", err)
@@ -192,24 +221,41 @@ var Output int
 
 func BenchmarkDense_Get(b *testing.B) {
 
-	width := uint(8)
-	n := int64(1024 * 1024)
+	n := int32(1024 * 1024)
 	mask := int(n - 1)
-	step := int64(128)
-	ns := benchhelper.RandI64Slice(0, n, step)
+	step := int32(128)
+	ns := benchhelper.RandI32Slice(0, n, step)
 
-	s := int64(0)
+	s := int32(0)
 
-	for _, segsize := range []int{256, 512, 1024, 2048} {
+	a := NewPolyArray(ns)
+	fmt.Println(a.Stat())
 
-		a := NewDense(ns, segsize, width)
-		fmt.Println(a.Stat())
+	b.ResetTimer()
 
-		b.Run(fmt.Sprintf("segment-size-%d", segsize), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				s += a.Get(int32(i & mask))
-			}
-		})
+	for i := 0; i < b.N; i++ {
+		s += a.Get(int32(i & mask))
 	}
+
+	Output = int(s)
+}
+
+func BenchmarkNewDense(b *testing.B) {
+
+	n := int32(1024 * 1024)
+	step := int32(128)
+	ns := benchhelper.RandI32Slice(0, n, step)
+
+	s := int32(0)
+
+	b.ResetTimer()
+	var a *PolyArray
+	for i := 0; i < b.N; i++ {
+		a = NewPolyArray(ns)
+		s += a.Get(int32(0))
+	}
+
+	fmt.Println(a.Stat())
+
 	Output = int(s)
 }

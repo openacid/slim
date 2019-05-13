@@ -26,7 +26,9 @@ vet: | test
 
 staticcheck:
 	$(GO) get honnef.co/go/tools/cmd/staticcheck
-	staticcheck -checks all $(PKGS)
+	# ST1016: methods on the same type should have the same receiver name
+	#         .pb.go have this issue.
+	staticcheck -checks all,-ST1016 $(PKGS)
 
 misspell:
 	$(GO) get github.com/client9/misspell/cmd/misspell

@@ -9,7 +9,7 @@ import (
 func ExampleNewDense() {
 
 	// Only 10 bits/elt to store a serias of incremental int64
-	nums := []int64{
+	nums := []int32{
 		10000387, 10000393, 10000399, 10000404, 10000407, 10000410, 10000415,
 		10000418, 10000420, 10000422, 10000426, 10000430, 10000434, 10000439,
 		10000444, 10000446, 10000448, 10000451, 10000456, 10000459, 10000462,
@@ -21,7 +21,7 @@ func ExampleNewDense() {
 		10000603, 10000606, 10000608, 10000610,
 	}
 
-	a := array.NewDense(nums, 1024, 4)
+	a := array.NewDense(nums)
 
 	fmt.Println("last elt is:", a.Get(int32(a.Len()-1)))
 
@@ -37,9 +37,9 @@ func ExampleNewDense() {
 
 	// Output:
 	// last elt is: 10000610
-	//  elt_width : 4
+	//  elt_width : 2
 	//    seg_cnt : 1
 	//  polys/seg : 1
 	//   mem_elts : 32
-	//   bits/elt : 14
+	//   bits/elt : 11
 }
