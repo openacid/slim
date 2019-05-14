@@ -1,0 +1,5 @@
+api-change:
+  trie:
+  - values to create trie must be slice or it panic; by drdr xp; 2019-05-01
+  typehelper:
+  - ToSlice now just panic if input is not a slice.; by drdr xp; 2019-05-01
