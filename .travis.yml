@@ -6,4 +6,4 @@ go:
     - tip
 
 script:
-  - make check
+  - make travis
