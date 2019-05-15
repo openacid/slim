@@ -7,6 +7,7 @@ import (
 
 	proto "github.com/golang/protobuf/proto"
 	"github.com/openacid/slim/array"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArrayNewEmpty(t *testing.T) {
@@ -120,6 +121,36 @@ func TestArrayAndU32InterMarshal(t *testing.T) {
 		fmt.Println(serialized)
 		fmt.Println(second)
 		t.Fatalf("second serialized data incorrect")
+	}
+}
+
+func TestArray_Unmarshal_0_5_3(t *testing.T) {
+
+	ta := assert.New(t)
+
+	index := []int32{1, 5, 9, 203}
+	eltsData := []uint32{12, 15, 19, 120}
+
+	// Made from:
+	//     arr, err := array.NewU32(index, eltsData)
+	//     b, err := proto.Marshal(arr)
+	//     fmt.Printf("%#v\n", b)
+	marshaled := []byte{0x8, 0x4, 0x12, 0x6, 0xa2, 0x4, 0x0, 0x0, 0x80, 0x10, 0x1a, 0x4, 0x0,
+		0x0, 0x0, 0x3, 0x22, 0x10, 0xc, 0x0, 0x0, 0x0, 0xf, 0x0, 0x0, 0x0, 0x13,
+		0x0, 0x0, 0x0, 0x78, 0x0, 0x0, 0x0}
+
+	a := &array.U32{}
+	err := proto.Unmarshal(marshaled, a)
+	ta.Nil(err)
+
+	for i, idx := range index {
+		v, found := a.Get(idx)
+		ta.Equal(eltsData[i], v, "Get(%d)", idx)
+		ta.True(found, "Get(%d)", idx)
+
+		v, found = a.Get(idx - 1)
+		ta.Equal(uint32(0), v, "Get(%d-1)", idx)
+		ta.False(found, "Get(%d-1)", idx)
 	}
 }
 

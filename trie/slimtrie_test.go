@@ -683,13 +683,12 @@ func TestSlimTrieString(t *testing.T) {
 
 }
 
-func TestSlimTrieBinaryCompatible(t *testing.T) {
+func TestSlimTrie_Unmarshal_0_5_0(t *testing.T) {
 
 	// Made with v0.5.0 from:
 	//	   st, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
-	//	   b := &bytes.Buffer{}
-	//	   _, err = st.encode(b)
-	//	   fmt.Printf("%#v\n", b.Bytes())
+	//	   b, err = proto.Marshal(st)
+	//	   fmt.Printf("%#v\n", b)
 	// Before v0.5.0 a leaf has "step" on it.
 	marshaled := []byte{0x31, 0x2e, 0x30, 0x2e, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0,
