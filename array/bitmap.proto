@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "array";
+
+import "polyarray.proto";
+
+// Bitmap is an array of bits
+// with rank(how many 1 upto position x, excluding x) index.
+// With option dense, it compresses rank index thus reduces memory usage but a query takes more
+// time, about 14 ns.
+message Bitmap {
+
+    // Flags provides options
+    uint32 Flags = 1;
+
+
+    // N is the max index of present elt + 1
+    int32 N                 = 10;
+
+
+    // Words contains bitmap
+    repeated uint64 Words = 20;
+
+
+    // RandIndex speeds up rank() by pre-calcuate it
+    // Choose by Flags
+    repeated int32 RankIndex = 30;
+    PolyArray RankIndexDense = 31;
+}

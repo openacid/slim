@@ -12,4 +12,10 @@ message Array32 {
     repeated uint64 Bitmaps = 2; // bitmaps[] about which index has elt
     repeated int32  Offsets = 3; // index offset in `elts` for bitmap[i]
     bytes  Elts             = 4;
+
+    // Flags provides options
+    // uint32 Flags = 10;
+
+    // BMElts is optimized for elt itself is a bitmap.
+    // Bitmaps BMElts = 20;
 }
