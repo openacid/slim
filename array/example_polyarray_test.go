@@ -28,18 +28,14 @@ func ExampleNewDense() {
 	st := a.Stat()
 	for _, k := range []string{
 		"elt_width",
-		"seg_cnt",
-		"polys/seg",
 		"mem_elts",
 		"bits/elt"} {
 		fmt.Printf("%10s : %d\n", k, st[k])
 	}
 
-	// Output:
+	// Unordered output:
 	// last elt is: 10000610
 	//  elt_width : 2
-	//    seg_cnt : 1
-	//  polys/seg : 1
 	//   mem_elts : 32
 	//   bits/elt : 11
 }
