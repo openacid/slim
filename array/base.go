@@ -1,5 +1,5 @@
-package array
 
+package array
 import (
 	"encoding/binary"
 	"reflect"
@@ -27,6 +27,7 @@ type Base struct {
 
 const (
 	// bmWidth defines how many bits for a bitmap word
+	// Never change this
 	bmWidth = int32(64)
 	bmShift = uint(6) // log₂64
 	bmMask  = int32(63)
@@ -46,24 +47,30 @@ func bmBit(idx int32) (int32, int32) {
 // Since 0.2.0
 func (a *Base) InitIndex(index []int32) error {
 
-	capacity := int32(0)
-	if len(index) > 0 {
-		capacity = index[len(index)-1] + 1
-	}
-
-	bmCnt := (capacity + bmWidth - 1) / bmWidth
-
-	a.Bitmaps = make([]uint64, bmCnt)
-	a.Offsets = make([]int32, bmCnt)
-
-	nxt := int32(0)
-	for i := 0; i < len(index); i++ {
-		if index[i] < nxt {
+	for i := 0; i < len(index)-1; i++ {
+		if index[i] >= index[i+1] {
 			return ErrIndexNotAscending
 		}
-		a.appendIndex(index[i])
-		nxt = index[i] + 1
 	}
+
+	if bmWidth != 64 {
+		panic("newBitmapWords only accept uint64 as bitmap word")
+	}
+
+	_, a.Bitmaps = newBitmapWords(index)
+	a.Offsets = newRankIndex1(a.Bitmaps)
+	a.Cnt = int32(len(index))
+
+	// Be compatible to previous issue:
+	// Since v0.2.0, Offsets is not exactly the same as bitmap ranks.
+	// It is 0 for empty bitmap word.
+	// But bitmap ranks set rank[i*64] to rank[(i-1)*64] for empty word.
+	for i, word := range a.Bitmaps {
+		if word == 0 {
+			a.Offsets[i] = 0
+		}
+	}
+
 	return nil
 }
 
@@ -215,22 +222,6 @@ func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 
 	stIdx := int32(eltsize) * dataIndex
 	return a.Elts[stIdx : stIdx+int32(eltsize)], true
-}
-
-// appendIndex add an index into index bitmap.
-// The `index` must be greater than any existent indexes.
-func (a *Base) appendIndex(index int32) {
-
-	iBm, iBit := bmBit(index)
-
-	var bmWord = &a.Bitmaps[iBm]
-	if *bmWord == 0 {
-		a.Offsets[iBm] = a.Cnt
-	}
-
-	*bmWord |= uint64(1) << uint(iBit)
-
-	a.Cnt++
 }
 
 // Indexes returns indexes of all present elements.
