@@ -18,6 +18,7 @@ github.com/openacid/tablewriter
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc
 gonum.org/v1/gonum/mat
 gonum.org/v1/gonum/blas
