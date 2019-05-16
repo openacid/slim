@@ -103,7 +103,7 @@ func newBitmapData(nums []int32) (int32, []uint64, []int32) {
 		words[iWord] |= 1 << uint(i)
 	}
 
-	index := newRankIndex(words)
+	index := newRankIndex2(words)
 
 	return n, words, index
 }
@@ -230,7 +230,24 @@ func (b *Bitmap) Rank(i int32) int32 {
 	return n + diff
 }
 
-func newRankIndex(words []uint64) []int32 {
+func newRankIndex1(words []uint64) []int32 {
+
+	// One uint64 words share one index
+
+	idx := make([]int32, 0)
+	n := int32(0)
+	for i := 0; i < len(words); i++ {
+		idx = append(idx, n)
+		n += int32(bits.OnesCount64(words[i]))
+	}
+
+	// clone to reduce cap to len
+	idx = append(idx[:0:0], idx...)
+
+	return idx
+}
+
+func newRankIndex2(words []uint64) []int32 {
 
 	// two uint64 words share one index
 
