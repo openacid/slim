@@ -68,10 +68,28 @@ func TestNewBitmap(t *testing.T) {
 				gotrank := got.Rank(j)
 				ta.Equal(int32(wantrank), gotrank, "%d-th: rank: j=%d", i+1, j)
 			}
-
 		}
-
 	}
+}
+
+func TestNewBitmapJoin(t *testing.T) {
+	ta := require.New(t)
+
+	subs := []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	b := NewBitmapJoin(subs, 4)
+	ta.Equal([]uint64{1 + (2 << 4) + (3 << 8) + (4 << 12) + (5 << 16) + (6 << 20) + (7 << 24) + (8 << 28) + (9 << 32)}, b.Bits())
+
+	b = NewBitmapJoin(subs, 8)
+	ta.Equal([]uint64{
+		1 + (2 << 8) + (3 << 16) + (4 << 24) + (5 << 32) + (6 << 40) + (7 << 48) + (8 << 56),
+		9}, b.Bits())
+
+	b = NewBitmapJoin(subs, 16)
+	ta.Equal([]uint64{
+		1 + (2 << 16) + (3 << 32) + (4 << 48),
+		5 + (6 << 16) + (7 << 32) + (8 << 48),
+		9}, b.Bits())
 }
 
 func TestBitmap_Stat(t *testing.T) {

@@ -65,6 +65,23 @@ func NewBitmap(nums []int32) Bitmapper {
 	return bm
 }
 
+// NewBitmapJoin creates a new Bitmapper instance from a serias of sub bitmap.
+//
+// Since 0.5.4
+func NewBitmapJoin(elts []uint64, eltWidth int32) Bitmapper {
+
+	n, words := concatBitmaps(elts, eltWidth)
+	index := newRankIndex2(words)
+
+	bm := &Bitmap{
+		Flags:     0,
+		N:         n,
+		Words:     words,
+		RankIndex: index,
+	}
+	return bm
+}
+
 // NewDenseBitmap creates a new Bitmapper instance from a serias of int32.
 // The input specifies what bit to set to 1.
 //
