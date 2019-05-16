@@ -89,6 +89,14 @@ func NewDenseBitmap(nums []int32) Bitmapper {
 
 func newBitmapData(nums []int32) (int32, []uint64, []int32) {
 
+	n, words := newBitmapWords(nums)
+	index := newRankIndex2(words)
+
+	return n, words, index
+}
+
+func newBitmapWords(nums []int32) (int32, []uint64) {
+
 	n := int32(0)
 	if len(nums) > 0 {
 		n = nums[len(nums)-1] + 1
@@ -102,10 +110,7 @@ func newBitmapData(nums []int32) (int32, []uint64, []int32) {
 		i = i & 63
 		words[iWord] |= 1 << uint(i)
 	}
-
-	index := newRankIndex2(words)
-
-	return n, words, index
+	return n, words
 }
 
 // Stat returns a map describing memory usage.
