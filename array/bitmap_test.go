@@ -168,6 +168,109 @@ func TestBitmap_MarshalUnmarshal(t *testing.T) {
 	}
 }
 
+func TestConcatBitmaps_panic(t *testing.T) {
+
+	ta := require.New(t)
+
+	ta.Panics(func() { concatBitmaps(nil, 0) })
+	ta.Panics(func() { concatBitmaps(nil, 3) })
+	ta.Panics(func() { concatBitmaps(nil, 5) })
+	ta.Panics(func() { concatBitmaps(nil, 6) })
+	ta.Panics(func() { concatBitmaps(nil, 7) })
+	ta.Panics(func() { concatBitmaps(nil, 9) })
+	ta.Panics(func() { concatBitmaps(nil, 15) })
+	ta.Panics(func() { concatBitmaps(nil, 17) })
+	ta.Panics(func() { concatBitmaps(nil, 31) })
+	ta.Panics(func() { concatBitmaps(nil, 33) })
+	ta.Panics(func() { concatBitmaps(nil, 63) })
+	ta.Panics(func() { concatBitmaps(nil, 65) })
+}
+
+func TestConcatBitmaps(t *testing.T) {
+
+	ta := require.New(t)
+
+	cases := []struct {
+		elts   []uint64
+		width  int32
+		wantn  int32
+		wantbm []uint64
+	}{
+		{
+			[]uint64{},
+			1,
+			0,
+			[]uint64{},
+		},
+		{
+			[]uint64{1},
+			1,
+			1,
+			[]uint64{1},
+		},
+		{
+			[]uint64{1, 1},
+			1,
+			2,
+			[]uint64{3},
+		},
+		{
+			[]uint64{1, 1, 1},
+			1,
+			3,
+			[]uint64{7},
+		},
+		{
+			[]uint64{1, 1, 1},
+			4,
+			9,
+			[]uint64{1 + (1 << 4) + (1 << 8)},
+		},
+		{
+			[]uint64{1, 2, 5},
+			4,
+			11,
+			[]uint64{1 + (2 << 4) + (5 << 8)},
+		},
+		{
+			[]uint64{1, 2, 5, 1},
+			16,
+			49,
+			[]uint64{1 + (2 << 16) + (5 << 32) + (1 << 48)},
+		},
+		{
+			[]uint64{1, 2, 5, 5},
+			16,
+			51,
+			[]uint64{1 + (2 << 16) + (5 << 32) + (5 << 48)},
+		},
+		{
+			[]uint64{1, 2, 5, 5, 1},
+			16,
+			65,
+			[]uint64{1 + (2 << 16) + (5 << 32) + (5 << 48), 1},
+		},
+		{
+			[]uint64{1, 2, 5, 5, 1},
+			16,
+			65,
+			[]uint64{1 + (2 << 16) + (5 << 32) + (5 << 48), 1},
+		},
+	}
+
+	for i, c := range cases {
+
+		gotn, gotbm := concatBitmaps(c.elts, c.width)
+		ta.Equal(c.wantn, gotn,
+			"%d-th: input: %#v, %#v; want: %#v; got: %#v",
+			i+1, c.elts, c.width, c.wantn, gotn)
+
+		ta.Equal(c.wantbm, gotbm,
+			"%d-th: input: %#v, %#v; want: %#v; got: %#v",
+			i+1, c.elts, c.width, c.wantbm, gotbm)
+	}
+}
+
 func TestNewRandIndex(t *testing.T) {
 
 	ta := require.New(t)

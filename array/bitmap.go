@@ -113,6 +113,35 @@ func newBitmapWords(nums []int32) (int32, []uint64) {
 	return n, words
 }
 
+func concatBitmaps(elts []uint64, width int32) (int32, []uint64) {
+
+	switch width {
+	case 1, 2, 4, 8, 16, 32, 64:
+	default:
+		panic(fmt.Sprintf("width must be 1, 2, 4, 8, 16, 32, 64 but: %d", width))
+	}
+
+	wcap := int(64 / width)
+	l := len(elts)
+
+	nWords := (l + wcap - 1) / wcap
+	words := make([]uint64, nWords)
+
+	for i, bm := range elts {
+		iWord := i / wcap
+		i = i % wcap
+		words[iWord] |= bm << (uint(i) * uint(width))
+	}
+
+	if len(words) == 0 {
+		return 0, words
+	}
+
+	last := words[len(words)-1]
+	n := (nWords * 64) - bits.LeadingZeros64(last)
+	return int32(n), words
+}
+
 // Stat returns a map describing memory usage.
 //
 //    bits/one  :9
