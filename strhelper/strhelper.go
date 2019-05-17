@@ -95,6 +95,8 @@ func SliceFromBitWords(bytesslice [][]byte, n int) []string {
 // Significant bits are at right.
 // E.g.:
 //    int32(0x0102) --> 01000000 10000000
+//
+// Since 0.5.4
 func ToBin(x interface{}) string {
 
 	rst := []string{}
