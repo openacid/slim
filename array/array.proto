@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package = "array";
 
+import "bitmap.proto";
+
 message Array32 {
     // compatibility guarantee:
     //     reserved field number: 1, 2, 3, 4
@@ -13,9 +15,21 @@ message Array32 {
     repeated int32  Offsets = 3; // index offset in `elts` for bitmap[i]
     bytes  Elts             = 4;
 
+
     // Flags provides options
-    // uint32 Flags = 10;
+    //
+    // Since 0.5.4
+    uint32 Flags = 10;
+
+
+    // EltWidth set width of elt in bits.
+    //
+    // Since 0.5.4
+    int32 EltWidth = 20;
+
 
     // BMElts is optimized for elt itself is a bitmap.
-    // Bitmaps BMElts = 20;
+    //
+    // Since 0.5.4
+    Bits BMElts = 30;
 }

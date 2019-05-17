@@ -1,5 +1,5 @@
-
 package array
+
 import (
 	"encoding/binary"
 	"reflect"
