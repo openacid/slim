@@ -4,11 +4,11 @@ option go_package = "array";
 
 import "polyarray.proto";
 
-// Bitmap is an array of bits
+// Bits is an array of bits
 // with rank(how many 1 upto position x, excluding x) index.
 // With option dense, it compresses rank index thus reduces memory usage but a query takes more
 // time, about 14 ns.
-message Bitmap {
+message Bits {
 
     // Flags provides options
     uint32 Flags = 1;

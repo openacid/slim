@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewBitmap(t *testing.T) {
+func TestNewBits(t *testing.T) {
 
 	ta := require.New(t)
 
@@ -50,9 +50,9 @@ func TestNewBitmap(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		for _, got := range []Bitmapper{
-			NewBitmap(c.input),
-			NewDenseBitmap(c.input),
+		for _, got := range []Bitmap{
+			NewBits(c.input),
+			NewDenseBits(c.input),
 		} {
 			ta.Equal(c.wantn, got.Len(),
 				"%d-th: input: %#v; wantn: %#v; got: %#v",
@@ -72,27 +72,27 @@ func TestNewBitmap(t *testing.T) {
 	}
 }
 
-func TestNewBitmapJoin(t *testing.T) {
+func TestNewBitsJoin(t *testing.T) {
 	ta := require.New(t)
 
 	subs := []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	b := NewBitmapJoin(subs, 4)
+	b := NewBitsJoin(subs, 4)
 	ta.Equal([]uint64{1 + (2 << 4) + (3 << 8) + (4 << 12) + (5 << 16) + (6 << 20) + (7 << 24) + (8 << 28) + (9 << 32)}, b.Bits())
 
-	b = NewBitmapJoin(subs, 8)
+	b = NewBitsJoin(subs, 8)
 	ta.Equal([]uint64{
 		1 + (2 << 8) + (3 << 16) + (4 << 24) + (5 << 32) + (6 << 40) + (7 << 48) + (8 << 56),
 		9}, b.Bits())
 
-	b = NewBitmapJoin(subs, 16)
+	b = NewBitsJoin(subs, 16)
 	ta.Equal([]uint64{
 		1 + (2 << 16) + (3 << 32) + (4 << 48),
 		5 + (6 << 16) + (7 << 32) + (8 << 48),
 		9}, b.Bits())
 }
 
-func TestBitmap_Stat(t *testing.T) {
+func TestBits_Stat(t *testing.T) {
 
 	ta := require.New(t)
 	n := 1024 * 1024
@@ -101,27 +101,27 @@ func TestBitmap_Stat(t *testing.T) {
 		nums[i] = int32(i * 7)
 	}
 
-	got := NewBitmap(nums)
+	got := NewBits(nums)
 	st := got.Stat()
 
 	ta.Equal(int32(8), st["bits/one"])
 	ta.True(st["mem_total"] > int32(3*n)/8)
 
-	got = NewDenseBitmap(nums)
+	got = NewDenseBits(nums)
 	st = got.Stat()
 
 	ta.Equal(int32(7), st["bits/one"])
 	ta.True(st["mem_total"] > int32(3*n)/8)
 }
 
-func TestBitmap_Has(t *testing.T) {
+func TestBits_Has(t *testing.T) {
 
 	ta := require.New(t)
 	nums := []int32{1, 3, 64, 129}
 
-	for _, got := range []Bitmapper{
-		NewBitmap(nums),
-		NewDenseBitmap(nums),
+	for _, got := range []Bitmap{
+		NewBits(nums),
+		NewDenseBits(nums),
 	} {
 
 		for _, j := range nums {
@@ -138,14 +138,14 @@ func TestBitmap_Has(t *testing.T) {
 	}
 }
 
-func TestBitmap_Rank_panic(t *testing.T) {
+func TestBits_Rank_panic(t *testing.T) {
 
 	ta := require.New(t)
 
 	nums := []int32{1, 3, 64, 129}
-	for _, got := range []Bitmapper{
-		NewBitmap(nums),
-		NewDenseBitmap(nums),
+	for _, got := range []Bitmap{
+		NewBits(nums),
+		NewDenseBits(nums),
 	} {
 
 		ta.Panics(func() {
@@ -161,20 +161,20 @@ func TestBitmap_Rank_panic(t *testing.T) {
 	}
 }
 
-func TestBitmap_MarshalUnmarshal(t *testing.T) {
+func TestBits_MarshalUnmarshal(t *testing.T) {
 
 	ta := require.New(t)
 
 	nums := []int32{1, 3, 64, 129}
-	for _, a := range []Bitmapper{
-		NewBitmap(nums),
-		NewDenseBitmap(nums),
+	for _, a := range []Bitmap{
+		NewBits(nums),
+		NewDenseBits(nums),
 	} {
 
 		bytes, err := proto.Marshal(a)
 		ta.Nil(err, "want no error but: %+v", err)
 
-		b := &Bitmap{}
+		b := &Bits{}
 
 		err = proto.Unmarshal(bytes, b)
 		ta.Nil(err, "want no error but: %+v", err)
@@ -186,25 +186,25 @@ func TestBitmap_MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestConcatBitmaps_panic(t *testing.T) {
+func TestConcatBitss_panic(t *testing.T) {
 
 	ta := require.New(t)
 
-	ta.Panics(func() { concatBitmaps(nil, 0) })
-	ta.Panics(func() { concatBitmaps(nil, 3) })
-	ta.Panics(func() { concatBitmaps(nil, 5) })
-	ta.Panics(func() { concatBitmaps(nil, 6) })
-	ta.Panics(func() { concatBitmaps(nil, 7) })
-	ta.Panics(func() { concatBitmaps(nil, 9) })
-	ta.Panics(func() { concatBitmaps(nil, 15) })
-	ta.Panics(func() { concatBitmaps(nil, 17) })
-	ta.Panics(func() { concatBitmaps(nil, 31) })
-	ta.Panics(func() { concatBitmaps(nil, 33) })
-	ta.Panics(func() { concatBitmaps(nil, 63) })
-	ta.Panics(func() { concatBitmaps(nil, 65) })
+	ta.Panics(func() { concatBits(nil, 0) })
+	ta.Panics(func() { concatBits(nil, 3) })
+	ta.Panics(func() { concatBits(nil, 5) })
+	ta.Panics(func() { concatBits(nil, 6) })
+	ta.Panics(func() { concatBits(nil, 7) })
+	ta.Panics(func() { concatBits(nil, 9) })
+	ta.Panics(func() { concatBits(nil, 15) })
+	ta.Panics(func() { concatBits(nil, 17) })
+	ta.Panics(func() { concatBits(nil, 31) })
+	ta.Panics(func() { concatBits(nil, 33) })
+	ta.Panics(func() { concatBits(nil, 63) })
+	ta.Panics(func() { concatBits(nil, 65) })
 }
 
-func TestConcatBitmaps(t *testing.T) {
+func TestConcatBitss(t *testing.T) {
 
 	ta := require.New(t)
 
@@ -278,7 +278,7 @@ func TestConcatBitmaps(t *testing.T) {
 
 	for i, c := range cases {
 
-		gotn, gotbm := concatBitmaps(c.elts, c.width)
+		gotn, gotbm := concatBits(c.elts, c.width)
 		ta.Equal(c.wantn, gotn,
 			"%d-th: input: %#v, %#v; want: %#v; got: %#v",
 			i+1, c.elts, c.width, c.wantn, gotn)
@@ -356,9 +356,9 @@ func TestNewRandIndex(t *testing.T) {
 
 var DsOutput int
 
-func BenchmarkBitmap_Rank_Dense(b *testing.B) {
+func BenchmarkBits_Rank_Dense(b *testing.B) {
 
-	got := NewDenseBitmap([]int32{1, 2, 3, 64, 129})
+	got := NewDenseBits([]int32{1, 2, 3, 64, 129})
 
 	b.ResetTimer()
 
@@ -370,9 +370,9 @@ func BenchmarkBitmap_Rank_Dense(b *testing.B) {
 	DsOutput = int(gotrank)
 }
 
-func BenchmarkBitmap_Rank(b *testing.B) {
+func BenchmarkBits_Rank(b *testing.B) {
 
-	got := NewBitmap([]int32{1, 2, 3, 64, 129})
+	got := NewBits([]int32{1, 2, 3, 64, 129})
 
 	b.ResetTimer()
 

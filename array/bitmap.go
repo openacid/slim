@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	BMFlagDenseRank = 0x00000001
+	BitsFlagDenseRank = 0x00000001
 )
 
-// Bitmapper defines behavior of a bitmap.
+// Bitmap defines behavior of a bitmap.
 //
 // Since 0.5.4
-type Bitmapper interface {
+type Bitmap interface {
 
 	// Stat returns a map describing memory usage.
 	//
@@ -48,15 +48,15 @@ type Bitmapper interface {
 	proto.Message
 }
 
-// NewBitmap creates a new Bitmapper instance from a serias of int32.
+// NewBits creates a new Bitmapper instance from a serias of int32.
 // The input specifies what bit to set to 1.
 //
 // Since 0.5.4
-func NewBitmap(nums []int32) Bitmapper {
+func NewBits(nums []int32) Bitmap {
 
-	n, words, index := newBitmapData(nums)
+	n, words, index := newBitsData(nums)
 
-	bm := &Bitmap{
+	bm := &Bits{
 		Flags:     0,
 		N:         n,
 		Words:     words,
@@ -65,15 +65,15 @@ func NewBitmap(nums []int32) Bitmapper {
 	return bm
 }
 
-// NewBitmapJoin creates a new Bitmapper instance from a serias of sub bitmap.
+// NewBitsJoin creates a new Bitmapper instance from a serias of sub bitmap.
 //
 // Since 0.5.4
-func NewBitmapJoin(elts []uint64, eltWidth int32) Bitmapper {
+func NewBitsJoin(elts []uint64, eltWidth int32) Bitmap {
 
-	n, words := concatBitmaps(elts, eltWidth)
+	n, words := concatBits(elts, eltWidth)
 	index := newRankIndex2(words)
 
-	bm := &Bitmap{
+	bm := &Bits{
 		Flags:     0,
 		N:         n,
 		Words:     words,
@@ -82,21 +82,21 @@ func NewBitmapJoin(elts []uint64, eltWidth int32) Bitmapper {
 	return bm
 }
 
-// NewDenseBitmap creates a new Bitmapper instance from a serias of int32.
+// NewDenseBits creates a new Bitmapper instance from a serias of int32.
 // The input specifies what bit to set to 1.
 //
 // It compress rand index to reduce memory cost.
 // But increase query time.
 //
 // Since 0.5.4
-func NewDenseBitmap(nums []int32) Bitmapper {
+func NewDenseBits(nums []int32) Bitmap {
 
-	n, words, index := newBitmapData(nums)
+	n, words, index := newBitsData(nums)
 
 	d := NewPolyArray(index)
 
-	bm := &Bitmap{
-		Flags:          BMFlagDenseRank,
+	bm := &Bits{
+		Flags:          BitsFlagDenseRank,
 		N:              n,
 		Words:          words,
 		RankIndexDense: d,
@@ -104,15 +104,15 @@ func NewDenseBitmap(nums []int32) Bitmapper {
 	return bm
 }
 
-func newBitmapData(nums []int32) (int32, []uint64, []int32) {
+func newBitsData(nums []int32) (int32, []uint64, []int32) {
 
-	n, words := newBitmapWords(nums)
+	n, words := newBitsWords(nums)
 	index := newRankIndex2(words)
 
 	return n, words, index
 }
 
-func newBitmapWords(nums []int32) (int32, []uint64) {
+func newBitsWords(nums []int32) (int32, []uint64) {
 
 	n := int32(0)
 	if len(nums) > 0 {
@@ -130,7 +130,7 @@ func newBitmapWords(nums []int32) (int32, []uint64) {
 	return n, words
 }
 
-func concatBitmaps(elts []uint64, width int32) (int32, []uint64) {
+func concatBits(elts []uint64, width int32) (int32, []uint64) {
 
 	switch width {
 	case 1, 2, 4, 8, 16, 32, 64:
@@ -165,7 +165,7 @@ func concatBitmaps(elts []uint64, width int32) (int32, []uint64) {
 //    mem_total :1195245
 //
 // Since 0.5.4
-func (b *Bitmap) Stat() map[string]int32 {
+func (b *Bits) Stat() map[string]int32 {
 
 	totalmem := benchhelper.SizeOf(b)
 
@@ -180,7 +180,7 @@ func (b *Bitmap) Stat() map[string]int32 {
 // Has return a bool indicating whether a bit is set.
 //
 // Since 0.5.4
-func (b *Bitmap) Has(i int32) bool {
+func (b *Bits) Has(i int32) bool {
 	if i < 0 || i >= b.N {
 		panic(fmt.Sprintf("i=%d out of range, n=%d", i, b.N))
 	}
@@ -192,14 +192,14 @@ func (b *Bitmap) Has(i int32) bool {
 // Len returns number of bits in it.
 //
 // Since 0.5.4
-func (b *Bitmap) Len() int32 {
+func (b *Bits) Len() int32 {
 	return b.N
 }
 
 // Bits returns all uint64 words in it.
 //
 // Since 0.5.4
-func (b *Bitmap) Bits() []uint64 {
+func (b *Bits) Bits() []uint64 {
 	return b.Words
 }
 
@@ -209,7 +209,7 @@ func (b *Bitmap) Bits() []uint64 {
 // and 15 ns/op with dense rank
 //
 // Since 0.5.4
-func (b *Bitmap) Rank(i int32) int32 {
+func (b *Bits) Rank(i int32) int32 {
 
 	// An precaculated count serves for two 64-bit word on the left and right.
 	//
@@ -233,7 +233,7 @@ func (b *Bitmap) Rank(i int32) int32 {
 
 	// Get Idx[j]
 	var n int32
-	if b.Flags&BMFlagDenseRank == 0 {
+	if b.Flags&BitsFlagDenseRank == 0 {
 		n = b.RankIndex[(i+64)>>7]
 	} else {
 		n = b.RankIndexDense.Get((i + 64) >> 7)

@@ -6,17 +6,17 @@ import (
 	"github.com/openacid/slim/array"
 )
 
-func ExampleNewBitmap() {
+func ExampleNewBits() {
 
 	// There is a "one" every 7 bits.
-	// Bitmap cost is about 9 bits for a "one"
+	// Bits cost is about 9 bits for a "one"
 	n := 100
 	bitset := make([]int32, n)
 	for i := 0; i < n; i++ {
 		bitset[i] = int32(i * 7)
 	}
 
-	a := array.NewBitmap(bitset)
+	a := array.NewBits(bitset)
 
 	st := a.Stat()
 	for _, k := range []string{"bits/one"} {

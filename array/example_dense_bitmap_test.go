@@ -6,7 +6,7 @@ import (
 	"github.com/openacid/slim/array"
 )
 
-func ExampleNewDenseBitmap() {
+func ExampleNewDenseBits() {
 
 	// For large bit set, use DenseBitmap:
 	// There is a "one" every 7 bits.
@@ -18,7 +18,7 @@ func ExampleNewDenseBitmap() {
 		bitset[i] = int32(i * 7)
 	}
 
-	a := array.NewDenseBitmap(bitset)
+	a := array.NewDenseBits(bitset)
 	st := a.Stat()
 
 	for _, k := range []string{"bits/one"} {
