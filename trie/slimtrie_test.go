@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
+	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/strhelper"
 	"github.com/stretchr/testify/require"
@@ -774,18 +775,17 @@ func TestSlimTrie_Unmarshal_0_5_3(t *testing.T) {
 
 func TestSlimTrieInternalStructre(t *testing.T) {
 
-	type testChiledData struct {
-		offset uint16
-		bitmap uint16
-	}
+	ta := require.New(t)
 
 	type ExpectType struct {
 		childIndex []int32
-		childData  []testChiledData
+		childData  []uint64
 		stepIndex  []int32
 		stepElts   []uint16
 		leafIndex  []int32
 		leafData   []uint32
+		flags      uint32
+		eltWidth   int32
 	}
 
 	cases := []struct {
@@ -810,14 +810,13 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 			},
 			ExpectType: ExpectType{
 				childIndex: []int32{0, 1},
-				childData: []testChiledData{
-					{offset: uint16(1), bitmap: uint16(12)},
-					{offset: uint16(3), bitmap: uint16(15)},
-				},
-				stepIndex: []int32{0, 1},
-				stepElts:  []uint16{2, 3},
-				leafIndex: []int32{2, 3, 4, 5, 6},
-				leafData:  []uint32{4, 0, 1, 2, 3},
+				childData:  []uint64{12, 15},
+				stepIndex:  []int32{0, 1},
+				stepElts:   []uint16{2, 3},
+				leafIndex:  []int32{2, 3, 4, 5, 6},
+				leafData:   []uint32{4, 0, 1, 2, 3},
+				flags:      3,
+				eltWidth:   16,
 			},
 		},
 
@@ -828,41 +827,36 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 			values: []uint32{3},
 			ExpectType: ExpectType{
 				childIndex: []int32{},
-				childData:  []testChiledData{},
+				childData:  []uint64{},
 				stepIndex:  []int32{},
 				stepElts:   []uint16{},
 				leafIndex:  []int32{0},
 				leafData:   []uint32{3},
+				flags:      3,
+				eltWidth:   16,
 			},
 		},
 	}
 
 	for _, c := range cases {
 		st, err := NewSlimTrie(encode.U32{}, c.keys, c.values)
-		if err != nil {
-			t.Fatalf("NewSlimTrie failed: %v\n", err)
-		}
+		ta.Nil(err)
 
 		expectedST, err := NewSlimTrie(encode.U32{}, nil, nil)
-		if err != nil {
-			t.Fatalf("NewSlimTrie failed: %v\n", err)
-		}
-		childData := make([]uint32, len(c.childData))
-		for i, d := range c.childData {
-			childData[i] = (uint32(d.offset) << 16) + uint32(d.bitmap)
-		}
-		err = expectedST.Children.Init(c.childIndex, childData)
-		if err != nil {
-			t.Fatalf("Children init failed: %v\n", err)
-		}
+		ta.Nil(err)
+
+		expectedST.Children.Flags = c.flags
+		expectedST.Children.EltWidth = c.eltWidth
+
+		ch, err := array.NewBitmap16(c.childIndex, c.childData, 16)
+		ta.Nil(err)
+		expectedST.Children = *ch
+
 		err = expectedST.Steps.Init(c.stepIndex, c.stepElts)
-		if err != nil {
-			t.Fatalf("Steps init failed: %v\n", err)
-		}
+		ta.Nil(err)
+
 		err = expectedST.Leaves.Init(c.leafIndex, c.leafData)
-		if err != nil {
-			t.Fatalf("Leaves init failed: %v\n", err)
-		}
+		ta.Nil(err)
 
 		checkSlimTrie(expectedST, st, t)
 	}

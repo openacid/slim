@@ -78,7 +78,7 @@ const (
 //
 // Since 0.2.0
 type SlimTrie struct {
-	Children array.U32
+	Children array.Bitmap16
 	Steps    array.U16
 	Leaves   array.Array
 }
@@ -93,10 +93,10 @@ type SlimTrie struct {
 //
 // Since 0.2.0
 func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
+
 	st := &SlimTrie{
-		Children: array.U32{},
-		Steps:    array.U16{},
-		Leaves:   array.Array{},
+		Steps:  array.U16{},
+		Leaves: array.Array{},
 	}
 	st.Leaves.EltEncoder = e
 
@@ -139,7 +139,7 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 		return ErrTooManyTrieNodes
 	}
 
-	childIndex, childData := []int32{}, []uint32{}
+	childIndex, childData := []int32{}, []uint64{}
 	stepIndex := []int32{}
 	stepElts := []uint16{}
 	leafIndex, leafData := []int32{}, []interface{}{}
@@ -176,7 +176,6 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 			}
 
 			childIndex = append(childIndex, nID)
-			offset := uint16(nID) + uint16(len(tq)) + uint16(1)
 
 			bitmap := uint16(0)
 			for _, b := range brs {
@@ -186,7 +185,7 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 				bitmap |= uint16(1) << (uint16(b) & WordMask)
 			}
 
-			childData = append(childData, (uint32(offset)<<16)+uint32(bitmap))
+			childData = append(childData, uint64(bitmap))
 		}
 
 		for _, b := range brs {
@@ -199,10 +198,11 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 		}
 	}
 
-	err = st.Children.Init(childIndex, childData)
+	ch, err := array.NewBitmap16(childIndex, childData, 16)
 	if err != nil {
 		return err
 	}
+	st.Children = *ch
 
 	err = st.Steps.Init(stepIndex, stepElts)
 	if err != nil {
@@ -433,9 +433,9 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 }
 
 func (st *SlimTrie) getChild(idx int32) (bitmap uint16, offset int32, found bool) {
-	cval, found := st.Children.Get(idx)
+	bm, rank, found := st.Children.GetWithRank(idx)
 	if found {
-		return uint16(cval), int32(cval >> 16), true
+		return bm, rank + 1, true
 	}
 	return 0, 0, false
 }
@@ -446,15 +446,6 @@ func (st *SlimTrie) getStep(idx uint16) uint16 {
 		return step
 	}
 
-	// // A checker: A leaf node should not have step
-	// _, hasLeaf := st.Leaves.Get(int32(idx))
-	// if hasLeaf {
-	//     if _, ok := st.Children.Get(int32(idx)); !ok {
-	//         fmt.Println(st)
-	//         fmt.Println(idx)
-	//         panic("trying to get step of a leaf")
-	//     }
-	// }
 	return uint16(1)
 }
 
