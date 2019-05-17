@@ -11,6 +11,7 @@ import (
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
+	"github.com/stretchr/testify/require"
 )
 
 func randIndexes(cnt int32) []int32 {
@@ -339,6 +340,36 @@ func TestBaseMemSize(t *testing.T) {
 	expect := 4 + 8 + 4*1 + 2*3
 	if sz != expect {
 		t.Fatalf("expect: %v; but: %v", expect, sz)
+	}
+}
+
+func TestBase_Indexes(t *testing.T) {
+
+	ta := require.New(t)
+
+	cases := []struct {
+		input []int32
+	}{
+		{
+			[]int32{},
+		},
+		{
+			[]int32{1, 2, 3},
+		},
+		{
+			[]int32{0, 1025},
+		},
+	}
+
+	for i, c := range cases {
+		a := &array.Base{}
+		err := a.Init(c.input, c.input)
+		ta.Nil(err)
+
+		got := a.Indexes()
+		ta.Equal(c.input, got,
+			"%d-th: input: %#v; want: %#v; got: %#v",
+			i+1, c.input, c.input, got)
 	}
 }
 

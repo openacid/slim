@@ -232,3 +232,21 @@ func (a *Base) appendIndex(index int32) {
 
 	a.Cnt++
 }
+
+// Indexes returns indexes of all present elements.
+//
+// Since 0.5.4
+func (a *Base) Indexes() []int32 {
+
+	rst := make([]int32, a.Cnt)
+	j := int32(0)
+
+	for i := int32(0); i < a.Cnt; {
+		if a.Has(j) {
+			rst[i] = j
+			i++
+		}
+		j++
+	}
+	return rst
+}
