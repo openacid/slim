@@ -1,7 +1,9 @@
 package benchhelper
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -11,6 +13,11 @@ func SizeOf(data interface{}) int {
 	return sizeof(reflect.ValueOf(data))
 }
 
+func SizeStat(v interface{}, depth int) string {
+	lines := sizestat(reflect.ValueOf(v), depth)
+	return strings.Join(lines, "\n")
+}
+
 var (
 	mapsize       = int(unsafe.Sizeof(map[int]int{}))
 	slicesize     = int(unsafe.Sizeof([]int8{}))
@@ -18,6 +25,54 @@ var (
 	pointersize   = int(unsafe.Sizeof(&mapsize))
 	interfacesize = int(unsafe.Sizeof(interface{}(nil)))
 )
+
+func sizestat(v reflect.Value, depth int) []string {
+	header := fmt.Sprintf("%s: %d", v.Type(), sizeof(v))
+	if depth == 0 {
+		return []string{header}
+	}
+
+	depth -= 1
+
+	lines := []string{header}
+
+	switch v.Kind() {
+	case reflect.Map:
+		keys := v.MapKeys()
+		for i := 0; i < len(keys); i++ {
+			mapkey := keys[i]
+			subs := sizestat(v.MapIndex(mapkey), depth)
+			subs[0] = fmt.Sprintf("%s: ", mapkey) + subs[0]
+
+			lines = append(lines, subs...)
+		}
+	case reflect.Slice, reflect.Array:
+		for i, n := 0, v.Len(); i < n; i++ {
+			subs := sizestat(v.Index(i), depth)
+			subs[0] = fmt.Sprintf("%d: ", i) + subs[0]
+			lines = append(lines, subs...)
+		}
+
+	case reflect.Ptr, reflect.Interface:
+		p := (*[]byte)(unsafe.Pointer(v.Pointer()))
+		if p != nil {
+			lines = append(lines, sizestat(v.Elem(), depth)...)
+		}
+	case reflect.Struct:
+		for i, n := 0, v.NumField(); i < n; i++ {
+			subs := sizestat(v.Field(i), depth)
+			subs[0] = fmt.Sprintf("%s: ", v.Type().Field(i).Name) + subs[0]
+			lines = append(lines, subs...)
+		}
+	}
+	for i, s := range lines {
+		if i > 0 {
+			lines[i] = "    " + s
+		}
+	}
+
+	return lines
+}
 
 func sizeof(v reflect.Value) int {
 	sum := 0
