@@ -14,7 +14,7 @@ func TestSizeOf(t *testing.T) {
 		input interface{}
 		want  int
 	}{
-		{"abc", 3},
+		{"abc", 16 + 3},
 
 		{uint8(0), 1}, {int8(0), 1},
 		{uint16(0), 2}, {int16(0), 2},
@@ -28,13 +28,13 @@ func TestSizeOf(t *testing.T) {
 		{complex128(complex(1, 2)), 16},
 		{int(0), UintSize / 8},
 
-		{[]int32{1, 2}, 8},
+		{[]int32{1, 2}, 24 + 8},
 		{[3]int32{1, 2, 3}, 12},
 
-		{map[int32]string{1: "a", 2: "b"}, 10},
+		{map[int32]string{1: "a", 2: "b"}, 8 + (4 + (16 + 1)) + (4 + (16 + 1))},
 
 		{struct{ a, b int64 }{1, 2}, 16},
-		{&struct{ a, b int64 }{1, 2}, 16},
+		{&struct{ a, b int64 }{1, 2}, 8 + 16},
 	}
 
 	for i, c := range cases {

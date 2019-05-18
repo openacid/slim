@@ -7,6 +7,7 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/openacid/slim/benchhelper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var polyTestNums []int32 = []int32{
@@ -101,7 +102,7 @@ func TestDense_New(t *testing.T) {
 
 func TestNewDense_eltWidthSmall(t *testing.T) {
 
-	ta := assert.New(t)
+	ta := require.New(t)
 
 	n := 500
 	nums := make([]int32, n)
@@ -113,7 +114,8 @@ func TestNewDense_eltWidthSmall(t *testing.T) {
 	ta.Equal(uint32(0), a.Segments[0].Info[0])
 
 	a = NewPolyArray(nums)
-	ta.True(a.Stat()["bits/elt"] <= 2)
+	fmt.Println(a.Stat())
+	ta.True(a.Stat()["bits/elt"] <= 4)
 
 }
 
@@ -181,7 +183,8 @@ func TestDense_Get_panic(t *testing.T) {
 }
 
 func TestDense_Stat(t *testing.T) {
-	ta := assert.New(t)
+
+	ta := require.New(t)
 
 	a := NewPolyArray(polyTestNums)
 
@@ -189,10 +192,10 @@ func TestDense_Stat(t *testing.T) {
 	want := map[string]int32{
 		"seg_cnt":   1,
 		"elt_width": 3,
-		"mem_elts":  224,
+		"mem_elts":  248,
 		"mem_total": st["mem_total"], // do not compare this
 		"polys/seg": 3,
-		"bits/elt":  7,
+		"bits/elt":  11,
 	}
 
 	ta.Equal(want, st)

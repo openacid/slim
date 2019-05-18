@@ -28,7 +28,7 @@ func ExampleNewBits() {
 	fmt.Printf("ones count: %d\n", a.Rank(a.Len()))
 
 	// Output:
-	// bits/one : 9
+	// bits/one : 16
 	// has set at 2: false
 	// has set at 7: true
 	// ones count: 100
