@@ -9,6 +9,19 @@ import (
 
 const UintSize = 32 << (^uint(0) >> 32 & 1) // 32 or 64
 
+type myInt interface {
+	Read() int
+}
+type myTyp int32
+
+func (m *myTyp) Read() int {
+	return 1
+}
+
+var mytyp myTyp
+var myint myInt = &mytyp
+var myintNil myInt = nil
+
 func TestSizeOf(t *testing.T) {
 
 	ta := require.New(t)
@@ -38,6 +51,11 @@ func TestSizeOf(t *testing.T) {
 
 		{struct{ a, b int64 }{1, 2}, 16},
 		{&struct{ a, b int64 }{1, 2}, 8 + 16},
+
+		{myintNil, 0},
+		{myint, 8 + 4},
+		{struct{ a myInt }{}, 16},
+		{struct{ a myInt }{&mytyp}, 16 + 8 + 4},
 	}
 
 	for i, c := range cases {
@@ -57,6 +75,8 @@ func TestSizeStat(t *testing.T) {
 		d *my
 		e []*my
 		f []string
+		g myInt
+		h myInt
 	}
 
 	v := my{
@@ -80,10 +100,12 @@ func TestSizeStat(t *testing.T) {
 			"abc",
 			"def",
 		},
+		g: nil,
+		h: &mytyp,
 	}
 
 	want10 := `
-benchhelper_test.my: 518
+benchhelper_test.my: 658
     a: []int32: 36
         0: int32: 4
         1: int32: 4
@@ -94,8 +116,8 @@ benchhelper_test.my: 518
         2: int32: 4
     c: map[string]int8: 28
         abc: int8: 1
-    d: *benchhelper_test.my: 116
-        benchhelper_test.my: 108
+    d: *benchhelper_test.my: 148
+        benchhelper_test.my: 140
             a: []int32: 32
                 0: int32: 4
                 1: int32: 4
@@ -107,9 +129,13 @@ benchhelper_test.my: 518
             d: *benchhelper_test.my: 8
             e: []*benchhelper_test.my: 24
             f: []string: 24
-    e: []*benchhelper_test.my: 264
-        0: *benchhelper_test.my: 120
-            benchhelper_test.my: 112
+            g: benchhelper_test.myInt: 16
+                <nil>
+            h: benchhelper_test.myInt: 16
+                <nil>
+    e: []*benchhelper_test.my: 328
+        0: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
                 a: []int32: 36
                     0: int32: 4
                     1: int32: 4
@@ -122,8 +148,12 @@ benchhelper_test.my: 518
                 d: *benchhelper_test.my: 8
                 e: []*benchhelper_test.my: 24
                 f: []string: 24
-        1: *benchhelper_test.my: 120
-            benchhelper_test.my: 112
+                g: benchhelper_test.myInt: 16
+                    <nil>
+                h: benchhelper_test.myInt: 16
+                    <nil>
+        1: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
                 a: []int32: 36
                     0: int32: 4
                     1: int32: 4
@@ -136,15 +166,24 @@ benchhelper_test.my: 518
                 d: *benchhelper_test.my: 8
                 e: []*benchhelper_test.my: 24
                 f: []string: 24
+                g: benchhelper_test.myInt: 16
+                    <nil>
+                h: benchhelper_test.myInt: 16
+                    <nil>
     f: []string: 62
         0: string: 19
-        1: string: 19`[1:]
+        1: string: 19
+    g: benchhelper_test.myInt: 16
+        <nil>
+    h: benchhelper_test.myInt: 28
+        *benchhelper_test.myTyp: 12
+            benchhelper_test.myTyp: 4`[1:]
 
-	got10 := SizeStat(v, 10)
+	got10 := SizeStat(v, 10, 100)
 	ta.Equal(want10, got10)
 
 	want3 := `
-benchhelper_test.my: 518
+benchhelper_test.my: 658
     a: []int32: 36
         0: int32: 4
         1: int32: 4
@@ -155,23 +194,65 @@ benchhelper_test.my: 518
         2: int32: 4
     c: map[string]int8: 28
         abc: int8: 1
-    d: *benchhelper_test.my: 116
-        benchhelper_test.my: 108
+    d: *benchhelper_test.my: 148
+        benchhelper_test.my: 140
             a: []int32: 32
             b: [3]int32: 12
             c: map[string]int8: 8
             d: *benchhelper_test.my: 8
             e: []*benchhelper_test.my: 24
             f: []string: 24
-    e: []*benchhelper_test.my: 264
-        0: *benchhelper_test.my: 120
-            benchhelper_test.my: 112
-        1: *benchhelper_test.my: 120
-            benchhelper_test.my: 112
+            g: benchhelper_test.myInt: 16
+            h: benchhelper_test.myInt: 16
+    e: []*benchhelper_test.my: 328
+        0: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
+        1: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
     f: []string: 62
         0: string: 19
-        1: string: 19`[1:]
-	got3 := SizeStat(v, 3)
+        1: string: 19
+    g: benchhelper_test.myInt: 16
+        <nil>
+    h: benchhelper_test.myInt: 28
+        *benchhelper_test.myTyp: 12
+            benchhelper_test.myTyp: 4`[1:]
+	got3 := SizeStat(v, 3, 100)
 	ta.Equal(want3, got3)
 
+	want32 := `
+benchhelper_test.my: 658
+    a: []int32: 36
+        0: int32: 4
+        1: int32: 4
+    b: [3]int32: 12
+        0: int32: 4
+        1: int32: 4
+    c: map[string]int8: 28
+        abc: int8: 1
+    d: *benchhelper_test.my: 148
+        benchhelper_test.my: 140
+            a: []int32: 32
+            b: [3]int32: 12
+            c: map[string]int8: 8
+            d: *benchhelper_test.my: 8
+            e: []*benchhelper_test.my: 24
+            f: []string: 24
+            g: benchhelper_test.myInt: 16
+            h: benchhelper_test.myInt: 16
+    e: []*benchhelper_test.my: 328
+        0: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
+        1: *benchhelper_test.my: 152
+            benchhelper_test.my: 144
+    f: []string: 62
+        0: string: 19
+        1: string: 19
+    g: benchhelper_test.myInt: 16
+        <nil>
+    h: benchhelper_test.myInt: 28
+        *benchhelper_test.myTyp: 12
+            benchhelper_test.myTyp: 4`[1:]
+	got32 := SizeStat(v, 3, 2)
+	ta.Equal(want32, got32)
 }
