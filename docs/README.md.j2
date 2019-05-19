@@ -11,6 +11,7 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 [![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
 [![GolangCI](https://golangci.com/badges/github.com/openacid/slim.svg)](https://golangci.com/r/github.com/openacid/slim)
 [![Sourcegraph](https://sourcegraph.com/github.com/openacid/slim/-/badge.svg)](https://sourcegraph.com/github.com/openacid/slim?badge)
+[![Coverage Status](https://coveralls.io/repos/github/openacid/slim/badge.svg?branch=master)](https://coveralls.io/github/openacid/slim?branch=master)
 
 
 Slim is collection of surprisingly space efficient data types, with
