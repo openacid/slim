@@ -6,4 +6,8 @@ go:
     - tip
 
 script:
-  - make travis
+    - make travis
+env:
+    global:
+        # coveralls token
+        secure: fJOPOuwBaZ59iQA1VskxZ3h08Nt5CjGbz5PdrZVT/v5UCG7DOLuVTx3x0Tb+gR9AG9lB8Fqpsnm0jjbBAPvOnyn1KIJDuK9Xj2PvKT78vhJ/SyCnn0BAinmxu9hZqghvyWIzeM8RrA3IrvmnoSUTdE1jnTC7McJ7np6cTRGO9Xe6b4mOO1xQOHJFMyTBFvA84uSKZPbuUHCrh19YH7NKrA4MKunX49R+niEFlFEM4oNM/2FXMca+4+OdlGNJmPkG0kV5exP87ihfqI3Q++9v3Z8SR0KOblL6yRBspaRDHmfKxuGx/YEf71pu0yu7nyT7uVeIABTz5SLrqX2Fhb/cpKb7iqCBQ+ifvgpd86pkfhrPUOsIO9N6pieNxmb+aCNm5WBJ2AaT1zrrfthpfbXvEl66K209rUDL0PV1n/u1pAgY5q7DQD5YuOnyAJNPBNQYYzJnZ+X1GjSNrHKOQPjXmrgwkq7KPVlDoqiaJAh97YwUmjXaULKYOm9JBPwVaToEUeCxzK82ZZRwa4YiYl3MLpJb+SvDMl97hgc58lolfg01wHgLYAT901bbq+qsrQZY4pkW9nDGvBuJg0Mru1bu6hqk/tUA7G4amh2y/5lJxxELednfnyzQ6fBeXKb0FVOTN9xRuFBkpRL1Drmbz3y6J2flAcdpJ4KgAMUP/941J6o=
