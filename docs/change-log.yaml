@@ -1,3 +1,26 @@
+v0.5.4:
+  api-change:
+    array:
+    - NewDense do not need eltWidth; only support int32; protobuf structure change;
+      optimize Dense creating; by drdr xp; 2019-05-13
+    - rename Bitmap to Bits; by drdr xp; 2019-05-17
+  new-feature:
+    array:
+    - add Bitmap to store series of bits; by drdr xp; 2019-05-16
+    - Base.Indexes() to retrieve all indexes of present elements; by drdr xp; 2019-05-17
+    - add NewBitmapJoin() to create a big bitmap by joining sub bitmaps; by drdr xp;
+      2019-05-16
+    - add Bitmap16 which is compatible with U32; by drdr xp; 2019-05-18
+    - NewBitsJoin() accept a "dense" argument; by drdr xp; 2019-05-19
+    benchhelper:
+    - add SizeStat() to describe data struct and size; by drdr xp; 2019-05-18
+    polyfit:
+    - add polyfit for fit a polynomial curve over points; by drdr xp; 2019-05-15
+    slimtrie:
+    - use Bitmap16 and reduce memory usage; by drdr xp; 2019-05-18
+    strhelper:
+    - add ToBin() converts integer or slice of integer to binary format string; by drdr
+      xp; 2019-05-17
 v0.5.3:
   api-change:
     trie:
