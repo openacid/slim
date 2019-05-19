@@ -13,12 +13,12 @@ var flg *benchhelper.ReportCmdFlag
 
 func main() {
 	flg = benchhelper.InitCmdFlag()
-	getPresent()
-	getAbsent()
+	// getPresent()
+	// getAbsent()
 
 	memOverhead()
 
-	fprGet()
+	// fprGet()
 
 }
 
@@ -76,7 +76,7 @@ func memOverhead() {
 	if flg.Plot {
 		script := `
 fn = "report/mem_usage.data"
-set yr [0:160]
+set yr [0:50]
 set xlabel 'key-count (n)'
 set ylabel 'bits/key' offset 1,0
 `
