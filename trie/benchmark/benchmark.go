@@ -162,8 +162,6 @@ func Mem(keyCounts []int) []MemResult {
 
 func slimtrieMem(keyCnt, keyLen int) int64 {
 
-	memStart := benchhelper.Allocated()
-
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
 	vals := make([]uint16, keyCnt)
 
@@ -172,22 +170,9 @@ func slimtrieMem(keyCnt, keyLen int) int64 {
 		panic(err)
 	}
 
-	keys = nil
-	vals = nil
+	size := benchhelper.SizeOf(t) - benchhelper.SizeOf(vals)
 
-	memEnd := benchhelper.Allocated()
-
-	size := memEnd - memStart
-
-	_ = keys
-	_ = vals
-
-	// reference them or memory is freed
-	_ = t.Children
-	_ = t.Steps
-	_ = t.Leaves
-
-	return size * 8 / int64(keyCnt)
+	return int64(size) * 8 / int64(keyCnt)
 }
 
 func benchGet(setting *GetSetting, typ string) int {

@@ -16,7 +16,7 @@ func main() {
 	getPresent()
 	getAbsent()
 
-	memX()
+	memOverhead()
 
 	fprGet()
 
@@ -66,7 +66,7 @@ set ylabel 'Get() present key ns/op' offset 1,0
 	}
 }
 
-func memX() {
+func memOverhead() {
 	if flg.BenchMem {
 		keyCounts := []int{1000, 2000, 5000}
 		results := benchmark.Mem(keyCounts)
