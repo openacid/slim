@@ -18,7 +18,7 @@ func (m *myTyp) Read() int {
 	return 1
 }
 
-var mytyp myTyp
+var mytyp myTyp = 0
 var myint myInt = &mytyp
 var myintNil myInt = nil
 
@@ -54,7 +54,7 @@ func TestSizeOf(t *testing.T) {
 
 		{myintNil, 0},
 		{myint, 8 + 4},
-		{struct{ a myInt }{}, 16},
+		{struct{ a myInt }{nil}, 16},
 		{struct{ a myInt }{&mytyp}, 16 + 8 + 4},
 	}
 

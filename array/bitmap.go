@@ -68,17 +68,24 @@ func NewBits(nums []int32) Bitmap {
 // NewBitsJoin creates a new Bitmapper instance from a serias of sub bitmap.
 //
 // Since 0.5.4
-func NewBitsJoin(elts []uint64, eltWidth int32) Bitmap {
+func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
 
 	n, words := concatBits(elts, eltWidth)
 	index := newRankIndex2(words)
 
 	bm := &Bits{
-		Flags:     0,
-		N:         n,
-		Words:     words,
-		RankIndex: index,
+		Flags: 0,
+		N:     n,
+		Words: words,
 	}
+
+	if dense {
+		bm.Flags |= BitsFlagDenseRank
+		bm.RankIndexDense = NewPolyArray(index)
+	} else {
+		bm.RankIndex = index
+	}
+
 	return bm
 }
 
