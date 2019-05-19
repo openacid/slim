@@ -102,28 +102,16 @@ memory, as a minimized index of huge amount external data.
 
 ## Memory overhead
 
-Comparison of `SlimTrie` and native golang-map.
+**Bits/key** is very stable when key-count(`n`) increaes,
+and does not relate to key-length(`k`) either!
 
-- Key length: 512 byte, different key count:
-
-| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:        | --:                | --:           |
-| 13107     | 512        |  7.3               | 542.2         |
-| 16384     | 512        |  7.0               | 554.5         |
-| 21845     | 512        |  7.2               | 544.9         |
-
-- Key count: 16384, different key length:
-
-| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:        | --:                | --:           |
-| 16384     | 512        | 7.0                | 554.5         |
-| 16384     | 1024       | 7.0                | 1066.5        |
-
-Memory overhead per key is stable with different key length(`k`) and key count(`n`):
+The more dense a key set is, the less memory a trie-like data structure costs.
+Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ![](trie/report/mem_usage.jpg)
 
-**SlimTrie memory does not increase when key become longer**.
+{% include 'trie/report/mem_usage.md' %}
+
 
 ## Performance benchmark
 

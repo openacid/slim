@@ -102,28 +102,20 @@ memory, as a minimized index of huge amount external data.
 
 ## Memory overhead
 
-Comparison of `SlimTrie` and native golang-map.
+**Bits/key** is very stable when key-count(`n`) increaes,
+and does not relate to key-length(`k`) either!
 
-- Key length: 512 byte, different key count:
-
-| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:        | --:                | --:           |
-| 13107     | 512        |  7.3               | 542.2         |
-| 16384     | 512        |  7.0               | 554.5         |
-| 21845     | 512        |  7.2               | 544.9         |
-
-- Key count: 16384, different key length:
-
-| Key count | Key length | SlimTrie: byte/key | Map: byte/key |
-| --:       | --:        | --:                | --:           |
-| 16384     | 512        | 7.0                | 554.5         |
-| 16384     | 1024       | 7.0                | 1066.5        |
-
-Memory overhead per key is stable with different key length(`k`) and key count(`n`):
+The more dense a key set is, the less memory a trie-like data structure costs.
+Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ![](trie/report/mem_usage.jpg)
 
-**SlimTrie memory does not increase when key become longer**.
+| key-count | k=64 | k=128 | k=256 |
+|-----------|------|-------|-------|
+|      1000 |   16 |    16 |    16 |
+|      2000 |   13 |    13 |    13 |
+|      5000 |   14 |    14 |    14 |
+
 
 ## Performance benchmark
 
@@ -177,6 +169,25 @@ Internal data structure may change before `v1.0.0`.
 <summary>Change-log</summary>
 
 ```yaml
+v0.5.3:
+  api-change:
+    trie:
+    - values to create trie must be slice or it panic; by drdr xp; 2019-05-01
+    typehelper:
+    - ToSlice now just panic if input is not a slice.; by drdr xp; 2019-05-01
+v0.5.2:
+  new-feature:
+    array:
+    - add Dense array to compress incremental ints; by drdr xp; 2019-05-06
+    benchhelper:
+    - add SizeOf() to get size of a value; by drdr xp; 2019-05-06
+    - add RandI32Slice; by drdr xp; 2019-05-07
+v0.5.1:
+  new-feature:
+    slimtrie:
+    - do not store Step on leaf node; by drdr xp; 2019-04-29
+    trie:
+    - Tree convert a tree-like data strcture to string; by drdr xp; 2019-05-02
 v0.5.0:
   api-change:
     trie:
