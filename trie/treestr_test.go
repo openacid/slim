@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/openacid/slim/trie"
+	"github.com/stretchr/testify/require"
 )
 
 type T struct {
@@ -24,6 +25,7 @@ func (t *T) Child(node, branch interface{}) interface{} {
 	}
 	return nil
 }
+
 func (t *T) Branches(node interface{}) []interface{} {
 	rst := []interface{}{}
 	if children, ok := t.branches[nodeID(node)]; ok {
@@ -74,4 +76,43 @@ func TestToString(t *testing.T) {
 	if want != rst {
 		t.Fatalf("expect: \n%v\n; but: \n%v\n", want, rst)
 	}
+}
+
+func TestDepthFirst(t *testing.T) {
+
+	ta := require.New(t)
+
+	tree := &T{
+		branches: map[int][]int{
+			0: {1, 2},
+			1: {3},
+			2: {4},
+			3: {5, 6},
+		},
+	}
+
+	got := []string{}
+
+	trie.DepthFirst(tree, func(t trie.Tree, parent, branch, node interface{}) {
+		var b int
+		if branch == nil {
+			b = 0
+		} else {
+			b = branch.(int)
+		}
+		s := fmt.Sprintf("p:%s-b:%d->n:%s", t.NodeID(parent), b, t.NodeID(node))
+		got = append(got, s)
+	})
+
+	want := []string{
+		"p:03-b:0->n:05",
+		"p:03-b:1->n:06",
+		"p:01-b:0->n:03",
+		"p:00-b:0->n:01",
+		"p:02-b:0->n:04",
+		"p:00-b:1->n:02",
+		"p:00-b:0->n:00",
+	}
+
+	ta.Equal(want, got)
 }

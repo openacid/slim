@@ -51,6 +51,27 @@ func ToString(t Tree) string {
 	return strings.Join(lines, "\n")
 }
 
+type nodeProcessor func(t Tree, parent, branch, node interface{})
+
+// DepthFirst walk through a tree in a depth-first manner: process children in
+// order then their parent.
+//
+// np is in form of func(t Tree, parent, branch, node interface{})
+//
+// Since 0.5.5
+func DepthFirst(t Tree, np nodeProcessor) {
+	depthFirst(t, nil, nil, nil, np)
+}
+
+func depthFirst(t Tree, parent, branch, node interface{}, np nodeProcessor) {
+
+	for _, b := range t.Branches(node) {
+		child := t.Child(node, b)
+		depthFirst(t, node, b, child, np)
+	}
+	np(t, parent, branch, node)
+}
+
 // toStrings converts a node and its subtree into multi strings.
 //
 // Since 0.5.1
