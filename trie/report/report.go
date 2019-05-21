@@ -13,12 +13,12 @@ var flg *benchhelper.ReportCmdFlag
 
 func main() {
 	flg = benchhelper.InitCmdFlag()
-	// getPresent()
-	// getAbsent()
+	getPresent()
+	getAbsent()
 
 	memOverhead()
 
-	// fprGet()
+	fprGet()
 
 }
 
