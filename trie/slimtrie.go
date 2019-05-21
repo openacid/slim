@@ -43,8 +43,8 @@ const (
 	WordMask = 0xf
 	// LeafWord is a special value to indicate a leaf node in a Trie.
 	LeafWord = byte(0x10)
-	// MaxNodeCnt is the max number of node(including leaf and inner node).
-	MaxNodeCnt = 65536
+	// MaxNodeCnt is the max number of node. Node id in SlimTrie is int32.
+	MaxNodeCnt = (1 << 31) - 1
 )
 
 // SlimTrie is a space efficient Trie index.

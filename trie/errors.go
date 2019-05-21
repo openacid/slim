@@ -5,7 +5,7 @@ import "github.com/openacid/errors"
 var (
 	// ErrTooManyTrieNodes indicates the number of trie nodes(not number of
 	// keys) exceeded.
-	ErrTooManyTrieNodes = errors.New("exceeds max node count=65536")
+	ErrTooManyTrieNodes = errors.New("exceeds max node count=2^31-1")
 
 	// ErrTrieBranchValueOverflow indicate input key consists of a word greater
 	// than the max 4-bit word(0x0f).

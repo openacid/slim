@@ -98,51 +98,44 @@ func unsquashedIntSlimTrie(t *testing.T, keys []string, values interface{}) *Sli
 
 func TestMaxKeys(t *testing.T) {
 
-	nn := 16
-	mx := 32768
+	ta := require.New(t)
 
-	keys := make([][]byte, 0, mx)
-	values := make([]interface{}, 0, mx)
+	nn := 256
+	// a milllion keys
+	mx := nn * nn * 16
+
+	keys := make([]string, 0, mx)
+	values := make([]int32, 0, mx)
 
 	for i := 0; i < nn; i++ {
 		for j := 0; j < nn; j++ {
-			for k := 0; k < nn; k++ {
-				for l := 0; l < 8; l++ {
-					key := []byte{byte(i), byte(j), byte(k), byte(l)}
-					keys = append(keys, key)
+			for k := 0; k < 16; k++ {
+				key := string([]byte{byte(i), byte(j), byte(k << 4)})
+				keys = append(keys, key)
 
-					value := i*nn*nn*nn + j*nn*nn + k*nn + l
-					values = append(values, value)
-
-				}
+				value := i*nn*nn + j*nn + k
+				values = append(values, int32(value))
 			}
-
 		}
 	}
 
-	trie, err := NewTrie(keys, values, true)
-	if err != nil {
-		t.Fatalf("create new trie")
-	}
+	st, err := NewSlimTrie(encode.I32{}, keys, values)
+	ta.Nil(err)
 
-	st, err := NewSlimTrie(encode.Int{}, nil, nil)
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
+	ta.Equal(int32(1+16+256+4096+65536), st.Children.Cnt)
+	ta.Equal(int32(0), st.Steps.Cnt)
+	ta.Equal(int32(mx), st.Leaves.Cnt)
 
-	err = st.LoadTrie(trie)
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
+	for i := 0; i < nn; i++ {
+		for j := 0; j < nn; j++ {
+			for k := 0; k < 16; k++ {
 
-	if st.Children.Cnt != 1+16+256+4096 {
-		t.Fatalf("children cnt should be %d", 1+16+256+4096)
-	}
-	if st.Steps.Cnt != int32(0) {
-		t.Fatalf("Steps cnt should be %d", mx)
-	}
-	if st.Leaves.Cnt != int32(mx) {
-		t.Fatalf("leaves cnt should be %d", mx)
+				key := string([]byte{byte(i), byte(j), byte(k << 4)})
+
+				v, _ := st.Get(key)
+				ta.Equal(values[i*nn*16+j*16+k], v)
+			}
+		}
 	}
 }
 
