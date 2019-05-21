@@ -10,30 +10,17 @@ func ExampleSlimTrie_RangeGet() {
 
 	// To index a map of key range to value with SlimTrie is very simple:
 	//
-	// Just give two adjacent keys the same value, then SlimTrie knows these
-	// keys belong to a "range".
-	// These two keys are left and right boundaries of a range, and are both
-	// inclusive.
-	//
-	// In this example we:
-	//
-	//   map [abc, abcd] to 1
-	//   map [bc, bc]    to 2 // this range has only one key in it.
-	//   map [bcd, bce]  to 3
-	//
-	// With RangeGet() to get any key that "abc" <= key <= "abcd", such as
-	// "abc1", "abc2"... should return "1".
-	//
-	// False Positive
-	//
-	// Just like Bloomfilter, SlimTrie does not contains full information of keys,
-	// thus there could be a false positive return:
-	// It returns some value and "true" but the key is not in there.
+	// Gives a set of key the same value, and use RangeGet() instead of Get().
+	// SlimTrie does not store branches for adjacent leaves with the same value.
 
 	keys := []string{
-		"abc", "abcd",
+		"abc",
+		"abcd",
+
 		"bc",
-		"bcd", "bce",
+
+		"bcd",
+		"bce",
 	}
 	values := []int{
 		1, 1,
@@ -49,23 +36,23 @@ func ExampleSlimTrie_RangeGet() {
 		key string
 		msg string
 	}{
-		{"ab", "smaller than any"},
+		{"ab", "FALSE POSITIVE: all known key starts with a are mapped to 1"},
 
-		{"abc", "in range [abc, abcd]"},
-		{"abc1", "in range [abc, abcd]"},
-		{"abc2", "in range [abc, abcd]"},
-		{"abcd", "in range [abc, abcd]"},
+		{"abc", "in range"},
+		{"abc1", "FALSE POSITIVE"},
+		{"abc2", "FALSE POSITIVE"},
+		{"abcd", "in range"},
 
 		{"abcde", "FALSE POSITIVE: a suffix of abcd"},
 
-		{"acc", "FALSE POSITIVE: not in range [abc, abcd]"},
+		{"acc", "FALSE POSITIVE"},
 
 		{"bc", "in single key range [bc]"},
-		{"bc1", "not in single key range [bc]"},
+		{"bc1", "FALSE POSITIVE"},
 
-		{"bcd1", "in range [bcd, bce]"},
+		{"bcd1", "FALSE POSITIVE"},
 
-		{"def", "greater than any"},
+		{"def", "FALSE POSITIVE"},
 	}
 
 	for _, c := range cases {
@@ -74,15 +61,15 @@ func ExampleSlimTrie_RangeGet() {
 	}
 
 	// Output:
-	// ab         <nil> false: smaller than any
-	// abc        1     true : in range [abc, abcd]
-	// abc1       1     true : in range [abc, abcd]
-	// abc2       1     true : in range [abc, abcd]
-	// abcd       1     true : in range [abc, abcd]
+	// ab         1     true : FALSE POSITIVE: all known key starts with a are mapped to 1
+	// abc        1     true : in range
+	// abc1       1     true : FALSE POSITIVE
+	// abc2       1     true : FALSE POSITIVE
+	// abcd       1     true : in range
 	// abcde      1     true : FALSE POSITIVE: a suffix of abcd
-	// acc        1     true : FALSE POSITIVE: not in range [abc, abcd]
+	// acc        1     true : FALSE POSITIVE
 	// bc         2     true : in single key range [bc]
-	// bc1        <nil> false: not in single key range [bc]
-	// bcd1       3     true : in range [bcd, bce]
-	// def        <nil> false: greater than any
+	// bc1        2     true : FALSE POSITIVE
+	// bcd1       3     true : FALSE POSITIVE
+	// def        3     true : FALSE POSITIVE
 }

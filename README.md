@@ -379,6 +379,8 @@ func Example_indexRanges() {
 		// Alison    |
 
 		{Key: "Aaron", Offset: 0},
+		{Key: "Agatha", Offset: 0},
+		{Key: "Al", Offset: 0},
 		{Key: "Albert", Offset: 0},
 
 		{Key: "Alexander", Offset: 31},

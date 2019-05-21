@@ -508,9 +508,9 @@ func TestRangeGet(t *testing.T) {
 		{"bce", 3, true},
 		{"c", 4, true}, // false positive
 		{"cde", 4, true},
-		{"cfe", 4, true},    // false positive
-		{"cff", 4, true},    // false positive
-		{"def", nil, false}, // false positive
+		{"cfe", 4, true}, // false positive
+		{"cff", 4, true}, // false positive
+		{"def", 4, true}, // false positive
 	}
 
 	st, err := NewSlimTrie(encode.Int{}, keys, values)
@@ -525,6 +525,38 @@ func TestRangeGet(t *testing.T) {
 		if c.wantfound != found {
 			t.Fatalf("%d-th key: %s expect: %v; but: %v", i+1, c.key, c.wantfound, found)
 		}
+	}
+}
+
+func TestSlimTrie_RangeGet_rangeindex_bug_2019_05_21(t *testing.T) {
+
+	// RangeGet has bug found by Liu Baohai:
+
+	ta := require.New(t)
+
+	keys := []string{
+		"test/存界needleid00011end",
+
+		"test/山我needleid00009end",
+		"test/界世needleid00005end",
+		"test/白我needleid00006end",
+
+		"test/白测needleid00008end",
+		"test/试世needleid00014end",
+	}
+	values := []int32{
+		0,
+		1, 1, 1,
+		2, 2,
+	}
+
+	st, err := NewSlimTrie(encode.I32{}, keys, values)
+	ta.Nil(err)
+
+	for i, c := range keys {
+		rst, found := st.RangeGet(c)
+		ta.Equal(values[i], rst, "%d-th: search: %+v", i+1, c)
+		ta.Equal(true, found, "%d-th: search: %+v", i+1, c)
 	}
 }
 

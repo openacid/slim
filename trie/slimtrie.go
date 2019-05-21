@@ -15,20 +15,8 @@
 // Actually besides as a key value map,
 // to index a map of key range to value with SlimTrie is also very simple:
 //
-// Just give two adjacent keys the same value, then SlimTrie
-// knows these keys belong to a "range".
-// These two keys are left and right boundaries of a range, and are both
-// inclusive.
-//
-//     // a to g --> 1
-//     // h      --> 2
-//     st, err := NewSlimTrie(encode.Int{}, []string{"a", "g", "h"}, []int{1, 1, 2})
-//
-//     st.Get("a")      // 1,   true   A normal key-value Get()
-//     st.Get("c")      // nil, false  A key-value Get() got nothing.
-//     st.RangeGet("c") // 1,   true   A range get got 1
-//     st.RangeGet("g") // 1,   true
-//     st.RangeGet("h") // 2,   true
+// Gives a set of key the same value, and use RangeGet() instead of Get().
+// SlimTrie does not store branches for adjacent leaves with the same value.
 //
 // See SlimTrie.RangeGet .
 //
@@ -122,6 +110,8 @@ func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
 	if err != nil {
 		return err
 	}
+
+	trie.removeSameLeaf()
 
 	err = st.LoadTrie(trie)
 	return err
@@ -230,11 +220,16 @@ func (st *SlimTrie) LoadTrie(root *Node) (err error) {
 // Since 0.4.3
 func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 
-	lID, eqID, rID := st.searchID(key)
+	lID, eqID, _ := st.searchID(key)
 
 	// an "equal" macth means key is a prefix of either start or end of a range.
 	if eqID != -1 {
-		return st.Leaves.Get(eqID)
+		v, found := st.Leaves.Get(eqID)
+		if found {
+			return v, found
+		}
+
+		// else: maybe matched at a inner node.
 	}
 
 	// key is smaller than any range-start or range-end.
@@ -242,24 +237,10 @@ func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 		return nil, false
 	}
 
-	// key is greater than any range-start or range-end.
-	if rID == -1 {
-		return nil, false
-	}
+	// Preceding value is the start of this range.
+	// It might be a false-positive
 
 	lVal, _ := st.Leaves.Get(lID)
-	rVal, _ := st.Leaves.Get(rID)
-
-	// If left-value != right-value, the key is between a range-end and next
-	// range-start.
-	if lVal != rVal {
-		return nil, false
-	}
-
-	// If range[i].end == range[i+1].start, it is a false positive.
-	// SlimTrie can not distinguish this from a positive match.
-	//
-	// Otherwise, lVal and rVal must be the start and end of a single range.
 	return lVal, true
 }
 
