@@ -54,6 +54,13 @@ func (s *slimTrieStringly) NodeID(node interface{}) string {
 	return fmt.Sprintf("%03d", stNodeID(node))
 }
 
+// LabelInfo implements treestr.Tree
+//
+// Since 0.5.1
+func (s *slimTrieStringly) LabelInfo(label interface{}) string {
+	return fmt.Sprintf("%d", label)
+}
+
 // NodeInfo implements treestr.Tree
 //
 // Since 0.5.1

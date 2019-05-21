@@ -13,19 +13,34 @@ import (
 // Since 0.5.1
 type Tree interface {
 
-	// Child returns the child of a node and value existence
+	// Child returns the child of a node
+	//
+	// Since 0.5.1
 	Child(node, branch interface{}) interface{}
 
 	// Branches returns the branches for a node.
+	//
+	// Since 0.5.1
 	Branches(node interface{}) []interface{}
 
 	// NodeID returns the a node id string.
+	//
+	// Since 0.5.1
 	NodeID(node interface{}) string
 
+	// LabelInfo returns a string representation of a branch label.
+	//
+	// Since 0.5.5
+	LabelInfo(label interface{}) string
+
 	// NodeInfo returns string describing the node.
+	//
+	// Since 0.5.1
 	NodeInfo(node interface{}) string
 
 	// LeafVal returns the value if the node is leaf.
+	//
+	// Since 0.5.1
 	LeafVal(node interface{}) (interface{}, bool)
 }
 
@@ -60,7 +75,7 @@ type nodeProcessor func(t Tree, parent, branch, node interface{})
 //
 // Since 0.5.5
 func DepthFirst(t Tree, np nodeProcessor) {
-	depthFirst(t, nil, nil, nil, np)
+	depthFirst(t, nil, nil, t.Child(nil, nil), np)
 }
 
 func depthFirst(t Tree, parent, branch, node interface{}, np nodeProcessor) {
@@ -101,7 +116,7 @@ func nodeStr(t Tree, inbranch, node interface{}) (string, int) {
 	var line string
 
 	if inbranch != nil {
-		line += fmt.Sprintf("-%03v->", inbranch)
+		line += fmt.Sprintf("-%03v->", t.LabelInfo(inbranch))
 	}
 
 	nodeid := t.NodeID(node)

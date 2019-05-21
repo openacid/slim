@@ -10,23 +10,19 @@ type trieStringly struct {
 	tnode *Node
 }
 
-type trieBranch int
-
-func (tb trieBranch) String() string {
-	if tb == -1 {
-		return "$"
-	}
-	return fmt.Sprintf("%d", tb)
-}
-
 // Child implements treestr.Tree
 //
 // Since 0.5.1
 func (s *trieStringly) Child(node, branch interface{}) interface{} {
 
+	if node == nil && branch == nil {
+		// root
+		return s.tnode
+	}
+
 	n := s.trieNode(node)
-	b := branch.(trieBranch)
-	return n.Children[int(b)]
+	b := branch.(int)
+	return n.Children[b]
 }
 
 // Branches implements treestr.Tree
@@ -36,7 +32,7 @@ func (s *trieStringly) Branches(node interface{}) []interface{} {
 	n := s.trieNode(node)
 	rst := []interface{}{}
 	for _, b := range n.Branches {
-		rst = append(rst, trieBranch(b))
+		rst = append(rst, b)
 	}
 	return rst
 }
@@ -46,6 +42,17 @@ func (s *trieStringly) Branches(node interface{}) []interface{} {
 // Since 0.5.1
 func (s *trieStringly) NodeID(node interface{}) string {
 	return ""
+}
+
+// LabelInfo implements treestr.Tree
+//
+// Since 0.5.5
+func (s *trieStringly) LabelInfo(label interface{}) string {
+	l := label.(int)
+	if l == -1 {
+		return "$"
+	}
+	return fmt.Sprintf("%d", l)
 }
 
 // NodeInfo implements treestr.Tree

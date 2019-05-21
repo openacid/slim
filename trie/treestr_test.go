@@ -20,6 +20,10 @@ func nodeID(node interface{}) int {
 }
 
 func (t *T) Child(node, branch interface{}) interface{} {
+	if node == nil && branch == nil {
+		// root
+		return 0
+	}
 	if children, ok := t.branches[nodeID(node)]; ok {
 		return children[branch.(int)]
 	}
@@ -42,6 +46,10 @@ func (t *T) NodeID(node interface{}) string {
 
 func (t *T) NodeInfo(node interface{}) string {
 	return "(foo)"
+}
+
+func (t *T) LabelInfo(label interface{}) string {
+	return fmt.Sprintf("%d", label)
 }
 
 func (t *T) LeafVal(node interface{}) (interface{}, bool) {
