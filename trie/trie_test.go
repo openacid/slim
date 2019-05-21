@@ -6,6 +6,7 @@ import (
 
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/benchhelper"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTrie(t *testing.T) {
@@ -526,4 +527,44 @@ func TestToStrings(t *testing.T) {
 	if expect != trie.String() {
 		t.Fatalf("expect: \n%v\n; but: \n%v\n", expect, trie.String())
 	}
+}
+
+func TestTrie_removeSameLeaf(t *testing.T) {
+
+	ta := require.New(t)
+
+	var keys = [][]byte{
+		{'a', 'b', 'c'},
+		{'a', 'b', 'c', 'd'},
+		{'a', 'b', 'd'},
+		{'a', 'b', 'd', 'e'},
+		{'b', 'c'},
+		{'b', 'c', 'd'},
+		{'b', 'c', 'd', 'e'},
+		{'c', 'd', 'e'},
+	}
+	var values = []int{0, 0, 0, 3, 4, 5, 5, 5}
+
+	want := `
+*2
+-097->
+      -098->*2
+            -099->
+                  -00$->=0
+            -100->
+                  -101->
+                        -00$->=3
+-098->
+      -099->*2
+            -00$->=4
+            -100->
+                  -00$->=5`[1:]
+
+	trie, err := NewTrie(keys, values, false)
+	ta.Nil(err)
+
+	trie.removeSameLeaf()
+
+	ta.Equal(want, trie.String())
+	ta.Equal(9, trie.NodeCnt, "non-leaf node count")
 }

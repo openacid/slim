@@ -14,6 +14,7 @@ type Node struct {
 
 	squash bool
 
+	// TODO inner node count. fix it
 	NodeCnt int
 }
 
@@ -26,7 +27,7 @@ const leafBranch = -1
 // key.
 func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err error) {
 
-	root = &Node{Children: make(map[int]*Node), Step: 1, squash: squash}
+	root = &Node{Children: make(map[int]*Node), Step: 1, squash: squash, NodeCnt: 1}
 
 	if keys == nil {
 		return
@@ -79,6 +80,60 @@ func (r *Node) Squash() int {
 	}
 
 	return cnt
+}
+
+// removeSameLeaf removes leaf that has the same value as preceding leaf.
+//
+//   a ------->e =1
+//   `>b------>f =2
+//     `>c->d->g =2 // "g" and "d" is removed, c has other child and is kept.
+//        `--->h =3
+//
+// Since 0.5.5
+func (r *Node) removeSameLeaf() {
+
+	var prevValue interface{} = nil
+
+	// wrapped as a generalized tree
+	s := &trieStringly{tnode: r}
+
+	DepthFirst(s,
+		func(t Tree, parent, branch, node interface{}) {
+
+			n := node.(*Node)
+			needRemove := false
+
+			v, isLeaf := t.LeafVal(node)
+			if isLeaf {
+				if v == prevValue {
+					// same value no need to store
+					needRemove = true
+				} else {
+					prevValue = v
+				}
+			} else {
+				if len(n.Branches) == 0 {
+					needRemove = true
+				}
+			}
+
+			if needRemove && parent != nil && branch != nil {
+				p := parent.(*Node)
+				b := branch.(int)
+
+				delete(p.Children, b)
+
+				for i, bb := range p.Branches {
+					if bb == b {
+						p.Branches = append(p.Branches[:i], p.Branches[i+1:]...)
+					}
+				}
+				if !isLeaf {
+					r.NodeCnt--
+				}
+
+			}
+		})
 }
 
 // Search for `key` in a Trie.
