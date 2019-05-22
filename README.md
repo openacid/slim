@@ -170,6 +170,20 @@ Internal data structure may change before `v1.0.0`.
 <summary>Change-log</summary>
 
 ```yaml
+v0.5.5:
+  api-change:
+    slimtrie:
+    - range based SlimTrie must provides all keys; by drdr xp; 2019-05-21
+    treestr:
+    - interface Tree adds a new method LabelInfo to format tree branch label; by drdr
+      xp; 2019-05-21
+  new-feature:
+    slimtrie:
+    - max key limit extends to 2^31; by drdr xp; 2019-05-21
+    tree:
+    - add depth-first walker DepthFirst(); by drdr xp; 2019-05-21
+    trie:
+    - add removeSameLeaf() to remove leaves with the same value; by drdr xp; 2019-05-21
 v0.5.4:
   api-change:
     array:
