@@ -101,10 +101,10 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 // SlimTrie.Leaves.Encoder.
 func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
 	ks := strhelper.SliceToBitWords(keys, 4)
-	return st.loadBytes(ks, values)
+	return st.load4bitWords(ks, values)
 }
 
-func (st *SlimTrie) loadBytes(keys [][]byte, values interface{}) (err error) {
+func (st *SlimTrie) load4bitWords(keys [][]byte, values interface{}) (err error) {
 
 	trie, err := NewTrie(keys, values, true)
 	if err != nil {
