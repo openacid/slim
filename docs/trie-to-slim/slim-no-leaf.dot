@@ -1,0 +1,27 @@
+digraph slim_no_leaf
+{
+    graph [ranksep="0.05"];
+
+    node [shape=circle, style=filled, fillcolor="white", fixedsize=true]
+    edge [arrowhead=none]
+
+    root [label="''"]
+
+    root -> abd [label="a.{2}", fontcolor=red]
+            abd -> abde [label=e]
+                   abde -> abdef [label=f]
+                   abde -> abdeg [label=g]
+            abd -> abdfg [label="f"]
+    root -> b1 [label="b.{1}", fontcolor=red]
+            b1 -> b123  [label="2"]
+            b1 -> b14 [label=4]
+
+    abd [label="a.."]
+    abde [label="a..e"]
+    abdef [label="a..ef"]
+    abdeg [label="a..eg"]
+    abdfg [label="a..f"]
+    b1 [label="b."]
+    b123 [label="b.2"]
+    b14 [label="b.4"]
+}
