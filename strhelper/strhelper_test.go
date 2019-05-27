@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openacid/low/bitword"
 	"github.com/stretchr/testify/require"
 )
 
@@ -139,7 +140,7 @@ func TestSliceToAndFromBitWords(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		rst := SliceToBitWords(c.input, c.n)
+		rst := bitword.BitWord[c.n].FromStrs(c.input)
 		if !reflect.DeepEqual(c.want, rst) {
 			t.Fatalf("%d-th: input: %v; want: %v; actual: %v",
 				i+1, c.input, c.want, rst)

@@ -32,10 +32,14 @@ import (
 	"math/bits"
 
 	"github.com/openacid/errors"
+	"github.com/openacid/low/bitword"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/serialize"
-	"github.com/openacid/slim/strhelper"
+)
+
+var (
+	bw4 = bitword.BitWord[4]
 )
 
 const (
@@ -100,7 +104,7 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 // values must be a slice of data-type of fixed size or compatible with
 // SlimTrie.Leaves.Encoder.
 func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
-	ks := strhelper.SliceToBitWords(keys, 4)
+	ks := bw4.FromStrs(keys)
 	return st.load4bitWords(ks, values)
 }
 
