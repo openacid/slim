@@ -10,7 +10,6 @@ import (
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/slim/strhelper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +37,7 @@ func from8bit(x ...byte) string {
 
 // from8bit create string from 4bit words
 func from4bit(x ...byte) string {
-	return strhelper.FromBitWords(x, 4)
+	return bw4.ToStr(x)
 }
 
 var (
@@ -76,7 +75,7 @@ var (
 
 func unsquashedIntSlimTrie(t *testing.T, keys []string, values interface{}) *SlimTrie {
 
-	ks := strhelper.SliceToBitWords(keys, 4)
+	ks := bw4.FromStrs(keys)
 
 	trie, err := NewTrie(ks, values, false)
 	if err != nil {
@@ -270,7 +269,7 @@ func TestUnsquashedSearch(t *testing.T) {
 
 	for _, c := range cases {
 
-		keys := strhelper.SliceToBitWords(c.keys, 4)
+		keys := bw4.FromStrs(c.keys)
 
 		// Unsquashed Trie
 
@@ -280,13 +279,13 @@ func TestUnsquashedSearch(t *testing.T) {
 		}
 
 		for _, ex := range c.searches {
-			lt, eq, gt := trie.Search(strhelper.ToBitWords(ex.key, 4))
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
 			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.want, rst) {
 				fmt.Println(trie)
-				fmt.Println("search:", strhelper.ToBitWords(ex.key, 4))
-				t.Fatal("key: ", strhelper.ToBitWords(ex.key, 4), "expected value: ", ex.want, "rst: ", rst)
+				fmt.Println("search:", bw4.FromStr(ex.key))
+				t.Fatal("key: ", bw4.FromStr(ex.key), "expected value: ", ex.want, "rst: ", rst)
 			}
 		}
 	}
@@ -366,7 +365,7 @@ func TestSquashedTrieSearch(t *testing.T) {
 
 	for _, c := range cases {
 
-		keys := strhelper.SliceToBitWords(c.keys, 4)
+		keys := bw4.FromStrs(c.keys)
 
 		// Squashed Trie
 
@@ -376,7 +375,7 @@ func TestSquashedTrieSearch(t *testing.T) {
 		}
 
 		for _, ex := range c.searches {
-			lt, eq, gt := trie.Search(strhelper.ToBitWords(ex.key, 4))
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
 			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.want, rst) {
@@ -388,7 +387,7 @@ func TestSquashedTrieSearch(t *testing.T) {
 
 		trie.Squash()
 		for _, ex := range c.searches {
-			lt, eq, gt := trie.Search(strhelper.ToBitWords(ex.key, 4))
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
 			rst := searchRst{lt, eq, gt}
 
 			if !reflect.DeepEqual(ex.want, rst) {
