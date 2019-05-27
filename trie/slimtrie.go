@@ -1,13 +1,10 @@
 // Package trie provides SlimTrie implementation.
 //
-// A SlimTrie is a static, compressed Trie implementation.
-// It is created from a standard Trie by removing unnecessary Trie-node.
-// And it internally uses 3 compacted array to store a Trie.
+// A SlimTrie is a static, compressed Trie data structure.
+// It removes unnecessary trie-node(single branch node etc).
+// And it internally uses 3 compacted array to store a trie.
 //
-// SlimTrie memory overhead is about 6 bytes per key, or less.
-//
-// TODO benchmark
-// TODO detail explain.
+// SlimTrie memory overhead is about 14 bits per key(without value), or less.
 //
 // Key value map or key-range value map
 //
@@ -51,7 +48,7 @@ const (
 
 // SlimTrie is a space efficient Trie index.
 //
-// The space overhead is less than 6 bytes per key and is irrelevant to key length.
+// The space overhead is about 14 bits per key and is irrelevant to key length.
 //
 // It does not store full key information, but only just enough info for
 // locating a record.
@@ -63,8 +60,6 @@ const (
 // `Children` stores node branches and children position.
 // `Steps` stores the number of words to skip between a node and its parent.
 // `Leaves` stores user data.
-//
-// TODO add scenario.
 //
 // Since 0.2.0
 type SlimTrie struct {
