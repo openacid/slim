@@ -77,10 +77,6 @@ type SlimTrie struct {
 	Leaves   array.Array
 }
 
-const (
-	newVer = true
-)
-
 // NewSlimTrie create an SlimTrie.
 // Argument e implements a encode.Encoder to convert user data to serialized
 // bytes and back.
@@ -91,22 +87,7 @@ const (
 //
 // Since 0.2.0
 func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
-
-	if newVer {
-		return newSlimTrie(e, keys, values)
-	}
-
-	st := &SlimTrie{
-		Steps:  array.U16{},
-		Leaves: array.Array{},
-	}
-	st.Leaves.EltEncoder = e
-
-	if keys != nil {
-		return st, st.load(keys, values)
-	}
-
-	return st, nil
+	return newSlimTrie(e, keys, values)
 }
 
 type subset struct {
@@ -323,28 +304,6 @@ func getLabels(keys []string, from int, tokeep []bool) ([]byte, uint16) {
 
 	}
 	return labels, bitmap
-}
-
-// load Loads keys and values and builds a SlimTrie.
-//
-// values must be a slice of data-type of fixed size or compatible with
-// SlimTrie.Leaves.Encoder.
-func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
-	ks := bw4.FromStrs(keys)
-	return st.load4bitWords(ks, values)
-}
-
-func (st *SlimTrie) load4bitWords(keys [][]byte, values interface{}) (err error) {
-
-	trie, err := NewTrie(keys, values, true)
-	if err != nil {
-		return err
-	}
-
-	trie.removeSameLeaf()
-
-	err = st.LoadTrie(trie)
-	return err
 }
 
 // LoadTrie compress a standard Trie and store compressed data in it.
