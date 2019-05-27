@@ -1,3 +1,5 @@
+# github.com/blang/semver v3.5.1+incompatible
+github.com/blang/semver
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
 # github.com/golang/protobuf v1.3.1
@@ -12,6 +14,12 @@ github.com/kr/text
 github.com/mattn/go-runewidth
 # github.com/openacid/errors v0.8.1
 github.com/openacid/errors
+# github.com/openacid/low v0.1.7
+github.com/openacid/low/size
+github.com/openacid/low/bitword
+github.com/openacid/low/pbcmpl
+github.com/openacid/low/tree
+github.com/openacid/low/vers
 # github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 github.com/openacid/tablewriter
 # github.com/pmezard/go-difflib v1.0.0
