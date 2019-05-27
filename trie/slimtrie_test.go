@@ -460,7 +460,9 @@ func TestSlimTrieSearch(t *testing.T) {
 	}
 }
 
-func TestRangeGet(t *testing.T) {
+func TestRangeGet_search(t *testing.T) {
+
+	ta := require.New(t)
 
 	keys := []string{
 		"abc",
@@ -506,9 +508,19 @@ func TestRangeGet(t *testing.T) {
 	}
 
 	st, err := NewSlimTrie(encode.Int{}, keys, values)
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
+	ta.Nil(err)
+
+	wantstr := `
+#000+2*3
+    -001->#001+4*2
+              -003->#004=0
+              -004->#005=1
+    -002->#002+3=2
+              -006->#006
+                        -004->#007=3
+    -003->#003=4`[1:]
+	ta.Equal(wantstr, st.String())
+
 	for i, c := range searches {
 		rst, found := st.RangeGet(c.key)
 		if c.want != rst {
@@ -517,6 +529,43 @@ func TestRangeGet(t *testing.T) {
 		if c.wantfound != found {
 			t.Fatalf("%d-th key: %s expect: %v; but: %v", i+1, c.key, c.wantfound, found)
 		}
+	}
+}
+func TestSlimTrie_RangeGet_leafNotToKeep(t *testing.T) {
+
+	ta := require.New(t)
+
+	// case: a key not to keep and is a leaf: "Al"
+	keys := []string{
+		"Aaron",
+		"Agatha",
+		"Al",
+		"Albert",
+
+		"Alexander",
+		"Alison",
+	}
+	values := []int32{
+		0, 0, 0, 0,
+		1, 1,
+	}
+
+	st, err := NewSlimTrie(encode.I32{}, keys, values)
+	ta.Nil(err)
+
+	wantstr := `
+#000+4*2
+    -001->#001=0
+    -012->#002
+              -006->#003
+                        -005->#004=1`[1:]
+
+	ta.Equal(wantstr, st.String())
+
+	for i, c := range keys {
+		rst, found := st.RangeGet(c)
+		ta.Equal(values[i], rst, "%d-th: search: %+v", i+1, c)
+		ta.Equal(true, found, "%d-th: search: %+v", i+1, c)
 	}
 }
 
@@ -544,6 +593,17 @@ func TestSlimTrie_RangeGet_rangeindex_bug_2019_05_21(t *testing.T) {
 
 	st, err := NewSlimTrie(encode.I32{}, keys, values)
 	ta.Nil(err)
+
+	wantstr := `
+#000+12*2
+    -005->#001*2
+              -010->#003=0
+              -011->#004=1
+    -007->#002+2
+              -009->#005+5
+                        -011->#006=2`[1:]
+
+	ta.Equal(wantstr, st.String())
 
 	for i, c := range keys {
 		rst, found := st.RangeGet(c)
@@ -597,7 +657,6 @@ func TestNewSlimTrie(t *testing.T) {
 }
 
 func TestSlimTrieError(t *testing.T) {
-
 	cases := []struct {
 		keys    []string
 		values  []int
@@ -605,13 +664,8 @@ func TestSlimTrieError(t *testing.T) {
 	}{
 		{
 			[]string{"a", "a"},
-			[]int{1},
-			ErrKVLenNotMatch,
-		},
-		{
-			[]string{"a", "a"},
 			[]int{1, 2},
-			ErrDuplicateKeys,
+			ErrKeyOutOfOrder,
 		},
 		{
 			[]string{"ab", "a"},

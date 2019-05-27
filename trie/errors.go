@@ -1,6 +1,6 @@
 package trie
 
-import "github.com/openacid/errors"
+import "errors"
 
 var (
 	// ErrTooManyTrieNodes indicates the number of trie nodes(not number of
