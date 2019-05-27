@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
+	"github.com/openacid/low/bitword"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
 	"github.com/stretchr/testify/require"
@@ -73,28 +74,6 @@ var (
 	}
 )
 
-func unsquashedIntSlimTrie(t *testing.T, keys []string, values interface{}) *SlimTrie {
-
-	ks := bw4.FromStrs(keys)
-
-	trie, err := NewTrie(ks, values, false)
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
-
-	st, err := NewSlimTrie(encode.Int{}, nil, nil)
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
-
-	err = st.LoadTrie(trie)
-	if err != nil {
-		t.Fatalf("compact trie error:%v", err)
-	}
-
-	return st
-}
-
 func TestMaxKeys(t *testing.T) {
 
 	ta := require.New(t)
@@ -140,9 +119,11 @@ func TestMaxKeys(t *testing.T) {
 
 func TestMaxNode(t *testing.T) {
 
+	ta := require.New(t)
+
 	mx := 32768
 
-	keys := make([][]byte, 0, mx)
+	keys := make([]string, 0, mx)
 	values := make([]int, 0, mx)
 
 	for i := 0; i < mx; i++ {
@@ -165,24 +146,12 @@ func TestMaxNode(t *testing.T) {
 			byte(i & 0x01),
 		}
 
-		keys = append(keys, key)
+		keys = append(keys, bitword.BitWord[4].ToStr(key))
 		values = append(values, i)
 	}
 
-	trie, err := NewTrie(keys, values, true)
-	if err != nil {
-		t.Fatalf("create new trie: %v", err)
-	}
-
-	sl, err := NewSlimTrie(encode.Int{}, nil, nil)
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
-
-	err = sl.LoadTrie(trie)
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
+	sl, err := NewSlimTrie(encode.Int{}, keys, values)
+	ta.Nil(err)
 
 	if sl.Children.Cnt != int32(mx-1) {
 		t.Fatalf("children cnt should be %d, but: %d", mx-1, sl.Children.Cnt)
@@ -709,7 +678,10 @@ func TestSlimTrieError(t *testing.T) {
 
 func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 
-	st1 := unsquashedIntSlimTrie(t, marshalCase.keys, marshalCase.values)
+	ta := require.New(t)
+
+	st1, err := NewSlimTrie(encode.Int{}, marshalCase.keys, marshalCase.values)
+	ta.Nil(err)
 
 	// marshal
 

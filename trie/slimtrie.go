@@ -45,10 +45,6 @@ var (
 )
 
 const (
-	// WordMask is bit mask for extracting a 4-bit word.
-	WordMask = 0xf
-	// LeafWord is a special value to indicate a leaf node in a Trie.
-	LeafWord = byte(0x10)
 	// MaxNodeCnt is the max number of node. Node id in SlimTrie is int32.
 	MaxNodeCnt = (1 << 31) - 1
 )
@@ -304,96 +300,6 @@ func getLabels(keys []string, from int, tokeep []bool) ([]byte, uint16) {
 
 	}
 	return labels, bitmap
-}
-
-// LoadTrie compress a standard Trie and store compressed data in it.
-//
-// Since 0.2.0
-func (st *SlimTrie) LoadTrie(root *Node) (err error) {
-	if root == nil {
-		return
-	}
-
-	if root.NodeCnt > MaxNodeCnt {
-		return ErrTooManyTrieNodes
-	}
-
-	childIndex, childData := []int32{}, []uint64{}
-	stepIndex := []int32{}
-	stepElts := []uint16{}
-	leafIndex, leafData := []int32{}, []interface{}{}
-
-	tq := make([]*Node, 0, 256)
-	tq = append(tq, root)
-
-	for nID := int32(0); ; {
-		if len(tq) == 0 {
-			break
-		}
-
-		node := tq[0]
-		tq = tq[1:]
-
-		if len(node.Branches) == 0 {
-			continue
-		}
-
-		brs := node.Branches
-
-		if brs[0] == leafBranch {
-			leafIndex = append(leafIndex, nID)
-			leafData = append(leafData, node.Children[brs[0]].Value)
-
-			brs = brs[1:]
-		}
-
-		if len(brs) > 0 {
-
-			if node.Step > 1 {
-				stepIndex = append(stepIndex, nID)
-				stepElts = append(stepElts, node.Step)
-			}
-
-			childIndex = append(childIndex, nID)
-
-			bitmap := uint16(0)
-			for _, b := range brs {
-				if b&WordMask != b {
-					return ErrTrieBranchValueOverflow
-				}
-				bitmap |= uint16(1) << (uint16(b) & WordMask)
-			}
-
-			childData = append(childData, uint64(bitmap))
-		}
-
-		for _, b := range brs {
-			tq = append(tq, node.Children[b])
-		}
-
-		nID++
-		if nID > MaxNodeCnt {
-			return ErrTooManyTrieNodes
-		}
-	}
-
-	ch, err := array.NewBitmap16(childIndex, childData, 16)
-	if err != nil {
-		return err
-	}
-	st.Children = *ch
-
-	err = st.Steps.Init(stepIndex, stepElts)
-	if err != nil {
-		return err
-	}
-
-	err = st.Leaves.Init(leafIndex, leafData)
-	if err != nil {
-		return errors.Wrapf(err, "failure init leaves")
-	}
-
-	return nil
 }
 
 // RangeGet look for a range that contains a key in SlimTrie.
