@@ -19,6 +19,15 @@ github.com/modood/table v0.0.0-20181112072225-499dc7fba710 h1:KkTJhLbA/nYDXBQZp9
 github.com/modood/table v0.0.0-20181112072225-499dc7fba710/go.mod h1:41qyXVI5QH9/ObyPj27CGCVau5v/njfc3Gjj7yzr0HQ=
 github.com/openacid/errors v0.8.1 h1:Hrj9WENDoj5jP27ZfF60SY5LShbxei+sxKZa0EP+oDw=
 github.com/openacid/errors v0.8.1/go.mod h1:GUQEJJOJE3W9skHm8E8Y4phdl2LLEN8iD7c5gcGgdx0=
+github.com/openacid/low v0.1.0 h1:OkwGX+C5BDmqbPnJ6RNvGbnCCqgsCmiOUal7z3sQxc0=
+github.com/openacid/low v0.1.1 h1:yTUf52gAImzudIpBvL4lRzLI9E9Lwi1IWWaLphFRzRc=
+github.com/openacid/low v0.1.1/go.mod h1:nJwkPAnS6/NAJELM4VmAcu7ooAGYMksjt9d58a0O534=
+github.com/openacid/low v0.1.2 h1:6lq55LTaqQTF11QTNjjdUVlME0jV5EzxqFan3yEJx1Y=
+github.com/openacid/low v0.1.2/go.mod h1:nJwkPAnS6/NAJELM4VmAcu7ooAGYMksjt9d58a0O534=
+github.com/openacid/low v0.1.3-0.20190524085713-78f32dbab46e h1:GDOpnu78nMe1vA9m0AptPJ6/ZN19WTAQ7oiu/iZ2aSI=
+github.com/openacid/low v0.1.3-0.20190524085713-78f32dbab46e/go.mod h1:nJwkPAnS6/NAJELM4VmAcu7ooAGYMksjt9d58a0O534=
+github.com/openacid/low v0.1.4 h1:LQCn4AG7MakF9J9jdmwMOS3J6t/Jz3MxSflqsj7Vmgk=
+github.com/openacid/low v0.1.4/go.mod h1:nJwkPAnS6/NAJELM4VmAcu7ooAGYMksjt9d58a0O534=
 github.com/openacid/tablewriter v0.0.0-20190403062637-eae587ad7165 h1:pcp1uwZiNZn2Xk8q5G1dlkSkrrcR7R6NywlPIkHuvAg=
 github.com/openacid/tablewriter v0.0.0-20190403062637-eae587ad7165/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/openacid/tablewriter v0.0.0-20190410073711-7c64c3790efc h1:F34tPxFjFRM23Km1YhSquQk0tvxCfktfAu0GXL1XxJw=
@@ -51,7 +60,9 @@ golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/tools v0.0.0-20190206041539-40960b6deb8e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
+golang.org/x/tools v0.0.0-20190328211700-ab21143f2384 h1:TFlARGu6Czu1z7q93HTxcP1P+/ZFC/IKythI5RzrnRg=
 golang.org/x/tools v0.0.0-20190328211700-ab21143f2384/go.mod h1:LCzVGOaR6xXOjkQ3onu1FJEFr0SW1gC7cKk1uF8kGRs=
+golang.org/x/tools v0.0.0-20190521203540-521d6ed310dd h1:7E3PabyysDSEjnaANKBgums/hyvMI/HoHQ50qZEzTrg=
 gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc h1:+c7TChc7Bi9WFPyWzDxu8mnEhA29YW/0NBDy4V24exU=
 gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc/go.mod h1:2ltnJ7xHfj0zHS40VVPYEAAMTa3ZGguvHGBSJeRWqE0=
 gonum.org/v1/netlib v0.0.0-20190313105609-8cb42192e0e0/go.mod h1:wa6Ws7BG/ESfp6dHfk7C6KdzKA7wR7u/rKwOGE66zvw=

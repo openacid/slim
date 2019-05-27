@@ -9,6 +9,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/modood/table v0.0.0-20181112072225-499dc7fba710 // indirect
 	github.com/openacid/errors v0.8.1
+	github.com/openacid/low v0.1.4
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
