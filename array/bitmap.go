@@ -5,7 +5,7 @@ import (
 	"math/bits"
 
 	proto "github.com/golang/protobuf/proto"
-	"github.com/openacid/slim/benchhelper"
+	"github.com/openacid/low/size"
 )
 
 const (
@@ -174,7 +174,7 @@ func concatBits(elts []uint64, width int32) (int32, []uint64) {
 // Since 0.5.4
 func (b *Bits) Stat() map[string]int32 {
 
-	totalmem := benchhelper.SizeOf(b)
+	totalmem := size.Of(b)
 
 	st := map[string]int32{
 		"mem_total": int32(totalmem),

@@ -5,7 +5,7 @@ import (
 	"math"
 	"math/bits"
 
-	"github.com/openacid/slim/benchhelper"
+	"github.com/openacid/low/size"
 	"github.com/openacid/slim/polyfit"
 )
 
@@ -125,14 +125,14 @@ func (m *PolyArray) Len() int {
 // Since 0.5.2
 func (m *PolyArray) Stat() map[string]int32 {
 	nseg := len(m.Segments)
-	totalmem := benchhelper.SizeOf(m)
+	totalmem := size.Of(m)
 
 	polyCnt := 0
 	memWords := 0
 	widthAvg := 0
 	for _, seg := range m.Segments {
 		polyCnt += len(seg.Polynomials)
-		memWords += benchhelper.SizeOf(seg.Words)
+		memWords += size.Of(seg.Words)
 
 		width := 0
 		for _, inf := range seg.Info {
