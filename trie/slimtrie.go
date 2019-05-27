@@ -29,7 +29,9 @@ package trie
 
 import (
 	"bytes"
+	"fmt"
 	"math/bits"
+	"reflect"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitword"
@@ -85,40 +87,223 @@ type SlimTrie struct {
 //
 // Since 0.2.0
 func NewSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
+	return newSlimTrie(e, keys, values)
+}
+
+type subset struct {
+	keyStart  int
+	keyEnd    int
+	fromIndex int
+}
+
+func newSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie, error) {
+
+	n := len(keys)
+	if n == 0 {
+		return emptySlimTrie(e), nil
+	}
+
+	for i := 0; i < len(keys)-1; i++ {
+		if keys[i] >= keys[i+1] {
+			return nil, errors.Wrapf(ErrKeyOutOfOrder,
+				"keys[%d] >= keys[%d] %s %s", i, i+1, keys[i], keys[i+1])
+		}
+	}
+
+	rvals := checkValues(reflect.ValueOf(values), n)
+	tokeep := newValueToKeep(rvals)
+
+	childi := make([]int32, 0, n)
+	childv := make([]uint64, 0, n)
+
+	stepi := make([]int32, 0, n)
+	stepv := make([]uint16, 0, n)
+
+	leavesi := make([]int32, 0, n)
+	leavesv := make([]interface{}, 0, n)
+
+	queue := make([]subset, 0, n*2)
+	queue = append(queue, subset{0, n, 0})
+
+	for i := 0; i < len(queue); i++ {
+		nid := int32(i)
+		o := queue[i]
+		s, e := o.keyStart, o.keyEnd
+
+		// single key, it is a leaf
+		if e-s == 1 {
+			if tokeep[s] {
+				leavesi = append(leavesi, nid)
+				leavesv = append(leavesv, getV(rvals, s))
+			}
+			continue
+		}
+
+		// need to create an inner node
+
+		prefI := prefixIndex(keys[s:e], o.fromIndex)
+
+		// the first key is a prefix of all other keys, which makes it a leaf.
+		isFirstKeyALeaf := len(keys[s])*8/4 == prefI
+		if isFirstKeyALeaf {
+			if tokeep[s] {
+				leavesi = append(leavesi, nid)
+				leavesv = append(leavesv, getV(rvals, s))
+			}
+			s += 1
+		}
+
+		// create inner node from following keys
+
+		labels, labelBitmap := getLabels(keys[s:e], prefI, tokeep[s:e])
+
+		hasChildren := len(labels) > 0
+
+		if hasChildren {
+			childi = append(childi, nid)
+			childv = append(childv, uint64(labelBitmap))
+
+			// put keys with the same starting word to queue.
+
+			for _, label := range labels {
+
+				// Find the first key starting with label
+				for ; s < e; s++ {
+					word := bw4.Get(keys[s], prefI)
+					if word == label {
+						break
+					}
+				}
+
+				// Continue looking for the first key not starting with label
+				var j int
+				for j = s + 1; j < e; j++ {
+					word := bw4.Get(keys[j], prefI)
+					if word != label {
+						break
+					}
+				}
+
+				p := subset{
+					keyStart:  s,
+					keyEnd:    j,
+					fromIndex: prefI + 1, // skip the label word
+				}
+				queue = append(queue, p)
+				s = j
+			}
+
+			// 1 for the label word at parent node
+			step := (prefI - o.fromIndex) + 1
+			if step > 0xffff {
+				panic(fmt.Sprintf("step=%d is too large. must < 2^16", step))
+			}
+
+			// By default to move 1 step forward, thus no need to store 1
+			hasStep := step > 1
+			if hasStep {
+				stepi = append(stepi, nid)
+				stepv = append(stepv, uint16(step))
+			}
+		}
+	}
+
+	ch, err := array.NewBitmap16(childi, childv, 16)
+	if err != nil {
+		return nil, err
+	}
+
+	steps, err := array.NewU16(stepi, stepv)
+	if err != nil {
+		return nil, err
+	}
+
+	leaves := array.Array{}
+	leaves.EltEncoder = e
+
+	err = leaves.Init(leavesi, leavesv)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failure init leaves")
+	}
 
 	st := &SlimTrie{
-		Steps:  array.U16{},
-		Leaves: array.Array{},
+		Children: *ch,
+		Steps:    *steps,
+		Leaves:   leaves,
 	}
-	st.Leaves.EltEncoder = e
-
-	if keys != nil {
-		return st, st.load(keys, values)
-	}
-
 	return st, nil
 }
 
-// load Loads keys and values and builds a SlimTrie.
-//
-// values must be a slice of data-type of fixed size or compatible with
-// SlimTrie.Leaves.Encoder.
-func (st *SlimTrie) load(keys []string, values interface{}) (err error) {
-	ks := bw4.FromStrs(keys)
-	return st.load4bitWords(ks, values)
-}
+func checkValues(rvals reflect.Value, n int) reflect.Value {
 
-func (st *SlimTrie) load4bitWords(keys [][]byte, values interface{}) (err error) {
-
-	trie, err := NewTrie(keys, values, true)
-	if err != nil {
-		return err
+	if rvals.Kind() != reflect.Slice {
+		panic("values is not a slice")
 	}
 
-	trie.removeSameLeaf()
+	valn := rvals.Len()
 
-	err = st.LoadTrie(trie)
-	return err
+	if n != valn {
+		panic(fmt.Sprintf("len(keys) != len(values): %d, %d", n, valn))
+	}
+	return rvals
+
+}
+
+// newValueToKeep creates a slice indicating which key to keep.
+// Value of key[i+1] with the same value with key[i] do not need to keep.
+func newValueToKeep(rvals reflect.Value) []bool {
+
+	n := rvals.Len()
+
+	tokeep := make([]bool, n)
+	tokeep[0] = true
+
+	for i := 0; i < n-1; i++ {
+		tokeep[i+1] = getV(rvals, i+1) != getV(rvals, i)
+	}
+	return tokeep
+}
+
+func getV(reflectSlice reflect.Value, i int) interface{} {
+	return reflectSlice.Index(i).Interface()
+}
+
+func emptySlimTrie(e encode.Encoder) *SlimTrie {
+	st := &SlimTrie{}
+	st.Leaves.EltEncoder = e
+	return st
+}
+
+func prefixIndex(keys []string, from int) int {
+	if len(keys) == 1 {
+		return len(keys[0])
+	}
+
+	n := len(keys)
+
+	end := bw4.FirstDiff(keys[0], keys[n-1], from, -1)
+	return end
+}
+
+func getLabels(keys []string, from int, tokeep []bool) ([]byte, uint16) {
+	labels := make([]byte, 0, 1<<4)
+	bitmap := uint16(0)
+
+	for i, k := range keys {
+
+		if !tokeep[i] {
+			continue
+		}
+
+		word := bw4.Get(k, from)
+		b := uint16(1) << word
+		if bitmap&b == 0 {
+			labels = append(labels, word)
+			bitmap |= b
+		}
+
+	}
+	return labels, bitmap
 }
 
 // LoadTrie compress a standard Trie and store compressed data in it.
