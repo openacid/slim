@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/google/btree"
+	"github.com/openacid/low/size"
 	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
@@ -170,7 +171,7 @@ func slimtrieMem(keyCnt, keyLen int) int64 {
 		panic(err)
 	}
 
-	size := benchhelper.SizeOf(t) - benchhelper.SizeOf(vals)
+	size := size.Of(t) - size.Of(vals)
 
 	return int64(size) * 8 / int64(keyCnt)
 }
