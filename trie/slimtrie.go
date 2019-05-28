@@ -290,7 +290,7 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 			break
 		}
 
-		i += int(st.getStep(uint16(eqID)))
+		i += int(st.getStep(eqID))
 
 		if lenWords < i {
 			rID = eqID
@@ -382,7 +382,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 			break
 		}
 
-		idx += int(st.getStep(uint16(eqID)))
+		idx += int(st.getStep(eqID))
 		if lenWords < idx {
 			eqID = -1
 			break
@@ -397,7 +397,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 		shift := 4 - (idx&1)*4
 		word = ((key[idx>>1] >> uint(shift)) & 0x0f)
 
-		if (bm >> word & 1) == 1 {
+		if ((bm >> word) & 1) == 1 {
 			chNum := bits.OnesCount16(bm & ((uint16(1) << word) - 1))
 			eqID = of + int32(chNum)
 		} else {
@@ -421,8 +421,8 @@ func (st *SlimTrie) getChild(idx int32) (bitmap uint16, offset int32, found bool
 	return 0, 0, false
 }
 
-func (st *SlimTrie) getStep(idx uint16) uint16 {
-	step, found := st.Steps.Get(int32(idx))
+func (st *SlimTrie) getStep(idx int32) uint16 {
+	step, found := st.Steps.Get(idx)
 	if found {
 		return step
 	}

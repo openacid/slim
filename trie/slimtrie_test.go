@@ -553,6 +553,33 @@ func TestSlimTrie_RangeGet_rangeindex_bug_2019_05_21(t *testing.T) {
 	}
 }
 
+func TestSlimTrie_u16step_bug_2019_05_29(t *testing.T) {
+
+	// Reported by @aaaton
+	// 2019 May 29
+	//
+	// When number of keys becomes greater than 50000,
+	// SlimTrie.Get() returns negaitve for some existent keys.
+	// Caused by SlimTrie.step has been using uint16 id, it should be int32.
+
+	ta := require.New(t)
+	keys := keys50k
+	n := len(keys)
+	values := make([]int32, n)
+	for i := 0; i < n; i++ {
+		values[i] = int32(i)
+	}
+	st, err := NewSlimTrie(encode.I32{}, keys, values)
+	ta.Nil(err)
+
+	for i, c := range keys {
+		rst, found := st.Get(c)
+		ta.Equal(values[i], rst, "%d-th: Get: %+v", i+1, c)
+		ta.Equal(true, found, "%d-th: Get: %+v", i+1, c)
+	}
+
+}
+
 func TestNewSlimTrie(t *testing.T) {
 
 	st, err := NewSlimTrie(encode.Int{}, []string{"ab", "cd"}, []int{1, 2})
