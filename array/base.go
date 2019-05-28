@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"reflect"
 
+	"math/bits"
+
 	"github.com/openacid/errors"
-	"github.com/openacid/slim/bits"
 	"github.com/openacid/slim/encode"
 )
 
@@ -93,7 +94,7 @@ func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 	}
 
 	base := a.Offsets[iBm]
-	cnt1 := bits.OnesCount64Before(bmWord, uint(iBit))
+	cnt1 := bits.OnesCount64(bmWord & ((uint64(1) << uint(iBit)) - 1))
 	return base + int32(cnt1), true
 }
 
