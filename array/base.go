@@ -75,6 +75,28 @@ func (a *Base) InitIndex(index []int32) error {
 	return nil
 }
 
+// ExtendIndex allocaed additional 0-bits after Bitmap and Offset.
+//
+// Since 0.5.9
+func (a *Base) ExtendIndex(n int32) {
+	nword := (n + 63) >> 6
+
+	if nword <= int32(len(a.Bitmaps)) {
+		return
+	}
+
+	bitmaps := make([]uint64, nword)
+	copy(bitmaps, a.Bitmaps)
+
+	a.Bitmaps = bitmaps
+	a.Offsets = newRankIndex1(a.Bitmaps)
+	for i, word := range a.Bitmaps {
+		if word == 0 {
+			a.Offsets[i] = 0
+		}
+	}
+}
+
 // GetEltIndex returns the position in a.Elts of element[idx] and a bool
 // indicating if found or not.
 // If "idx" absents it returns "0, false".
