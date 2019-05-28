@@ -113,21 +113,14 @@ func TestBaseInitIndex(t *testing.T) {
 	}
 }
 
-func testPanic(t *testing.T, f func(), msg string) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatalf("expected panic: %s", msg)
-		}
-	}()
-
-	f()
-}
-
 func TestBaseInit(t *testing.T) {
 
+	ta := require.New(t)
+
 	ab := &array.Base{}
-	testPanic(t, func() { _ = ab.Init([]int32{}, 1) }, "elts int")
-	testPanic(t, func() { _ = ab.Init([]int32{1, 2}, []interface{}{uint32(1), uint64(1)}) }, "different type elts")
+
+	ta.Panics(func() { _ = ab.Init([]int32{}, 1) }, "elts int")
+	ta.Panics(func() { _ = ab.Init([]int32{1, 2}, []interface{}{uint32(1), uint64(1)}) }, "different type elts")
 
 	cases := []struct {
 		input       []int32
