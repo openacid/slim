@@ -1,0 +1,4 @@
+fixbug:
+  slimtrie:
+  - 'getStep should use int32 id instead of uint16 id. fix #104; thanks to @aaaton;
+    by drdr xp; 2019-05-29'
