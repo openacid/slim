@@ -5,7 +5,7 @@ import (
 	"math/bits"
 )
 
-// slimTrieStringly is a wrapper that implements treestr.Tree .
+// slimTrieStringly is a wrapper that implements tree.Tree .
 // It is a helper to convert SlimTrie to string.
 //
 // Since 0.5.1
@@ -13,7 +13,7 @@ type slimTrieStringly struct {
 	st *SlimTrie
 }
 
-// Child implements treestr.Tree
+// Child implements tree.Tree
 //
 // Since 0.5.1
 func (s *slimTrieStringly) Child(node, branch interface{}) interface{} {
@@ -29,10 +29,10 @@ func (s *slimTrieStringly) Child(node, branch interface{}) interface{} {
 	}
 }
 
-// Branches implements treestr.Tree
+// Labels implements tree.Tree
 //
 // Since 0.5.1
-func (s *slimTrieStringly) Branches(node interface{}) []interface{} {
+func (s *slimTrieStringly) Labels(node interface{}) []interface{} {
 
 	rst := []interface{}{}
 
@@ -47,21 +47,21 @@ func (s *slimTrieStringly) Branches(node interface{}) []interface{} {
 	return rst
 }
 
-// NodeID implements treestr.Tree
+// NodeID implements tree.Tree
 //
 // Since 0.5.1
 func (s *slimTrieStringly) NodeID(node interface{}) string {
 	return fmt.Sprintf("%03d", stNodeID(node))
 }
 
-// LabelInfo implements treestr.Tree
+// LabelInfo implements tree.Tree
 //
 // Since 0.5.1
 func (s *slimTrieStringly) LabelInfo(label interface{}) string {
 	return fmt.Sprintf("%d", label)
 }
 
-// NodeInfo implements treestr.Tree
+// NodeInfo implements tree.Tree
 //
 // Since 0.5.1
 func (s *slimTrieStringly) NodeInfo(node interface{}) string {
@@ -72,7 +72,7 @@ func (s *slimTrieStringly) NodeInfo(node interface{}) string {
 	return ""
 }
 
-// LeafVal implements treestr.Tree
+// LeafVal implements tree.Tree
 //
 // Since 0.5.1
 func (s *slimTrieStringly) LeafVal(node interface{}) (interface{}, bool) {

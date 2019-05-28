@@ -32,6 +32,7 @@ import (
 
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitword"
+	"github.com/openacid/low/tree"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/serialize"
@@ -616,7 +617,7 @@ func (st *SlimTrie) Reset() {
 // Since 0.4.3
 func (st *SlimTrie) String() string {
 	s := &slimTrieStringly{st: st}
-	return ToString(s)
+	return tree.String(s)
 }
 
 // ProtoMessage implements proto.Message

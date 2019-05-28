@@ -2,7 +2,7 @@ package trie
 
 import "fmt"
 
-// trieStringly is a wrapper that implements treestr.Tree .
+// trieStringly is a wrapper that implements tree.Tree .
 // It is a helper to convert trie to string.
 //
 // Since 0.5.1
@@ -10,7 +10,7 @@ type trieStringly struct {
 	tnode *Node
 }
 
-// Child implements treestr.Tree
+// Child implements tree.Tree
 //
 // Since 0.5.1
 func (s *trieStringly) Child(node, branch interface{}) interface{} {
@@ -25,10 +25,10 @@ func (s *trieStringly) Child(node, branch interface{}) interface{} {
 	return n.Children[b]
 }
 
-// Branches implements treestr.Tree
+// Labels implements tree.Tree
 //
 // Since 0.5.1
-func (s *trieStringly) Branches(node interface{}) []interface{} {
+func (s *trieStringly) Labels(node interface{}) []interface{} {
 	n := s.trieNode(node)
 	rst := []interface{}{}
 	for _, b := range n.Branches {
@@ -37,14 +37,14 @@ func (s *trieStringly) Branches(node interface{}) []interface{} {
 	return rst
 }
 
-// NodeID implements treestr.Tree
+// NodeID implements tree.Tree
 //
 // Since 0.5.1
 func (s *trieStringly) NodeID(node interface{}) string {
 	return ""
 }
 
-// LabelInfo implements treestr.Tree
+// LabelInfo implements tree.Tree
 //
 // Since 0.5.5
 func (s *trieStringly) LabelInfo(label interface{}) string {
@@ -55,7 +55,7 @@ func (s *trieStringly) LabelInfo(label interface{}) string {
 	return fmt.Sprintf("%d", l)
 }
 
-// NodeInfo implements treestr.Tree
+// NodeInfo implements tree.Tree
 //
 // Since 0.5.1
 func (s *trieStringly) NodeInfo(node interface{}) string {
@@ -66,7 +66,7 @@ func (s *trieStringly) NodeInfo(node interface{}) string {
 	return fmt.Sprintf("+%d", n.Step)
 }
 
-// LeafVal implements treestr.Tree
+// LeafVal implements tree.Tree
 //
 // Since 0.5.1
 func (s *trieStringly) LeafVal(node interface{}) (interface{}, bool) {

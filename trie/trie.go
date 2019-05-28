@@ -2,6 +2,7 @@ package trie
 
 import (
 	"github.com/openacid/errors"
+	"github.com/openacid/low/tree"
 	"github.com/openacid/slim/typehelper"
 )
 
@@ -59,7 +60,7 @@ func NewTrie(keys [][]byte, values interface{}, squash bool) (root *Node, err er
 // String outputs multiline trie structure.
 func (r *Node) String() string {
 	s := &trieStringly{tnode: r}
-	return ToString(s)
+	return tree.String(s)
 }
 
 // Squash compresses a Trie by removing single-branch nodes.
@@ -97,8 +98,8 @@ func (r *Node) removeSameLeaf() {
 	// wrapped as a generalized tree
 	s := &trieStringly{tnode: r}
 
-	DepthFirst(s,
-		func(t Tree, parent, branch, node interface{}) {
+	tree.DepthFirst(s,
+		func(t tree.Tree, parent, branch, node interface{}) {
 
 			n := node.(*Node)
 			needRemove := false
