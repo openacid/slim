@@ -24,7 +24,7 @@ func main() {
 
 func getPresent() {
 	if flg.Bench {
-		keyCounts := []int{1, 10, 100, 1000, 2000, 5000, 10000, 20000}
+		keyCounts := []int{100, 1000, 10 * 1000, 100 * 1000}
 		results := benchmark.GetPresent(keyCounts)
 		benchhelper.WriteTableFiles("report/bench_get_present", results)
 	}

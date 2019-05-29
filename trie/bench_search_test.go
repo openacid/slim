@@ -8,12 +8,15 @@ import (
 )
 
 var runs = []benchmark.Config{
-	{KeyCnt: 1, KeyLen: 1024, ValLen: 2},
-	{KeyCnt: 10, KeyLen: 1024, ValLen: 2},
-	{KeyCnt: 100, KeyLen: 1024, ValLen: 2},
-	{KeyCnt: 1000, KeyLen: 1024, ValLen: 2},
-	{KeyCnt: 1000, KeyLen: 512, ValLen: 2},
-	{KeyCnt: 1000, KeyLen: 256, ValLen: 2},
+	{KeyCnt: 100, KeyLen: 32, ValLen: 2},
+	{KeyCnt: 100, KeyLen: 64, ValLen: 2},
+	{KeyCnt: 100, KeyLen: 128, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 32, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 64, ValLen: 2},
+	{KeyCnt: 1000, KeyLen: 128, ValLen: 2},
+	{KeyCnt: 10 * 1000, KeyLen: 32, ValLen: 2},
+	{KeyCnt: 10 * 1000, KeyLen: 64, ValLen: 2},
+	{KeyCnt: 10 * 1000, KeyLen: 128, ValLen: 2},
 }
 
 func BenchmarkTrieSearch(b *testing.B) {
