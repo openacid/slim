@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitword"
+	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
 	"github.com/stretchr/testify/require"
@@ -591,6 +593,7 @@ func TestSlimTrie_u16step_bug_2019_05_29(t *testing.T) {
 	// Caused by SlimTrie.step has been using uint16 id, it should be int32.
 
 	ta := require.New(t)
+
 	keys := keys50k
 	n := len(keys)
 	values := make([]int32, n)
@@ -610,6 +613,8 @@ func TestSlimTrie_u16step_bug_2019_05_29(t *testing.T) {
 
 func TestNewSlimTrie(t *testing.T) {
 
+	ta := require.New(t)
+
 	st, err := NewSlimTrie(encode.Int{}, []string{"ab", "cd"}, []int{1, 2})
 	if err != nil {
 		t.Fatalf("expect no error but: %v", err)
@@ -619,6 +624,8 @@ func TestNewSlimTrie(t *testing.T) {
 	if !found {
 		t.Fatalf("%q should be found", "ab")
 	}
+
+	ta.Equal(1, v)
 
 	if v.(int) != 1 {
 		t.Fatalf("v should be 2, but: %v", v)
@@ -676,7 +683,7 @@ func TestSlimTrieError(t *testing.T) {
 	}
 }
 
-func TestSlimTrieMarshalUnmarshal(t *testing.T) {
+func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 
 	ta := require.New(t)
 
@@ -686,41 +693,36 @@ func TestSlimTrieMarshalUnmarshal(t *testing.T) {
 	// marshal
 
 	marshalSize := proto.Size(st1)
+
 	buf, err := st1.Marshal()
-	if err != nil {
-		t.Fatalf("failed to marshal st: %v", err)
-	}
-	if len(buf) != marshalSize {
-		t.Fatalf("size not correct expect: %v; but: %v", len(buf), marshalSize)
-	}
+	ta.Nil(err)
+	ta.Equal(len(buf), marshalSize)
 
 	// marshal twice
 
 	buf1, err := proto.Marshal(st1)
-	if err != nil {
-		t.Fatalf("failed to marshal st: %v", err)
-	}
+	ta.Nil(err)
+	ta.Equal(buf, buf1)
 
-	if !reflect.DeepEqual(buf, buf1) {
-		t.Fatalf("st.Marshal != proto.Marshal(st)")
-	}
+	// check version
+	r := bytes.NewBuffer(buf)
+	n, h, err := pbcmpl.ReadHeader(r)
+	ta.Nil(err)
+	ta.Equal(int64(32), n)
+	ta.Equal(slimtrieVersion, h.GetVersion())
 
 	// unmarshal
 
 	st2, _ := NewSlimTrie(encode.Int{}, nil, nil)
 	err = proto.Unmarshal(buf, st2)
-	if err != nil {
-		t.Fatalf("failed to unmarshal st: %v", err)
-	}
+	ta.Nil(err)
 
 	checkSlimTrie(st1, st2, t)
 
 	// proto.Unmarshal twice
 
 	err = proto.Unmarshal(buf, st2)
-	if err != nil {
-		t.Fatalf("failed to unmarshal st: %v", err)
-	}
+	ta.Nil(err)
 
 	checkSlimTrie(st1, st2, t)
 

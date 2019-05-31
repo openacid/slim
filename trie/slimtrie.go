@@ -26,16 +26,19 @@ package trie
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/bits"
 	"reflect"
+	"strings"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitword"
+	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/low/tree"
+	"github.com/openacid/low/vers"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/slim/serialize"
 )
 
 var (
@@ -67,6 +70,25 @@ type SlimTrie struct {
 	Children array.Bitmap16
 	Steps    array.U16
 	Leaves   array.Array
+}
+
+type versionedArray struct {
+	*array.Base
+}
+
+func (va *versionedArray) GetVersion() string {
+	return slimtrieVersion
+}
+
+func (st *SlimTrie) GetVersion() string {
+	return slimtrieVersion
+}
+
+func (st *SlimTrie) compatibleVersions() []string {
+	return []string{
+		"==1.0.0", // before 0.5.8 it is "1.0.0" for historical reason.
+		"==" + slimtrieVersion,
+	}
 }
 
 // NewSlimTrie create an SlimTrie.
@@ -199,6 +221,8 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 			}
 		}
 	}
+
+	// nodeCnt := len(queue)
 
 	ch, err := array.NewBitmap16(childi, childv, 16)
 	if err != nil {
@@ -467,7 +491,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 
 	for idx := -1; ; {
 
-		bm, of, hasInner := st.getChild(eqID)
+		bm, rank, hasInner := st.Children.GetWithRank(eqID)
 		if !hasInner {
 			// maybe a leaf
 			break
@@ -488,9 +512,10 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 		shift := 4 - (idx&1)*4
 		word = ((key[idx>>1] >> uint(shift)) & 0x0f)
 
-		if ((bm >> word) & 1) == 1 {
-			chNum := bits.OnesCount16(bm & ((uint16(1) << word) - 1))
-			eqID = of + int32(chNum)
+		bb := uint64(1) << word
+		if bm&bb != 0 {
+			chNum := bits.OnesCount64(bm & (bb - 1))
+			eqID = rank + 1 + int32(chNum)
 		} else {
 			eqID = -1
 			break
@@ -507,7 +532,7 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 func (st *SlimTrie) getChild(idx int32) (bitmap uint16, offset int32, found bool) {
 	bm, rank, found := st.Children.GetWithRank(idx)
 	if found {
-		return bm, rank + 1, true
+		return uint16(bm), rank + 1, true
 	}
 	return 0, 0, false
 }
@@ -552,15 +577,18 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 	var buf []byte
 	writer := bytes.NewBuffer(buf)
 
-	if _, err := serialize.Marshal(writer, &st.Children); err != nil {
+	_, err := pbcmpl.Marshal(writer, &versionedArray{&st.Children.Base})
+	if err != nil {
 		return nil, errors.WithMessage(err, "failed to marshal children")
 	}
 
-	if _, err := serialize.Marshal(writer, &st.Steps); err != nil {
+	_, err = pbcmpl.Marshal(writer, &versionedArray{&st.Steps.Base})
+	if err != nil {
 		return nil, errors.WithMessage(err, "failed to marshal steps")
 	}
 
-	if _, err := serialize.Marshal(writer, &st.Leaves); err != nil {
+	_, err = pbcmpl.Marshal(writer, &versionedArray{&st.Leaves.Base})
+	if err != nil {
 		return nil, errors.WithMessage(err, "failed to marshal leaves")
 	}
 
@@ -571,21 +599,67 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 //
 // Since 0.4.3
 func (st *SlimTrie) Unmarshal(buf []byte) error {
+
+	var ver string
+	compatible := st.compatibleVersions()
 	reader := bytes.NewReader(buf)
 
-	if err := serialize.Unmarshal(reader, &st.Children); err != nil {
+	_, ver, err := pbcmpl.Unmarshal(reader, &st.Children)
+	if err != nil {
 		return errors.WithMessage(err, "failed to unmarshal children")
 	}
 
-	if err := serialize.Unmarshal(reader, &st.Steps); err != nil {
+	if !vers.IsCompatible(ver, compatible) {
+		return errors.Wrapf(ErrIncompatible,
+			fmt.Sprintf(`version: "%s", compatible versions:"%s"`,
+				ver,
+				strings.Join(compatible, " || ")))
+	}
+
+	// convert old data to latest version
+	if ver == "1.0.0" {
+		// 1.0.0 is the initial version
+		st.fromV100()
+	}
+
+	_, _, err = pbcmpl.Unmarshal(reader, &st.Steps)
+	if err != nil {
 		return errors.WithMessage(err, "failed to unmarshal steps")
 	}
 
-	if err := serialize.Unmarshal(reader, &st.Leaves); err != nil {
+	_, _, err = pbcmpl.Unmarshal(reader, &st.Leaves)
+	if err != nil {
 		return errors.WithMessage(err, "failed to unmarshal leaves")
 	}
 
 	return nil
+}
+
+func (st *SlimTrie) fromV100() {
+
+	// convert u32 node to ranked bitmap node
+
+	if st.Children.Flags&array.ArrayFlagIsBitmap == 0 {
+
+		var endian = binary.LittleEndian
+
+		b := &st.Children
+		b.Flags |= array.ArrayFlagHasEltWidth | array.ArrayFlagIsBitmap
+		b.EltWidth = 16
+
+		indexes := b.Indexes()
+		elts := make([]uint64, len(indexes))
+		for i, idx := range indexes {
+			eltIdx, found := b.GetEltIndex(idx)
+			if !found {
+				panic("not found index???")
+			}
+			v := endian.Uint32(b.Elts[eltIdx*4:])
+			elts[i] = uint64(v & 0xffff)
+		}
+		b.BMElts = array.NewBitsJoin(elts, b.EltWidth, false).(*array.Bits)
+		b.Elts = nil
+	}
 }
 
 // Reset implements proto.Message
