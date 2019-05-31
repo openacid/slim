@@ -170,6 +170,15 @@ Internal data structure may change before `v1.0.0`.
 <summary>Change-log</summary>
 
 ```yaml
+v0.5.7:
+  api-change:
+    slimtrie:
+    - remove LoadTrie(); SlimTrie do not need a trie to create; by drdr xp; 2019-05-28
+v0.5.6:
+  fixbug:
+    slimtrie:
+    - 'getStep should use int32 id instead of uint16 id. fix #104; thanks to @aaaton;
+      by drdr xp; 2019-05-29'
 v0.5.5:
   api-change:
     slimtrie:

@@ -1,3 +1,7 @@
+v0.5.7:
+  api-change:
+    slimtrie:
+    - remove LoadTrie(); SlimTrie do not need a trie to create; by drdr xp; 2019-05-28
 v0.5.6:
   fixbug:
     slimtrie:
