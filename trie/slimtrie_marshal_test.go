@@ -1,6 +1,9 @@
 package trie
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -38,5 +41,40 @@ func TestSlimTrie_Unmarshal_incompatible(t *testing.T) {
 		copy(buf, []byte(c.input))
 		err := proto.Unmarshal(buf, st2)
 		ta.Equal(c.want, errors.Cause(err), "%d-th: case: %+v", i+1, c)
+	}
+}
+
+func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
+
+	ta := require.New(t)
+
+	folder := "testdata/"
+	finfos, err := ioutil.ReadDir(folder)
+	ta.Nil(err)
+
+	for _, finfo := range finfos {
+
+		fn := finfo.Name()
+
+		if !strings.HasPrefix(fn, "slimtrie-data-") {
+			continue
+		}
+
+		path := filepath.Join(folder, fn)
+		b, err := ioutil.ReadFile(path)
+		ta.Nil(err)
+
+		st, err := NewSlimTrie(encode.I32{}, nil, nil)
+		ta.Nil(err)
+
+		err = proto.Unmarshal(b, st)
+		ta.Nil(err)
+
+		keys := keys50k
+		for i, key := range keys {
+			v, found := st.Get(key)
+			ta.True(found)
+			ta.Equal(int32(i), v)
+		}
 	}
 }
