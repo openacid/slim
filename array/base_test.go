@@ -283,7 +283,8 @@ func TestBaseHasAndGetEltIndex(t *testing.T) {
 		t.Fatalf("expect no err but: %s", err)
 	}
 
-	for i := int32(0); i < maxIndex+128; i++ {
+	maxValid := (maxIndex + 63) & (^63)
+	for i := int32(0); i < maxValid; i++ {
 
 		_, inMap := indexMap[i]
 
@@ -303,7 +304,29 @@ func TestBaseHasAndGetEltIndex(t *testing.T) {
 	}
 }
 
-func TestBaseGet(t *testing.T) {
+func TestBase_HasAndGetEltIndex_panic(t *testing.T) {
+
+	ta := require.New(t)
+
+	cnt := int32(024)
+	indexes := randIndexes(cnt)
+
+	maxIndex := indexes[len(indexes)-1]
+
+	a := &array.Base{}
+	err := a.InitIndex(indexes)
+	ta.Nil(err)
+
+	maxValid := (maxIndex + 63) & (^63)
+
+	// -1 does not cause an panic
+	ta.Panics(func() { a.Has(maxValid) })
+	ta.Panics(func() { a.GetEltIndex(maxValid) })
+}
+
+func TestBase_Get(t *testing.T) {
+
+	ta := require.New(t)
 
 	indexes := []int32{1, 3, 100}
 	elts := []uint16{1, 3, 100}
@@ -312,35 +335,19 @@ func TestBaseGet(t *testing.T) {
 	ab.EltEncoder = encode.U16{}
 
 	// test empty array
-	v, found := ab.Get(1)
-	if found {
-		t.Fatalf("expect not found but: %v", found)
-	}
-	if v != nil {
-		t.Fatalf("expect nil but: %v", v)
-	}
+	ta.Panics(func() { ab.Get(1) })
 
 	err := ab.Init(indexes, elts)
-	if err != nil {
-		t.Fatalf("expected no error but: %#v", err)
-	}
+	ta.Nil(err)
 
 	for i, idx := range indexes {
 		v, found := ab.Get(idx)
-		if !found {
-			t.Fatalf("%d-th, expect found but: %d %v", i+1, idx, found)
-		}
-		if v != elts[i] {
-			t.Fatalf("%d-th, %d expect %d found but: %v", i+1, idx, elts[i], v)
-		}
+		ta.True(found)
+		ta.Equal(elts[i], v, "%d-th, %d expect %d found but: %v", i+1, idx, elts[i], v)
 
 		v, found = ab.Get(idx + 1)
-		if found {
-			t.Fatalf("%d-th, expect not found but: %d %v", i+1, idx, found)
-		}
-		if v != nil {
-			t.Fatalf("%d-th, %d expect nil found but: %v", i+1, idx, v)
-		}
+		ta.False(found)
+		ta.Nil(v)
 	}
 }
 

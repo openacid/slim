@@ -105,10 +105,6 @@ func (a *Base) ExtendIndex(n int32) {
 func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
-
 	var bmWord = a.Bitmaps[iBm]
 
 	if ((bmWord >> uint(iBit)) & 1) == 0 {
@@ -125,7 +121,7 @@ func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 // Since 0.2.0
 func (a *Base) Has(idx int32) bool {
 	iBm := idx / bmWidth
-	return iBm < int32(len(a.Bitmaps)) && ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
+	return ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
 }
 
 // Init initializes an array from the "indexes" and "elts".
@@ -212,10 +208,6 @@ func (a *Base) MemSize() int {
 //
 // Since 0.2.0
 func (a *Base) Get(idx int32) (interface{}, bool) {
-
-	if a.Cnt == 0 {
-		return nil, false
-	}
 
 	bs, ok := a.GetBytes(idx, a.EltEncoder.GetEncodedSize(nil))
 	if ok {

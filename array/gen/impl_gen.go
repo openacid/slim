@@ -38,10 +38,6 @@ func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
-
 	var n = a.Bitmaps[iBm]
 
 	if ((n >> uint(iBit)) & 1) == 0 {

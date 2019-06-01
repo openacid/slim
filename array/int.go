@@ -33,10 +33,6 @@ func (a *U16) Get(idx int32) (uint16, bool) {
 
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
-
 	var n = a.Bitmaps[iBm]
 
 	if ((n >> uint(iBit)) & 1) == 0 {
@@ -76,10 +72,6 @@ func NewU32(index []int32, elts []uint32) (a *U32, err error) {
 func (a *U32) Get(idx int32) (uint32, bool) {
 
 	iBm, iBit := bmBit(idx)
-
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
 
 	var n = a.Bitmaps[iBm]
 
@@ -121,10 +113,6 @@ func (a *U64) Get(idx int32) (uint64, bool) {
 
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
-
 	var n = a.Bitmaps[iBm]
 
 	if ((n >> uint(iBit)) & 1) == 0 {
@@ -164,10 +152,6 @@ func NewI16(index []int32, elts []int16) (a *I16, err error) {
 func (a *I16) Get(idx int32) (int16, bool) {
 
 	iBm, iBit := bmBit(idx)
-
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
 
 	var n = a.Bitmaps[iBm]
 
@@ -209,10 +193,6 @@ func (a *I32) Get(idx int32) (int32, bool) {
 
 	iBm, iBit := bmBit(idx)
 
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
-
 	var n = a.Bitmaps[iBm]
 
 	if ((n >> uint(iBit)) & 1) == 0 {
@@ -252,10 +232,6 @@ func NewI64(index []int32, elts []int64) (a *I64, err error) {
 func (a *I64) Get(idx int32) (int64, bool) {
 
 	iBm, iBit := bmBit(idx)
-
-	if iBm >= int32(len(a.Bitmaps)) {
-		return 0, false
-	}
 
 	var n = a.Bitmaps[iBm]
 
