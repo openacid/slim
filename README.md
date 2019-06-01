@@ -170,6 +170,11 @@ Internal data structure may change before `v1.0.0`.
 <summary>Change-log</summary>
 
 ```yaml
+v0.5.8:
+  new-feature:
+    slimtrie:
+    - add version writing when marshaling and version check when unmarshaling; by drdr
+      xp; 2019-05-31
 v0.5.7:
   api-change:
     slimtrie:
