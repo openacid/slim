@@ -87,6 +87,7 @@ func (st *SlimTrie) GetVersion() string {
 func (st *SlimTrie) compatibleVersions() []string {
 	return []string{
 		"==1.0.0", // before 0.5.8 it is "1.0.0" for historical reason.
+		"==0.5.8",
 		"==" + slimtrieVersion,
 	}
 }
