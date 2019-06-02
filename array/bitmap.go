@@ -232,13 +232,8 @@ func (b *Bits) Rank(i int32) int32 {
 	//	   If 0 <= j < 64:   use index at i/128
 	//	   If 64 <= j < 128: use index at i/128 + 1
 
-	if i < 0 || i > b.N {
-		panic(fmt.Sprintf("i=%d out of range, n=%d", i, b.N))
-	}
-
 	iWord := uint64(i >> 6)
 
-	// Get Idx[j]
 	var n int32
 	if b.Flags&BitsFlagDenseRank == 0 {
 		n = b.RankIndex[(i+64)>>7]
@@ -246,46 +241,15 @@ func (b *Bits) Rank(i int32) int32 {
 		n = b.RankIndexDense.Get((i + 64) >> 7)
 	}
 
-	// j <  64: 000000...
-	// j >= 64: 111111...
-	//          <-- less significant
-	all1 := -(iWord & 1)
-
-	// j <  64: 11111000.....
-	//               ^
-	//               ` j is here
-	//
-	//	   0       64      128     192     256
-	//	   |-------+-------+1111---+-------+
-	//	   Idx[0]          Idx[1]          Idx[2]
-	//
-	// j >= 64: 00000111.....
-	//               ^
-	//               ` j is here
-	//
-	//	   0       64      128     192     256
-	//	   |-------+----111+-------+-------+
-	//	   Idx[0]          Idx[1]          Idx[2]
-	mask := (uint64(1) << uint(i&63)) - 1
-	mask = all1 ^ mask
-
-	// j <  64: word of [128, 192]
-	//	   0       64      128     192     256
-	//	   |-------+-------+1111---+-------+
-	//	   Idx[0]          Idx[1]          Idx[2]
-	//
-	// j >= 64:  word of [64, 128]
-	//	   0       64      128     192     256
-	//	   |-------+----111+-------+-------+
-	//	   Idx[0]          Idx[1]          Idx[2]
-	word := b.Words[iWord] & mask
-	d := int32(bits.OnesCount64(word))
-
-	// j <  64:  d
-	// j >= 64: -d
-	diff := (int32(all1) ^ d) - int32(all1)
-
-	return n + diff
+	if iWord&1 == 0 {
+		word := b.Words[iWord] << (64 - uint(i&63))
+		d := int32(bits.OnesCount64(word))
+		return n + d
+	} else {
+		word := b.Words[iWord] >> uint(i&63)
+		d := int32(bits.OnesCount64(word))
+		return n - d
+	}
 }
 
 func newRankIndex1(words []uint64) []int32 {

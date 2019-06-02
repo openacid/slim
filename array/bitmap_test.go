@@ -158,9 +158,10 @@ func TestBits_Rank_panic(t *testing.T) {
 
 		// no panic
 		_ = got.Rank(130)
+		_ = got.Rank(191)
 
 		ta.Panics(func() {
-			got.Rank(131)
+			got.Rank(192)
 		})
 	}
 }
@@ -383,6 +384,26 @@ func BenchmarkBits_Rank(b *testing.B) {
 	var gotrank int32
 	for i := 0; i < b.N; i++ {
 		gotrank += got.Rank(int32(i & 127))
+	}
+
+	DsOutput = int(gotrank)
+}
+
+func BenchmarkBits_Rank_50k(b *testing.B) {
+
+	n := 64 * 1024
+	mask := n - 1
+	indexes := make([]int32, n)
+	for i := 0; i < n; i++ {
+		indexes[i] = int32(i * 2)
+	}
+	got := NewBits(indexes)
+
+	b.ResetTimer()
+
+	var gotrank int32
+	for i := 0; i < b.N; i++ {
+		gotrank += got.Rank(int32(i & mask))
 	}
 
 	DsOutput = int(gotrank)
