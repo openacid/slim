@@ -121,7 +121,7 @@ func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 // Since 0.2.0
 func (a *Base) Has(idx int32) bool {
 	iBm := idx / bmWidth
-	return ((a.Bitmaps[iBm]>>uint32(idx&bmMask))&1) != 0
+	return ((a.Bitmaps[iBm] >> uint32(idx&bmMask)) & 1) != 0
 }
 
 // Init initializes an array from the "indexes" and "elts".

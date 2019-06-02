@@ -32,6 +32,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/blang/semver"
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitword"
 	"github.com/openacid/low/pbcmpl"
@@ -223,7 +224,7 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 		}
 	}
 
-	// nodeCnt := len(queue)
+	nodeCnt := int32(len(queue))
 
 	ch, err := array.NewBitmap16(childi, childv, 16)
 	if err != nil {
@@ -242,6 +243,11 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 	if err != nil {
 		return nil, errors.Wrapf(err, "failure init leaves")
 	}
+
+	// Avoid panic of slice index out of bound.
+	ch.ExtendIndex(nodeCnt)
+	steps.ExtendIndex(nodeCnt)
+	leaves.ExtendIndex(nodeCnt)
 
 	st := &SlimTrie{
 		Children: *ch,
@@ -617,12 +623,6 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 				strings.Join(compatible, " || ")))
 	}
 
-	// convert old data to latest version
-	if ver == "1.0.0" {
-		// 1.0.0 is the initial version
-		st.fromV100()
-	}
-
 	_, _, err = pbcmpl.Unmarshal(reader, &st.Steps)
 	if err != nil {
 		return errors.WithMessage(err, "failed to unmarshal steps")
@@ -633,33 +633,89 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 		return errors.WithMessage(err, "failed to unmarshal leaves")
 	}
 
+	// backward compatible:
+
+	before058ConvertToChildrenEltsToBMElts(st, ver)
+	before059ExtendBitmapIndex(st, ver)
+
 	return nil
 }
 
-func (st *SlimTrie) fromV100() {
+func checkVer(ver string, want string) bool {
+	v, err := semver.Parse(ver)
+	if err != nil {
+		panic(err)
+	}
 
-	// convert u32 node to ranked bitmap node
+	chk, err := semver.ParseRange(want)
+	if err != nil {
+		panic(err)
+	}
 
-	if st.Children.Flags&array.ArrayFlagIsBitmap == 0 {
+	return chk(v)
+}
 
-		var endian = binary.LittleEndian
+func before058ConvertToChildrenEltsToBMElts(st *SlimTrie, ver string) {
 
-		b := &st.Children
-		b.Flags |= array.ArrayFlagHasEltWidth | array.ArrayFlagIsBitmap
-		b.EltWidth = 16
+	// 1.0.0 is the initial version.
+	// From 0.5.8 it starts writing version to marshaled data.
+	// In 0.5.4 it starts using Bitmap to store Children elements.
+	// But 0.5.4 marshals data with version == 1.0.0
 
-		indexes := b.Indexes()
-		elts := make([]uint64, len(indexes))
-		for i, idx := range indexes {
-			eltIdx, found := b.GetEltIndex(idx)
-			if !found {
-				panic("not found index???")
+	// Convert u32 node to ranked bitmap node
+
+	if checkVer(ver, "==1.0.0 || <0.5.8") {
+
+		// There are two format with version 1.0.0:
+		// Before 0.5.4 Children elements are in Elts
+		// From 0.5.4 Children elements are in BMElts
+
+		if st.Children.Flags&array.ArrayFlagIsBitmap == 0 {
+
+			var endian = binary.LittleEndian
+
+			b := &st.Children
+			b.Flags |= array.ArrayFlagHasEltWidth | array.ArrayFlagIsBitmap
+			b.EltWidth = 16
+
+			indexes := b.Indexes()
+			elts := make([]uint64, len(indexes))
+			for i, idx := range indexes {
+				eltIdx, found := b.GetEltIndex(idx)
+				if !found {
+					panic("not found index???")
+				}
+				v := endian.Uint32(b.Elts[eltIdx*4:])
+				elts[i] = uint64(v & 0xffff)
 			}
-			v := endian.Uint32(b.Elts[eltIdx*4:])
-			elts[i] = uint64(v & 0xffff)
+			b.BMElts = array.NewBitsJoin(elts, b.EltWidth, false).(*array.Bits)
+			b.Elts = nil
 		}
-		b.BMElts = array.NewBitsJoin(elts, b.EltWidth, false).(*array.Bits)
-		b.Elts = nil
+	}
+}
+
+func before059ExtendBitmapIndex(st *SlimTrie, ver string) {
+
+	// From 0.5.9 it create aligned array bitmap.
+	// Need to align array bitmap for previous versions.
+
+	if checkVer(ver, "==1.0.0 || <0.5.9") {
+
+		n := 0
+		if n < len(st.Children.Bitmaps)*64 {
+			n = len(st.Children.Bitmaps) * 64
+		}
+		if n < len(st.Steps.Bitmaps)*64 {
+			n = len(st.Steps.Bitmaps) * 64
+		}
+		if n < len(st.Leaves.Bitmaps)*64 {
+			n = len(st.Leaves.Bitmaps) * 64
+		}
+
+		nodeCnt := int32(n)
+		st.Children.ExtendIndex(nodeCnt)
+		st.Steps.ExtendIndex(nodeCnt)
+		st.Leaves.ExtendIndex(nodeCnt)
 	}
 }
 

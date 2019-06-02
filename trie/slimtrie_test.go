@@ -865,6 +865,7 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 		leafData   []uint32
 		flags      uint32
 		eltWidth   int32
+		nodeCnt    int32
 	}
 
 	cases := []struct {
@@ -896,6 +897,7 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 				leafData:   []uint32{4, 0, 1, 2, 3},
 				flags:      3,
 				eltWidth:   16,
+				nodeCnt:    7,
 			},
 		},
 
@@ -913,6 +915,7 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 				leafData:   []uint32{3},
 				flags:      3,
 				eltWidth:   16,
+				nodeCnt:    1,
 			},
 		},
 	}
@@ -928,14 +931,17 @@ func TestSlimTrieInternalStructre(t *testing.T) {
 		expectedST.Children.EltWidth = c.eltWidth
 
 		ch, err := array.NewBitmap16(c.childIndex, c.childData, 16)
+		ch.ExtendIndex(c.nodeCnt)
 		ta.Nil(err)
 		expectedST.Children = *ch
 
 		err = expectedST.Steps.Init(c.stepIndex, c.stepElts)
 		ta.Nil(err)
+		expectedST.Steps.ExtendIndex(c.nodeCnt)
 
 		err = expectedST.Leaves.Init(c.leafIndex, c.leafData)
 		ta.Nil(err)
+		expectedST.Leaves.ExtendIndex(c.nodeCnt)
 
 		checkSlimTrie(expectedST, st, t)
 	}
