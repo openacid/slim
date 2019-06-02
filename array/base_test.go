@@ -397,42 +397,54 @@ func TestBase_Indexes(t *testing.T) {
 	}
 }
 
-func BenchmarkBaseHasAndGetEltIndex(b *testing.B) {
+var OutputBool bool
 
-	var name string
-	runs := []struct{ cnt int32 }{
-		{5},
-		{32},
-		{256},
-		{1024},
-		{10240},
-		{102400},
+func BenchmarkBase_Has(b *testing.B) {
+
+	cnt := int32(1024 * 1024)
+	mask := cnt - 1
+
+	indexes := randIndexes(cnt)
+
+	arr := &array.Base{}
+	err := arr.InitIndex(indexes)
+	if err != nil {
+		panic(err)
 	}
-	for _, r := range runs {
 
-		indexes := randIndexes(r.cnt)
-		maxIndex := indexes[len(indexes)-1]
+	b.ResetTimer()
 
-		arr := &array.Base{}
-		err := arr.InitIndex(indexes)
-		if err != nil {
-			panic(err)
-		}
-
-		name = fmt.Sprintf("Has-%d", r.cnt)
-		b.Run(name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				arr.Has(int32(i) % maxIndex)
-			}
-		})
-
-		name = fmt.Sprintf("GetEltIndex-%d", r.cnt)
-		b.Run(name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				arr.GetEltIndex(int32(i) % maxIndex)
-			}
-		})
+	var s bool = false
+	for i := 0; i < b.N; i++ {
+		s = s || arr.Has(int32(i)&mask)
 	}
+	OutputBool = s
+}
+
+var OutputInt32 int32 = 0
+
+func BenchmarkBase_GetEltIndex(b *testing.B) {
+
+	cnt := int32(1024 * 1024)
+	mask := cnt - 1
+
+	indexes := randIndexes(cnt)
+
+	arr := &array.Base{}
+	err := arr.InitIndex(indexes)
+	if err != nil {
+		panic(err)
+	}
+
+	b.ResetTimer()
+
+	var s int32
+
+	for i := 0; i < b.N; i++ {
+		v, _ := arr.GetEltIndex(int32(i) & mask)
+		s += v
+	}
+	OutputInt32 = s
 }
 
 func BenchmarkBaseGet(b *testing.B) {
