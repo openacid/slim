@@ -109,7 +109,6 @@ memory, as a minimized index of huge amount external data.
 and does not relate to key-length(`k`) either!
 
 The more dense a key set is, the less memory a trie-like data structure costs.
-Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ![](trie/report/mem_usage.jpg)
 
@@ -168,9 +167,6 @@ See: [trie/report/](trie/report/)
 ## Synopsis
 
 ### Index keys, get by key
-
-<details>
-<summary>Show me the code</summary>
 
 ```go
 package index_test
@@ -238,12 +234,7 @@ func Example() {
 }
 ```
 
-</details>
-
 ### Index key ranges, get by key
-
-<details>
-<summary>Show me the code</summary>
 
 Create an index item for every 4(or more as you wish) keys.
 
@@ -332,8 +323,6 @@ func Example_indexRanges() {
 	//   value: ""
 }
 ```
-
-</details>
 
 <!-- ## FAQ -->
 

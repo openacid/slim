@@ -162,6 +162,9 @@ func slimtrieMem(keyCnt, keyLen int) int64 {
 
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
+	for i := 0; i < len(keys); i++ {
+		vals[i] = uint16(i)
+	}
 
 	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
 	if err != nil {

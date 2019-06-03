@@ -107,7 +107,6 @@ memory, as a minimized index of huge amount external data.
 and does not relate to key-length(`k`) either!
 
 The more dense a key set is, the less memory a trie-like data structure costs.
-Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ![](trie/report/mem_usage.jpg)
 
@@ -163,19 +162,11 @@ See: [trie/report/](trie/report/)
 
 ### Index keys, get by key
 
-<details>
-<summary>Show me the code</summary>
-
 ```go
 {% include 'index/example_test.go' %}
 ```
 
-</details>
-
 ### Index key ranges, get by key
-
-<details>
-<summary>Show me the code</summary>
 
 Create an index item for every 4(or more as you wish) keys.
 
@@ -187,8 +178,6 @@ costs 20ms for either reading 4KB or reading 1MB).
 ```go
 {% include 'index/example_range_test.go' %}
 ```
-
-</details>
 
 <!-- ## FAQ -->
 
