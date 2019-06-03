@@ -1,3 +1,11 @@
+v0.5.9:
+  api-change:
+    array:
+    - do not check internal bitmap size, just panic; by drdr xp; 2019-06-02
+  new-feature:
+    array:
+    - add ExtendIndex to allocate additional 0-bits after Bitmaps and Offsets; by drdr
+      xp; 2019-05-28
 v0.5.8:
   new-feature:
     slimtrie:
