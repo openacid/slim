@@ -505,7 +505,13 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 			break
 		}
 
-		idx += int(st.getStep(eqID))
+		step, foundstep := st.Steps.Get(eqID)
+		if foundstep {
+			idx += int(step)
+		} else {
+			idx++
+		}
+
 		if lenWords < idx {
 			eqID = -1
 			break
