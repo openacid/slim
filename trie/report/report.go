@@ -13,18 +13,16 @@ var flg *benchhelper.ReportCmdFlag
 
 func main() {
 	flg = benchhelper.InitCmdFlag()
+
 	getPresent()
 	getAbsent()
-
 	memOverhead()
-
 	fprGet()
-
 }
 
 func getPresent() {
 	if flg.Bench {
-		keyCounts := []int{100, 1000, 10 * 1000, 100 * 1000}
+		keyCounts := []int{100, 1000, 10 * 1000, 100 * 1000, 1000 * 1000}
 		results := benchmark.GetPresent(keyCounts)
 		benchhelper.WriteTableFiles("report/bench_get_present", results)
 	}
@@ -46,7 +44,7 @@ set ylabel 'Get() present key ns/op' offset 1,0
 
 func getAbsent() {
 	if flg.Bench {
-		keyCounts := []int{1, 10, 100, 1000, 2000, 5000, 10000, 20000}
+		keyCounts := []int{100, 1000, 10 * 1000, 100 * 1000, 1000 * 1000}
 		results := benchmark.GetAbsent(keyCounts)
 		benchhelper.WriteTableFiles("report/bench_get_absent", results)
 	}
@@ -68,7 +66,7 @@ set ylabel 'Get() present key ns/op' offset 1,0
 
 func memOverhead() {
 	if flg.BenchMem {
-		keyCounts := []int{1000, 2000, 5000}
+		keyCounts := []int{100, 1000, 10 * 1000, 100 * 1000, 1000 * 1000}
 		results := benchmark.Mem(keyCounts)
 		benchhelper.WriteTableFiles("report/mem_usage", results)
 	}

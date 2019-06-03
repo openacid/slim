@@ -126,16 +126,8 @@ Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [b
 
 ![benchmark-get-png][]
 
-| Key count | Key length | SlimTrie | Map  | Btree |
-| ---:      | ---:       | ---:     | ---: | ---:  |
-| 1         | 1024       | 86.3     | 5.0  | 36.9  |
-| 10        | 1024       | 90.7     | 59.7 | 99.5  |
-| 100       | 1024       | 123.3    | 60.1 | 240.6 |
-| 1000      | 1024       | 157.0    | 63.5 | 389.6 |
-| 1000      | 512        | 152.6    | 40.0 | 363.0 |
-| 1000      | 256        | 152.3    | 28.8 | 332.3 |
-
-It is about **2.6 times faster** than the [btree][] by google.
+It is about **2.2 times faster** than the [btree][] by google, or **1.5 times
+faster** than binary search on a sorted array.
 
 Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
 
@@ -170,6 +162,14 @@ Internal data structure may change before `v1.0.0`.
 <summary>Change-log</summary>
 
 ```yaml
+v0.5.9:
+  api-change:
+    array:
+    - do not check internal bitmap size, just panic; by drdr xp; 2019-06-02
+  new-feature:
+    array:
+    - add ExtendIndex to allocate additional 0-bits after Bitmaps and Offsets; by drdr
+      xp; 2019-05-28
 v0.5.8:
   new-feature:
     slimtrie:
@@ -690,7 +690,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <!-- benchmark -->
 
-[benchmark-get-png]: docs/trie/charts/search_existing.png
+[benchmark-get-png]: docs/trie/charts/bench_get_2019_06_03.png
 
 <!-- links to other resource -->
 

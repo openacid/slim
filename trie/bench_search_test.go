@@ -2,12 +2,16 @@ package trie_test
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/openacid/slim/trie/benchmark"
 )
 
 var runs = []benchmark.Config{
+	// {KeyCnt: 10, KeyLen: 8, ValLen: 2},
+
 	{KeyCnt: 100, KeyLen: 32, ValLen: 2},
 	{KeyCnt: 100, KeyLen: 64, ValLen: 2},
 	{KeyCnt: 100, KeyLen: 128, ValLen: 2},
@@ -17,71 +21,120 @@ var runs = []benchmark.Config{
 	{KeyCnt: 10 * 1000, KeyLen: 32, ValLen: 2},
 	{KeyCnt: 10 * 1000, KeyLen: 64, ValLen: 2},
 	{KeyCnt: 10 * 1000, KeyLen: 128, ValLen: 2},
+	{KeyCnt: 100 * 1000, KeyLen: 32, ValLen: 2},
+	{KeyCnt: 100 * 1000, KeyLen: 64, ValLen: 2},
+	{KeyCnt: 100 * 1000, KeyLen: 128, ValLen: 2},
+	{KeyCnt: 1000 * 1000, KeyLen: 32, ValLen: 2},
+	{KeyCnt: 1000 * 1000, KeyLen: 64, ValLen: 2},
+	{KeyCnt: 1000 * 1000, KeyLen: 128, ValLen: 2},
 }
 
-func BenchmarkTrieSearch(b *testing.B) {
+var OutputBench int32 = 0
 
+func Benchmark_Get_slim_btree_map_array(b *testing.B) {
+
+	v := int32(0)
 	for _, r := range runs {
-		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
 
-		tr := testSrc.Slim
+		gst := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen)
+		mask := 1
+		n := len(gst.Keys)
+		for ; (mask << 1) <= n; mask <<= 1 {
+		}
 
-		name := fmt.Sprintf("%d-keys-%d-length: slimstrie search existing", r.KeyCnt, r.KeyLen)
-		b.Run(name, benchmark.MakeTrieBenchFunc(tr, testSrc.SearchKey))
+		nk := fmt.Sprintf("n=%d k=%d", r.KeyCnt, r.KeyLen)
 
-		// trie search nonexistent key
-		name = fmt.Sprintf("%d-keys-%d-length: slimstrie search nonexistent", r.KeyCnt, r.KeyLen)
-		searchKey := fmt.Sprintf("%snot found", testSrc.SearchKey)
-		b.Run(name, benchmark.MakeTrieBenchFunc(tr, searchKey))
+		{
+			name := "SlimTrie: " + nk
+
+			b.Run(name+": present", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += gst.SlimKV.Get(gst.Keys[i&mask])
+				}
+			})
+
+			b.Run(name+": absent", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += gst.SlimKV.Get(gst.AbsentKeys[i&mask])
+				}
+			})
+		}
+
+		{
+			name := "Map: " + nk
+
+			b.Run(name+": present", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += gst.Map[gst.Keys[i&mask]]
+				}
+			})
+
+			b.Run(name+": absent", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += gst.Map[gst.AbsentKeys[i&mask]]
+				}
+			})
+		}
+
+		{
+			name := "Btree: " + nk
+
+			b.Run(name+": present", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					itm := &benchmark.KVElt{Key: gst.Keys[i&mask], Val: gst.Values[i&mask]}
+					ee := gst.Btree.Get(itm)
+					// if ee == nil {
+					//     panic("not found")
+					// }
+					v += ee.(*benchmark.KVElt).Val
+				}
+			})
+
+			b.Run(name+": absent", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					itm := &benchmark.KVElt{Key: gst.AbsentKeys[i&mask], Val: -1}
+					ee := gst.Btree.Get(itm)
+					if ee == nil {
+						v++
+					}
+				}
+			})
+		}
+
+		{
+			name := "Array: " + nk
+
+			b.Run(name+": present", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += sortedArraySearch(gst.Keys, gst.Values, gst.Keys[i&mask])
+				}
+			})
+
+			b.Run(name+": absent", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					v += sortedArraySearch(gst.Keys, gst.Values, gst.AbsentKeys[i&mask])
+				}
+			})
+		}
 	}
+
+	OutputBench += v
 }
 
-func BenchmarkMapSearch(b *testing.B) {
+func sortedArraySearch(keys []string, values []int32, searchKey string) int32 {
 
-	for _, r := range runs {
-		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
+	n := len(keys)
 
-		m := testSrc.Map
+	idx := sort.Search(
+		n,
+		func(i int) bool {
+			return strings.Compare(keys[i], searchKey) >= 0
+		},
+	)
 
-		name := fmt.Sprintf("%d-keys-%d-length: map search existing", r.KeyCnt, r.KeyLen)
-		b.Run(name, benchmark.MakeMapBenchFunc(m, testSrc.SearchKey))
-
-		name = fmt.Sprintf("%d-keys-%d-length: map search nonexistent", r.KeyCnt, r.KeyLen)
-		searchKey := fmt.Sprintf("%snot found", testSrc.SearchKey)
-		b.Run(name, benchmark.MakeMapBenchFunc(m, searchKey))
+	if idx < n && strings.Compare(keys[idx], searchKey) == 0 {
+		return values[idx]
 	}
-}
 
-func BenchmarkArraySearch(b *testing.B) {
-
-	for _, r := range runs {
-		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
-
-		keys := testSrc.Keys
-		values := testSrc.Values
-
-		name := fmt.Sprintf("%d-keys-%d-length: array search existing", r.KeyCnt, r.KeyLen)
-		b.Run(name, benchmark.MakeArrayBenchFunc(keys, values, testSrc.SearchKey))
-
-		name = fmt.Sprintf("%d-keys-%d-length: array search nonexistent", r.KeyCnt, r.KeyLen)
-		searchKey := fmt.Sprintf("%snot found", testSrc.SearchKey)
-		b.Run(name, benchmark.MakeArrayBenchFunc(keys, values, searchKey))
-	}
-}
-
-func BenchmarkBTreeSearch(b *testing.B) {
-
-	for _, r := range runs {
-		testSrc := benchmark.NewGetSetting(r.KeyCnt, r.KeyLen, r.ValLen)
-		bt := testSrc.Btree
-
-		name := fmt.Sprintf("%d-keys-%d-length: btree search existing", r.KeyCnt, r.KeyLen)
-		searchItem := &benchmark.TrieBenchKV{Key: testSrc.SearchKey, Val: testSrc.SearchValue}
-		b.Run(name, benchmark.MakeBTreeBenchFunc(bt, searchItem))
-
-		name = fmt.Sprintf("%d-keys-%d-length: btree search nonexistent", r.KeyCnt, r.KeyLen)
-		searchKey := fmt.Sprintf("%snot found", testSrc.SearchKey)
-		searchItem = &benchmark.TrieBenchKV{Key: searchKey, Val: testSrc.SearchValue}
-		b.Run(name, benchmark.MakeBTreeBenchFunc(bt, searchItem))
-	}
+	return -1
 }

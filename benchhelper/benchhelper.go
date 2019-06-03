@@ -3,7 +3,6 @@
 package benchhelper
 
 import (
-	crand "crypto/rand"
 	"math/rand"
 	"os"
 	"runtime"
@@ -79,12 +78,12 @@ func RandI32Slice(min, n, step int32) []int32 {
 	return rst
 }
 
-func RandSortedStrings(cnt, leng int) []string {
+func RandSortedStrings(cnt, leng int, from []byte) []string {
 
 	keys := make(map[string]bool, cnt)
 
 	for i := 0; i < cnt; i++ {
-		k := RandString(leng)
+		k := RandString(leng, from)
 		if _, ok := keys[k]; ok {
 			i--
 		} else {
@@ -107,26 +106,29 @@ func RandByteSlices(cnt, leng int) [][]byte {
 	rsts := make([][]byte, cnt)
 
 	for i := int(0); i < cnt; i++ {
-		rsts[i] = RandBytes(leng)
+		rsts[i] = RandBytes(leng, nil)
 	}
 
 	return rsts
 }
 
-func RandString(leng int) string {
-	return string(RandBytes(leng))
+func RandString(leng int, from []byte) string {
+	return string(RandBytes(leng, from))
 }
 
-func RandBytes(leng int) []byte {
-	bs := make([]byte, leng)
-	n, err := crand.Read(bs)
-	if err != nil {
-		panic(err)
+var letters = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+
+func RandBytes(leng int, from []byte) []byte {
+
+	if from == nil {
+		from = letters
 	}
-	if n != leng {
-		panic("not read enough")
+
+	b := make([]byte, leng)
+	for i := range b {
+		b[i] = from[rand.Intn(len(from))]
 	}
-	return bs
+	return b
 }
 
 func newFile(fn string) *os.File {

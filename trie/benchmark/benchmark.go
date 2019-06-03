@@ -2,13 +2,10 @@
 package benchmark
 
 import (
-	"encoding/binary"
 	"math/rand"
-	"sort"
 	"strings"
 	"testing"
 	"time"
-	"unsafe"
 
 	"github.com/google/btree"
 	"github.com/openacid/low/size"
@@ -52,7 +49,7 @@ type FPRResult struct {
 // MemResult is a alias of GetResult
 type MemResult GetResult
 
-var Rec byte
+var Rec int32
 
 // GetPresent benchmark the Get() of present key.
 func GetPresent(keyCounts []int) []GetResult {
@@ -63,9 +60,9 @@ func GetPresent(keyCounts []int) []GetResult {
 
 		r := GetResult{
 			KeyCount: n,
-			K64:      benchGet(NewGetSetting(n, 64, 2), "present"),
-			K128:     benchGet(NewGetSetting(n, 128, 2), "present"),
-			K256:     benchGet(NewGetSetting(n, 256, 2), "present"),
+			K64:      benchGet(NewGetSetting(n, 64), "present"),
+			K128:     benchGet(NewGetSetting(n, 128), "present"),
+			K256:     benchGet(NewGetSetting(n, 256), "present"),
 		}
 
 		rst = append(rst, r)
@@ -83,9 +80,9 @@ func GetAbsent(keyCounts []int) []GetResult {
 
 		r := GetResult{
 			KeyCount: n,
-			K64:      benchGet(NewGetSetting(n, 64, 2), "absent"),
-			K128:     benchGet(NewGetSetting(n, 128, 2), "absent"),
-			K256:     benchGet(NewGetSetting(n, 256, 2), "absent"),
+			K64:      benchGet(NewGetSetting(n, 64), "absent"),
+			K128:     benchGet(NewGetSetting(n, 128), "absent"),
+			K256:     benchGet(NewGetSetting(n, 256), "absent"),
 		}
 
 		rst = append(rst, r)
@@ -103,7 +100,7 @@ func GetFPR(keyCounts []int) []FPRResult {
 	r := 100
 	for _, n := range keyCounts {
 
-		keys := benchhelper.RandSortedStrings(n, keyLen)
+		keys := benchhelper.RandSortedStrings(n, keyLen, nil)
 		nAbsent := n * r
 
 		present := map[string]bool{}
@@ -120,7 +117,7 @@ func GetFPR(keyCounts []int) []FPRResult {
 		fp := float64(0)
 
 		for i := 0; i < nAbsent; {
-			k := benchhelper.RandString(keyLen)
+			k := benchhelper.RandString(keyLen, nil)
 			if _, ok := present[k]; ok {
 				continue
 			}
@@ -163,7 +160,7 @@ func Mem(keyCounts []int) []MemResult {
 
 func slimtrieMem(keyCnt, keyLen int) int64 {
 
-	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
+	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
 
 	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
@@ -186,29 +183,30 @@ func benchGet(setting *GetSetting, typ string) int {
 		keys = setting.AbsentKeys
 	}
 
+	st := setting.SlimKV
+	n := len(setting.Keys)
+	mask := 1
+	for ; (mask << 1) <= n; mask <<= 1 {
+	}
+
+	var rec int32
+
 	rst := testing.Benchmark(
 		func(b *testing.B) {
-
-			st := setting.Slim
-			n := len(setting.Keys)
-
-			var rec byte
-
 			for i := 0; i < b.N; i++ {
-				v := getTestKV(st, keys[i%n])
-				rec += v[0]
+				v := st.Get(keys[i&mask])
+				rec += v
 			}
-
-			Rec = rec
 		})
 
-	return int(rst.NsPerOp())
+	Rec = rec
 
+	return int(rst.NsPerOp())
 }
 
-func NewGetSetting(cnt int, keyLen, valLen int) *GetSetting {
+func NewGetSetting(cnt int, keyLen int) *GetSetting {
 
-	ks := benchhelper.RandSortedStrings(cnt*2, keyLen)
+	ks := benchhelper.RandSortedStrings(cnt*2, keyLen, nil)
 
 	keys := make([]string, cnt)
 	absentkeys := make([]string, cnt)
@@ -218,23 +216,26 @@ func NewGetSetting(cnt int, keyLen, valLen int) *GetSetting {
 		absentkeys[i] = ks[i*2+1]
 	}
 
-	vals := benchhelper.RandByteSlices(cnt, valLen)
+	vals := make([]int32, cnt)
+	for i := 0; i < cnt; i++ {
+		vals[i] = int32(i)
+	}
 
 	elts := makeKVElts(keys, vals)
 
-	st, err := trie.NewSlimTrie(testKVConv{keySize: keyLen, valSize: valLen}, keys, elts)
+	st, err := trie.NewSlimTrie(encode.I32{}, keys, vals)
 	if err != nil {
 		panic(err)
 	}
 
 	// make test map
-	m := make(map[string][]byte, cnt)
+	m := make(map[string]int32, cnt)
 	for i := 0; i < len(keys); i++ {
 		m[keys[i]] = vals[i]
 	}
 
 	// make test btree
-	bt := btree.New(2)
+	bt := btree.New(32)
 
 	for _, v := range elts {
 		bt.ReplaceOrInsert(v)
@@ -253,9 +254,9 @@ func NewGetSetting(cnt int, keyLen, valLen int) *GetSetting {
 
 		AbsentKeys: absentkeys,
 
-		Slim:  st,
-		Map:   m,
-		Btree: bt,
+		SlimKV: &slimKV{Elts: elts, slim: st},
+		Map:    m,
+		Btree:  bt,
 
 		SearchKey:   searchKey,
 		SearchValue: searchVal,
@@ -265,166 +266,57 @@ func NewGetSetting(cnt int, keyLen, valLen int) *GetSetting {
 // GetSetting defines benchmark data source.
 type GetSetting struct {
 	Keys   []string
-	Values [][]byte
+	Values []int32
 
 	AbsentKeys []string
 
-	Slim  *trie.SlimTrie
-	Map   map[string][]byte
-	Btree *btree.BTree
+	SlimKV *slimKV
+	Map    map[string]int32
+	Btree  *btree.BTree
 
 	SearchKey   string
-	SearchValue []byte
+	SearchValue int32
 }
 
-// TrieBenchKV defines a key-value struct to be used as a value in SlimTrie in test.
-type TrieBenchKV struct {
+type slimKV struct {
+	// SlimTrie as an index
+	slim *trie.SlimTrie
+	// full key-values
+	Elts []*KVElt
+}
+
+func (s *slimKV) Get(key string) int32 {
+	idx, found := s.slim.Get(key)
+	if !found {
+		return -1
+	}
+
+	i := idx.(int32)
+
+	elt := s.Elts[i]
+	if strings.Compare(elt.Key, key) != 0 {
+		return -1
+	}
+
+	return elt.Val
+}
+
+// KVElt defines a key-value struct to be used as a value in SlimTrie in test.
+type KVElt struct {
 	Key string
-	Val []byte
+	Val int32
 }
 
 // Less is used to implements google/btree.Item
-func (kv TrieBenchKV) Less(than btree.Item) bool {
-	anotherKV := than.(*TrieBenchKV)
-
-	return kv.Key < anotherKV.Key
+func (kv *KVElt) Less(than btree.Item) bool {
+	o := than.(*KVElt)
+	return kv.Key < o.Key
 }
 
-// testKVConv implements array.Converter to be a converter of TrieBenchKV.
-type testKVConv struct {
-	keySize int
-	valSize int
-}
-
-func (c testKVConv) Encode(d interface{}) []byte {
-
-	elt := d.(*TrieBenchKV)
-
-	p := unsafe.Pointer(&elt)
-
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, *(*uint64)(p))
-
-	return b
-}
-
-func (c testKVConv) Decode(b []byte) (int, interface{}) {
-
-	size := 8
-	s := b[:size]
-
-	buf := binary.LittleEndian.Uint64(s)
-
-	// addr of uint64 == addr of elt pointer
-	p := unsafe.Pointer(&buf)
-
-	// convter pointer
-	covP := *(*unsafe.Pointer)(p)
-
-	// addr of *TrieBenchKV
-	eltP := (*TrieBenchKV)(covP)
-
-	return 8, eltP
-}
-
-func (c testKVConv) GetSize(d interface{}) int {
-	return 8
-}
-
-func (c testKVConv) GetEncodedSize(b []byte) int {
-	return 8
-}
-
-func makeKVElts(srcKeys []string, srcVals [][]byte) []*TrieBenchKV {
-	vals := make([]*TrieBenchKV, len(srcKeys))
+func makeKVElts(srcKeys []string, srcVals []int32) []*KVElt {
+	elts := make([]*KVElt, len(srcKeys))
 	for i, k := range srcKeys {
-		vals[i] = &TrieBenchKV{Key: k, Val: srcVals[i]}
+		elts[i] = &KVElt{Key: k, Val: srcVals[i]}
 	}
-	return vals
-}
-
-func getTestKV(ct *trie.SlimTrie, key string) []byte {
-
-	eq, found := ct.Get(key)
-	if !found {
-		return []byte{0}
-	}
-
-	val := eq.(*TrieBenchKV)
-
-	if strings.Compare(val.Key, key) != 0 {
-		return []byte{0}
-	}
-
-	return val.Val
-}
-
-func MakeTrieBenchFunc(st *trie.SlimTrie, searchKey string) func(*testing.B) {
-
-	return func(b *testing.B) {
-
-		for i := 0; i < b.N; i++ {
-			_ = getTestKV(st, searchKey)
-		}
-
-	}
-}
-
-func MakeMapBenchFunc(m map[string][]byte, searchKey string) func(*testing.B) {
-
-	return func(b *testing.B) {
-
-		b.ResetTimer()
-
-		for i := 0; i < b.N; i++ {
-			_ = m[searchKey]
-		}
-
-		b.StopTimer()
-	}
-}
-
-func MakeArrayBenchFunc(keys []string, values [][]byte, searchKey string) func(*testing.B) {
-
-	return func(b *testing.B) {
-
-		b.ResetTimer()
-
-		for i := 0; i < b.N; i++ {
-			_ = sortedArraySearch(keys, values, searchKey)
-		}
-
-		b.StopTimer()
-	}
-}
-
-func MakeBTreeBenchFunc(bt *btree.BTree, searchItem *TrieBenchKV) func(*testing.B) {
-	return func(b *testing.B) {
-
-		b.ResetTimer()
-
-		for i := 0; i < b.N; i++ {
-			_ = bt.Get(searchItem)
-		}
-
-		b.StopTimer()
-	}
-}
-
-func sortedArraySearch(keys []string, values [][]byte, searchKey string) []byte {
-
-	keyCnt := len(keys)
-
-	idx := sort.Search(
-		keyCnt,
-		func(i int) bool {
-			return strings.Compare(keys[i], searchKey) >= 0
-		},
-	)
-
-	if idx < keyCnt && strings.Compare(keys[idx], searchKey) == 0 {
-		return values[idx]
-	}
-
-	return nil
+	return elts
 }

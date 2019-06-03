@@ -56,7 +56,7 @@ func getTrieMem(keyCnt, keyLen int) int64 {
 
 	memStart := benchhelper.Allocated()
 
-	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
+	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
 
 	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
@@ -87,7 +87,7 @@ func getKVTrieMem2(keyCnt, keyLen int) int64 {
 
 	memStart := benchhelper.Allocated()
 
-	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
+	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
 	indexes := make([]uint32, keyCnt)
 	for i := 0; i < len(keys); i++ {
@@ -124,7 +124,7 @@ func getMapMem(keyCnt, keyLen int) int64 {
 
 	memStart := benchhelper.Allocated()
 
-	keys := benchhelper.RandSortedStrings(keyCnt, keyLen)
+	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
 
 	m := make(map[string]uint16, len(keys))
