@@ -24,7 +24,9 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 - [Why slim](#why-slim)
 - [Memory overhead](#memory-overhead)
 - [Performance benchmark](#performance-benchmark)
-- [Status, Roadmap and Change-log](#status-roadmap-and-change-log)
+- [Status](#status)
+- [Roadmap](#roadmap)
+- [Change-log](#change-log)
 - [Synopsis](#synopsis)
   - [Index keys, get by key](#index-keys-get-by-key)
   - [Index key ranges, get by key](#index-key-ranges-get-by-key)
@@ -120,14 +122,16 @@ Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ## Performance benchmark
 
-Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [btree][] by google.
-
-**Smaller is better**.
-
-![benchmark-get-png][]
-
+Time(in nano second) spent on a `get` operation with golan-map, SlimTrie, array and
+[btree][] by google.
 It is about **2.2 times faster** than the [btree][] by google, or **1.5 times
 faster** than binary search on a sorted array.
+**Smaller is better**.
+
+<!-- use img instead of markdown image to control width -->
+
+<img src="docs/trie/charts/bench_get_2019_06_04.png" width="400px"/>
+
 
 Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
 
@@ -135,144 +139,31 @@ Time(in nano second) spent on a `get` with different key count(`n`) and key leng
 
 See: [trie/report/](trie/report/)
 
-## Status, Roadmap and Change-log
 
-Currently `slim v0.5.0` APIs are stable,
-and has been used in a production env.
+## Status
 
-Meanwhile we focus on optimizing memory usage and query performance.
+-   `SlimTrie` APIs are stable, and has been used in a production env.
 
-Internal data structure may change before `v1.0.0`.
+    Meanwhile we focus on optimizing memory usage and query performance.
 
-<details>
-<summary>Roadmap</summary>
+-   Internal data structure are promised to be backward compatible for ever.
+    No data migration issue!
 
--   [ ] Large key set benchmark
+
+## Roadmap
+
 -   [ ] Query by range
--   [ ] Support up to 2 billion keys
 -   [ ] Reduce false positive rate
--   [ ] Reduce memory usage from 40 to 25 bits/key
+-   [x] **2019-06-03** v0.5.9 Large key set benchmark
+-   [x] **2019-05-29** v0.5.6 Support up to 2 billion keys
+-   [x] **2019-05-18** v0.5.4 Reduce memory usage from 40 to 14 bits/key
 -   [x] **2019-04-20** v0.4.3 Range index: many keys share one index item
 -   [x] **2019-04-18** v0.4.1 Marshaling support
 -   [x] **2019-03-08** v0.1.0 SlimIndex SlimTrie
 
-</details>
+## Change-log
 
-<details>
-<summary>Change-log</summary>
-
-```yaml
-v0.5.9:
-  api-change:
-    array:
-    - do not check internal bitmap size, just panic; by drdr xp; 2019-06-02
-  new-feature:
-    array:
-    - add ExtendIndex to allocate additional 0-bits after Bitmaps and Offsets; by drdr
-      xp; 2019-05-28
-v0.5.8:
-  new-feature:
-    slimtrie:
-    - add version writing when marshaling and version check when unmarshaling; by drdr
-      xp; 2019-05-31
-v0.5.7:
-  api-change:
-    slimtrie:
-    - remove LoadTrie(); SlimTrie do not need a trie to create; by drdr xp; 2019-05-28
-v0.5.6:
-  fixbug:
-    slimtrie:
-    - 'getStep should use int32 id instead of uint16 id. fix #104; thanks to @aaaton;
-      by drdr xp; 2019-05-29'
-v0.5.5:
-  api-change:
-    slimtrie:
-    - range based SlimTrie must provides all keys; by drdr xp; 2019-05-21
-    treestr:
-    - interface Tree adds a new method LabelInfo to format tree branch label; by drdr
-      xp; 2019-05-21
-  new-feature:
-    slimtrie:
-    - max key limit extends to 2^31; by drdr xp; 2019-05-21
-    tree:
-    - add depth-first walker DepthFirst(); by drdr xp; 2019-05-21
-    trie:
-    - add removeSameLeaf() to remove leaves with the same value; by drdr xp; 2019-05-21
-v0.5.4:
-  api-change:
-    array:
-    - NewDense do not need eltWidth; only support int32; protobuf structure change;
-      optimize Dense creating; by drdr xp; 2019-05-13
-    - rename Bitmap to Bits; by drdr xp; 2019-05-17
-  new-feature:
-    array:
-    - add Bitmap to store series of bits; by drdr xp; 2019-05-16
-    - Base.Indexes() to retrieve all indexes of present elements; by drdr xp; 2019-05-17
-    - add NewBitmapJoin() to create a big bitmap by joining sub bitmaps; by drdr xp;
-      2019-05-16
-    - add Bitmap16 which is compatible with U32; by drdr xp; 2019-05-18
-    - NewBitsJoin() accept a "dense" argument; by drdr xp; 2019-05-19
-    benchhelper:
-    - add SizeStat() to describe data struct and size; by drdr xp; 2019-05-18
-    polyfit:
-    - add polyfit for fit a polynomial curve over points; by drdr xp; 2019-05-15
-    slimtrie:
-    - use Bitmap16 and reduce memory usage; by drdr xp; 2019-05-18
-    strhelper:
-    - add ToBin() converts integer or slice of integer to binary format string; by drdr
-      xp; 2019-05-17
-v0.5.3:
-  api-change:
-    trie:
-    - values to create trie must be slice or it panic; by drdr xp; 2019-05-01
-    typehelper:
-    - ToSlice now just panic if input is not a slice.; by drdr xp; 2019-05-01
-v0.5.2:
-  new-feature:
-    array:
-    - add Dense array to compress incremental ints; by drdr xp; 2019-05-06
-    benchhelper:
-    - add SizeOf() to get size of a value; by drdr xp; 2019-05-06
-    - add RandI32Slice; by drdr xp; 2019-05-07
-v0.5.1:
-  new-feature:
-    slimtrie:
-    - do not store Step on leaf node; by drdr xp; 2019-04-29
-    trie:
-    - Tree convert a tree-like data strcture to string; by drdr xp; 2019-05-02
-v0.5.0:
-  api-change:
-    trie:
-    - Append() do not need isStartLeaf; by drdr xp; 2019-04-22
-v0.4.3:
-  new-feature:
-    slimtrie:
-    - RangeGet() to get value of a key in indexed range; by drdr xp; 2019-04-20
-    - String(); by drdr xp; 2019-04-23
-    trie:
-    - add String() to output human readable trie structure; by drdr xp; 2019-04-19
-v0.4.1:
-  new-feature:
-    encode:
-    - add encode.Int to convert int to byte and back; by drdr xp; 2019-04-18
-    slimtrie:
-    - add proto.Marshaler and proto.Unmarshaler interface; by liubaohai; 2019-04-18
-    strhelper:
-    - add func to convert word of bits back to string; by drdr xp; 2019-04-19
-v0.4.0:
-  api-changes:
-    trie:
-    - trie.Node add squash; by wenbo; 2019-04-11
-    - remove marshalAt and unmarshalAt; use SectionReader and SectionWriter; by drdr
-      xp; 2019-04-10
-    - fix method name encode->marshal; by drdr xp; 2019-04-10
-    - SlimTrie.Get returns value and found in bool; by drdr xp; 2019-03-27
-  new-feature:
-    array:
-    - add MemSize() to get memory occupied by array; by drdr xp; 2019-04-15
-```
-
-</details>
+[Change-log](docs/change-log.yaml)
 
 ## Synopsis
 

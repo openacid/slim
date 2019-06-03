@@ -116,14 +116,16 @@ Above 5000 keys, it becomes stable at **13 bits/key**.
 
 ## Performance benchmark
 
-Time(in nano second) spent on a `get` operation with SlimTrie, golang-map and [btree][] by google.
-
-**Smaller is better**.
-
-![benchmark-get-png][]
-
+Time(in nano second) spent on a `get` operation with golan-map, SlimTrie, array and
+[btree][] by google.
 It is about **2.2 times faster** than the [btree][] by google, or **1.5 times
 faster** than binary search on a sorted array.
+**Smaller is better**.
+
+<!-- use img instead of markdown image to control width -->
+
+<img src="docs/trie/charts/bench_get_2019_06_04.png" width="400px"/>
+
 
 Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
 
@@ -131,37 +133,31 @@ Time(in nano second) spent on a `get` with different key count(`n`) and key leng
 
 See: [trie/report/](trie/report/)
 
-## Status, Roadmap and Change-log
 
-Currently `slim v0.5.0` APIs are stable,
-and has been used in a production env.
+## Status
 
-Meanwhile we focus on optimizing memory usage and query performance.
+-   `SlimTrie` APIs are stable, and has been used in a production env.
 
-Internal data structure may change before `v1.0.0`.
+    Meanwhile we focus on optimizing memory usage and query performance.
 
-<details>
-<summary>Roadmap</summary>
+-   Internal data structure are promised to be backward compatible for ever.
+    No data migration issue!
 
--   [ ] Large key set benchmark
+
+## Roadmap
+
 -   [ ] Query by range
--   [ ] Support up to 2 billion keys
 -   [ ] Reduce false positive rate
--   [ ] Reduce memory usage from 40 to 25 bits/key
+-   [x] **2019-06-03** v0.5.9 Large key set benchmark
+-   [x] **2019-05-29** v0.5.6 Support up to 2 billion keys
+-   [x] **2019-05-18** v0.5.4 Reduce memory usage from 40 to 14 bits/key
 -   [x] **2019-04-20** v0.4.3 Range index: many keys share one index item
 -   [x] **2019-04-18** v0.4.1 Marshaling support
 -   [x] **2019-03-08** v0.1.0 SlimIndex SlimTrie
 
-</details>
+## Change-log
 
-<details>
-<summary>Change-log</summary>
-
-```yaml
-{% include 'docs/change-log.yaml' %}
-```
-
-</details>
+[Change-log](docs/change-log.yaml)
 
 ## Synopsis
 
