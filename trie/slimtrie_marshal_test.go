@@ -30,8 +30,9 @@ func TestSlimTrie_Unmarshal_incompatible(t *testing.T) {
 	}{
 		{"1.0.0", nil},
 		{"0.5.8", nil},
+		{"0.5.9", nil},
 		{slimtrieVersion, nil},
-		{"0.5.10", ErrIncompatible},
+		{"0.5.11", ErrIncompatible},
 		{"0.6.0", ErrIncompatible},
 		{"0.9.9", ErrIncompatible},
 		{"1.0.1", ErrIncompatible},
@@ -40,8 +41,12 @@ func TestSlimTrie_Unmarshal_incompatible(t *testing.T) {
 	for i, c := range cases {
 		bad := make([]byte, len(buf))
 		copy(bad, buf)
-		copy(buf, []byte(c.input))
-		err := proto.Unmarshal(buf, st2)
+		// clear buf for version
+		for i := 0; i < 16; i++ {
+			bad[i] = 0
+		}
+		copy(bad, []byte(c.input))
+		err := proto.Unmarshal(bad, st2)
 		ta.Equal(c.want, errors.Cause(err), "%d-th: case: %+v", i+1, c)
 	}
 }
