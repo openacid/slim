@@ -210,14 +210,14 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}) (*SlimTrie
 				s = j
 			}
 
-			// 1 for the label word at parent node
-			step := (prefI - o.fromIndex) + 1
+			// Exclude the label word at parent node
+			step := (prefI - o.fromIndex)
 			if step > 0xffff {
 				panic(fmt.Sprintf("step=%d is too large. must < 2^16", step))
 			}
 
 			// By default to move 1 step forward, thus no need to store 1
-			hasStep := step > 1
+			hasStep := step > 0
 			if hasStep {
 				stepi = append(stepi, nid)
 				stepv = append(stepv, uint16(step))
@@ -505,12 +505,8 @@ func (st *SlimTrie) Get(key string) (eqVal interface{}, found bool) {
 			break
 		}
 
-		step, foundstep := st.Steps.Get(eqID)
-		if foundstep {
-			idx += int(step)
-		} else {
-			idx++
-		}
+		step, _ := st.Steps.Get(eqID)
+		idx += 1 + int(step)
 
 		if lenWords < idx {
 			eqID = -1
@@ -552,12 +548,9 @@ func (st *SlimTrie) getChild(idx int32) (bitmap uint16, offset int32, found bool
 }
 
 func (st *SlimTrie) getStep(idx int32) uint16 {
-	step, found := st.Steps.Get(idx)
-	if found {
-		return step
-	}
-
-	return uint16(1)
+	step, _ := st.Steps.Get(idx)
+	// 1 for the label word at parent node.
+	return step + 1
 }
 
 func (st *SlimTrie) leftMost(idx int32) int32 {
@@ -644,6 +637,7 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 
 	before058ConvertToChildrenEltsToBMElts(st, ver)
 	before059ExtendBitmapIndex(st, ver)
+	before0510StepFrom0(st, ver)
 
 	return nil
 }
@@ -723,6 +717,27 @@ func before059ExtendBitmapIndex(st *SlimTrie, ver string) {
 		st.Children.ExtendIndex(nodeCnt)
 		st.Steps.ExtendIndex(nodeCnt)
 		st.Leaves.ExtendIndex(nodeCnt)
+	}
+}
+
+func before0510StepFrom0(st *SlimTrie, ver string) {
+
+	// From 0.5.10 step does not include the count of the label word.
+
+	if checkVer(ver, "==1.0.0 || <0.5.10") {
+
+		ii := st.Steps.Indexes()
+		for i, idx := range ii {
+			v, found := st.Steps.Get(idx)
+			if !found {
+				panic("not found??")
+			}
+
+			v -= 1
+
+			st.Steps.Elts[i*2] = byte(v)
+			st.Steps.Elts[i*2+1] = byte(v >> 8)
+		}
 	}
 }
 
