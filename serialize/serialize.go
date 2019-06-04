@@ -4,6 +4,9 @@
 // header length and data length.
 // Thus we de-serializing, total size can be accquired at once, without reading
 // the entire data.
+//
+// Deprecated: use github.com/openacid/low/pbcmpl; This module will be removed
+// in 1.0.0 .
 package serialize
 
 import (
@@ -12,7 +15,7 @@ import (
 	"io"
 	"unsafe"
 
-	"github.com/openacid/slim/iohelper"
+	"github.com/openacid/low/iohelper"
 	"github.com/openacid/slim/version"
 
 	proto "github.com/golang/protobuf/proto"

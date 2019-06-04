@@ -4,6 +4,8 @@
 // Most data structure defined in this repo provides with
 // serializing/deserializing APIs.
 // Serialized data has a version to describe its structure.
+//
+// Deprecated: will be removed since 1.0.0
 package version
 
 const (

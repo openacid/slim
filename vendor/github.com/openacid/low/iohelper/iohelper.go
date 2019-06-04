@@ -1,7 +1,4 @@
 // Package iohelper provides extra interfaces than package io.
-//
-// Deprecated: use github.com/openacid/low/iohelper; This module will be removed
-// in 1.0.0 .
 package iohelper
 
 import (
@@ -9,14 +6,36 @@ import (
 	"io"
 )
 
+const (
+	maxOffset int64 = 0x7fffffffffffffff
+)
+
+// AtToWriter convert a WriterAt to a Writer
+//
+// Since 0.1.6
+func AtToWriter(w io.WriterAt, offset int64) io.Writer {
+	return NewSectionWriter(w, offset, maxOffset-offset)
+}
+
+// AtToReader convert a ReaderAt to a Reader
+//
+// Since 0.1.6
+func AtToReader(r io.ReaderAt, offset int64) io.Reader {
+	return io.NewSectionReader(r, offset, maxOffset-offset)
+}
+
 // NewSectionWriter returns a SectionWriter that writes to w
 // starting at offset off and stops with io.ErrShortWrite after n bytes.
+//
+// Since 0.1.6
 func NewSectionWriter(w io.WriterAt, off int64, n int64) *SectionWriter {
 	return &SectionWriter{w, off, off, off + n}
 }
 
 // SectionWriter implements Write, Seek, and WriteAt on a section
 // of an underlying io.WriterAt.
+//
+// Since 0.1.6
 type SectionWriter struct {
 	w     io.WriterAt
 	base  int64
@@ -24,6 +43,9 @@ type SectionWriter struct {
 	limit int64
 }
 
+// Write buf "p".
+//
+// Since 0.1.6
 func (s *SectionWriter) Write(p []byte) (n int, err error) {
 	if s.off >= s.limit {
 		return 0, io.ErrShortWrite
@@ -46,6 +68,8 @@ var errWhence = errors.New("Seek: invalid whence")
 var errOffset = errors.New("Seek: invalid offset")
 
 // Seek seeks to relative position by offset.
+//
+// Since 0.1.6
 func (s *SectionWriter) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	default:
@@ -65,6 +89,8 @@ func (s *SectionWriter) Seek(offset int64, whence int) (int64, error) {
 }
 
 // WriteAt write buf p at relative position off.
+//
+// Since 0.1.6
 func (s *SectionWriter) WriteAt(p []byte, off int64) (n int, err error) {
 	if off < 0 || off >= s.limit-s.base {
 		return 0, io.ErrShortWrite
@@ -82,4 +108,6 @@ func (s *SectionWriter) WriteAt(p []byte, off int64) (n int, err error) {
 }
 
 // Size returns the size of the section in bytes.
+//
+// Since 0.1.6
 func (s *SectionWriter) Size() int64 { return s.limit - s.base }

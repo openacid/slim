@@ -1,12 +1,9 @@
 # `grep -v` does not work on travis. No time to find out why -- xp 2019 Feb 22
-PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\|array/pb\)")
+PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\|iohelper\|serialize\|version\)")
 
 # PKGS := github.com/openacid/slim/array \
 #         github.com/openacid/slim/bit \
-#         github.com/openacid/slim/iohelper \
-#         github.com/openacid/slim/serialize \
 #         github.com/openacid/slim/trie \
-#         github.com/openacid/slim/version
 
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 

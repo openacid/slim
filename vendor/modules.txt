@@ -17,6 +17,7 @@ github.com/openacid/errors
 # github.com/openacid/low v0.1.11-0.20190918052027-76b5225d1eae
 github.com/openacid/low/bitmap
 github.com/openacid/low/size
+github.com/openacid/low/iohelper
 github.com/openacid/low/bitword
 github.com/openacid/low/bmtree
 github.com/openacid/low/pbcmpl
