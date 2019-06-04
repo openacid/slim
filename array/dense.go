@@ -27,5 +27,5 @@ type Denser interface {
 //
 // Since 0.5.2
 func NewDense(nums []int32) Denser {
-	return NewPolyArray(nums)
+	return nil
 }

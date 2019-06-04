@@ -2,8 +2,6 @@ syntax = "proto3";
 
 option go_package = "array";
 
-import "polyarray.proto";
-
 // Bits is an array of bits
 // with rank(how many 1 upto position x, excluding x) index.
 // With option dense, it compresses rank index thus reduces memory usage but a query takes more
@@ -27,7 +25,4 @@ message Bits {
     //
     // Since 0.5.4
     repeated int32 RankIndex = 30;
-
-    // Not used anymore.
-    PolyArray RankIndexDense = 31;
 }
