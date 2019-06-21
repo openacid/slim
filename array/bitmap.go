@@ -5,6 +5,7 @@ import (
 	"math/bits"
 
 	proto "github.com/golang/protobuf/proto"
+	"github.com/openacid/low/bitmap"
 	"github.com/openacid/low/size"
 )
 
@@ -65,13 +66,13 @@ func NewBits(nums []int32) Bitmap {
 	return bm
 }
 
-// NewBitsJoin creates a new Bitmap instance from a serias of bitmap pieces.
+// NewBitsJoin creates a new Bitmap instance from a serias of sub bitmap.
 //
 // Since 0.5.4
 func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
 
 	n, words := concatBits(elts, eltWidth)
-	index := newRankIndex2(words)
+	index := bitmap.IndexRank128(words)
 
 	bm := &Bits{
 		Flags: 0,
@@ -114,7 +115,7 @@ func NewDenseBits(nums []int32) Bitmap {
 func newBitsData(nums []int32) (int32, []uint64, []int32) {
 
 	n, words := newBitsWords(nums)
-	index := newRankIndex2(words)
+	index := bitmap.IndexRank128(words)
 
 	return n, words, index
 }
@@ -250,47 +251,4 @@ func (b *Bits) Rank(i int32) int32 {
 		d := int32(bits.OnesCount64(word))
 		return n - d
 	}
-}
-
-func newRankIndex1(words []uint64) []int32 {
-
-	// One uint64 words share one index
-
-	idx := make([]int32, 0)
-	n := int32(0)
-	for i := 0; i < len(words); i++ {
-		idx = append(idx, n)
-		n += int32(bits.OnesCount64(words[i]))
-	}
-
-	// clone to reduce cap to len
-	idx = append(idx[:0:0], idx...)
-
-	return idx
-}
-
-func newRankIndex2(words []uint64) []int32 {
-
-	// two uint64 words share one index
-
-	idx := make([]int32, 0)
-	n := int32(0)
-	for i := 0; i < len(words); i += 2 {
-		idx = append(idx, n)
-		n += int32(bits.OnesCount64(words[i]))
-		if i < len(words)-1 {
-			n += int32(bits.OnesCount64(words[i+1]))
-		}
-	}
-
-	// Need a last index to let distance from every bit to its closest index
-	// <=64
-	if len(words)&1 == 0 {
-		idx = append(idx, n)
-	}
-
-	// clone to reduce cap to len
-	idx = append(idx[:0:0], idx...)
-
-	return idx
 }

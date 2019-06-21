@@ -7,6 +7,7 @@ import (
 	"math/bits"
 
 	"github.com/openacid/errors"
+	"github.com/openacid/low/bitmap"
 	"github.com/openacid/slim/encode"
 )
 
@@ -59,7 +60,7 @@ func (a *Base) InitIndex(index []int32) error {
 	}
 
 	_, a.Bitmaps = newBitsWords(index)
-	a.Offsets = newRankIndex1(a.Bitmaps)
+	a.Offsets = bitmap.IndexRank64(a.Bitmaps)
 	a.Cnt = int32(len(index))
 
 	// Be compatible to previous issue:
@@ -89,7 +90,7 @@ func (a *Base) ExtendIndex(n int32) {
 	copy(bitmaps, a.Bitmaps)
 
 	a.Bitmaps = bitmaps
-	a.Offsets = newRankIndex1(a.Bitmaps)
+	a.Offsets = bitmap.IndexRank64(a.Bitmaps)
 	for i, word := range a.Bitmaps {
 		if word == 0 {
 			a.Offsets[i] = 0
