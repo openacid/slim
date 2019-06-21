@@ -29,8 +29,10 @@ type Bits struct {
 	N int32 `protobuf:"varint,10,opt,name=N,proto3" json:"N,omitempty"`
 	// Words contains bitmap
 	Words []uint64 `protobuf:"varint,20,rep,packed,name=Words,proto3" json:"Words,omitempty"`
-	// RandIndex speeds up rank() by pre-calcuate it
+	// RankIndex speeds up rank() by pre-calcuate it
 	// Choose by Flags
+	//
+	// Since 0.5.4
 	RankIndex            []int32    `protobuf:"varint,30,rep,packed,name=RankIndex,proto3" json:"RankIndex,omitempty"`
 	RankIndexDense       *PolyArray `protobuf:"bytes,31,opt,name=RankIndexDense,proto3" json:"RankIndexDense,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`

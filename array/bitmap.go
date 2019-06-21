@@ -40,7 +40,7 @@ type Bitmap interface {
 	// Since 0.5.4
 	Bits() []uint64
 
-	// Rand returns the count of 1 up to i(exclude i)
+	// Rank returns the count of 1 up to i(exclude i)
 	//
 	// Since 0.5.4
 	Rank(int32) int32
@@ -48,7 +48,7 @@ type Bitmap interface {
 	proto.Message
 }
 
-// NewBits creates a new Bitmapper instance from a serias of int32.
+// NewBits creates a new Bitmap instance from a serias of int32.
 // The input specifies what bit to set to 1.
 //
 // Since 0.5.4
@@ -65,7 +65,7 @@ func NewBits(nums []int32) Bitmap {
 	return bm
 }
 
-// NewBitsJoin creates a new Bitmapper instance from a serias of sub bitmap.
+// NewBitsJoin creates a new Bitmap instance from a serias of bitmap pieces.
 //
 // Since 0.5.4
 func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
@@ -89,7 +89,7 @@ func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
 	return bm
 }
 
-// NewDenseBits creates a new Bitmapper instance from a serias of int32.
+// NewDenseBits creates a new Bitmap instance from a serias of int32.
 // The input specifies what bit to set to 1.
 //
 // It compress rand index to reduce memory cost.

@@ -22,8 +22,10 @@ message Bits {
     repeated uint64 Words = 20;
 
 
-    // RandIndex speeds up rank() by pre-calcuate it
+    // RankIndex speeds up rank() by pre-calcuate it
     // Choose by Flags
+    //
+    // Since 0.5.4
     repeated int32 RankIndex = 30;
     PolyArray RankIndexDense = 31;
 }
