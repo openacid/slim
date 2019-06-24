@@ -9,10 +9,6 @@ import (
 	"github.com/openacid/low/size"
 )
 
-const (
-	BitsFlagDenseRank = 0x00000001
-)
-
 // Bitmap defines behavior of a bitmap.
 //
 // Since 0.5.4
