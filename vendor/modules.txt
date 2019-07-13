@@ -14,14 +14,26 @@ github.com/kr/text
 github.com/mattn/go-runewidth
 # github.com/openacid/errors v0.8.1
 github.com/openacid/errors
-# github.com/openacid/low v0.1.7
+# github.com/openacid/low v0.1.11-0.20190918052027-76b5225d1eae
+github.com/openacid/low/bitmap
 github.com/openacid/low/size
 github.com/openacid/low/bitword
+github.com/openacid/low/bmtree
 github.com/openacid/low/pbcmpl
+github.com/openacid/low/sigbits
 github.com/openacid/low/tree
+github.com/openacid/low/typehelper
 github.com/openacid/low/vers
+# github.com/openacid/must v0.1.3
+github.com/openacid/must
+github.com/openacid/must/disabled
+github.com/openacid/must/enabled
+# github.com/openacid/slimcompatible v0.0.0-20190906020345-8858324167c9
+github.com/openacid/slimcompatible/testkeys
 # github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 github.com/openacid/tablewriter
+# github.com/openacid/testkeys v0.1.1
+github.com/openacid/testkeys
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.3.0

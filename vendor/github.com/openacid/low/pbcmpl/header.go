@@ -111,7 +111,7 @@ func (h *header) ProtoMessage() {}
 
 func newHeader(ver string, bodysize uint64) *header {
 
-	if len(ver) >= versionLen {
+	if len(ver) > versionLen {
 		panic("version length overflow")
 	}
 

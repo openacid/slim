@@ -115,7 +115,7 @@ func nodeStr(t Tree, inbranch, node interface{}) (string, int) {
 	var line string
 
 	if inbranch != nil {
-		line += fmt.Sprintf("-%03v->", t.LabelInfo(inbranch))
+		line += fmt.Sprintf("-%v->", t.LabelInfo(inbranch))
 	}
 
 	nodeid := t.NodeID(node)

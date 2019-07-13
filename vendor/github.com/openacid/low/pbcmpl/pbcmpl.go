@@ -36,10 +36,8 @@ func marshal(msg proto.Message, ver string) ([]byte, []byte, error) {
 
 	h := newHeader(ver, uint64(len(data)))
 
-	header, err := proto.Marshal(h)
-	if err != nil {
-		return nil, nil, err
-	}
+	// header is tested and should never encounter error when marshaling it
+	header, _ := proto.Marshal(h)
 
 	return header, data, nil
 }
@@ -98,10 +96,8 @@ func ReadHeader(r io.Reader) (int64, Header, error) {
 	}
 
 	h := &header{}
-	err = proto.Unmarshal(b, h)
-	if err != nil {
-		return int64(n), nil, errors.WithStack(err)
-	}
+	// by tests, Unmarshaling a header should never return an error
+	proto.Unmarshal(b, h)
 
 	return int64(n), &headerInfo{h}, nil
 }

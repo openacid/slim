@@ -148,6 +148,8 @@ func sizeof(v reflect.Value) int {
 		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
 		reflect.Int:
 		sum = int(v.Type().Size())
+	case reflect.Bool:
+		sum = int(v.Type().Size())
 	default:
 		panic(fmt.Sprintf("unknown kind: %s", v.Kind()))
 	}
