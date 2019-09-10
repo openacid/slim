@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 
+	"github.com/openacid/low/size"
 	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
 )
-
-var Output int
-var _ = Output
 
 func main() {
 	compareTrieMapMemUse()
@@ -54,41 +52,24 @@ func writeTableRow(cnt, kLen, vLen int, trieAvg, mapAvg, kvTrieAvg float64) {
 
 func getTrieMem(keyCnt, keyLen int) int64 {
 
-	memStart := benchhelper.Allocated()
-
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
+	for i := range vals {
+		vals[i] = uint16(i)
+	}
 
 	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
 	if err != nil {
 		panic(err)
 	}
 
-	keys = nil
-	vals = nil
-
-	memEnd := benchhelper.Allocated()
-
-	size := memEnd - memStart
-
-	_ = keys
-	_ = vals
-
-	// reference them or memory is freed
-	_ = t.Children
-	_ = t.Steps
-	_ = t.Leaves
-
-	return size
+	return int64(size.Of(t))
 }
 
 func getKVTrieMem2(keyCnt, keyLen int) int64 {
 	// make key + value as a value in trie
 
-	memStart := benchhelper.Allocated()
-
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
-	vals := make([]uint16, keyCnt)
 	indexes := make([]uint32, keyCnt)
 	for i := 0; i < len(keys); i++ {
 		indexes[i] = uint32(i)
@@ -99,30 +80,10 @@ func getKVTrieMem2(keyCnt, keyLen int) int64 {
 		panic(err)
 	}
 
-	memEnd := benchhelper.Allocated()
-
-	size := memEnd - memStart
-
-	var s int
-	for _, k := range keys {
-		i, _ := t.Get(k)
-		// in real world, need to compare keys[i] and k to ensure it is a positive match
-		v := vals[i.(uint32)]
-		s += int(v)
-	}
-	Output = len(keys) + len(vals) + len(indexes) + s
-
-	// reference them or memory is freed
-	_ = t.Children
-	_ = t.Steps
-	_ = t.Leaves
-
-	return size
+	return int64(size.Of(t))
 }
 
 func getMapMem(keyCnt, keyLen int) int64 {
-
-	memStart := benchhelper.Allocated()
 
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
 	vals := make([]uint16, keyCnt)
@@ -133,17 +94,5 @@ func getMapMem(keyCnt, keyLen int) int64 {
 		m[keys[i]] = vals[i]
 	}
 
-	keys = nil
-	vals = nil
-
-	memEnd := benchhelper.Allocated()
-
-	size := memEnd - memStart
-
-	Output = len(m)
-
-	_ = keys
-	_ = vals
-
-	return size
+	return int64(size.Of(m))
 }
