@@ -19,7 +19,8 @@ check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 travis: test vet gofmt misspell unconvert ineffassign unparam coveralls
 
 test:
-	$(GO) test $(PKGS)
+	$(GO) test -tags debug $(PKGS)
+	$(GO) test             $(PKGS)
 
 vet: | test
 	$(GO) vet $(PKGS)
@@ -82,5 +83,5 @@ fix:
 coveralls:
 	$(GO) get golang.org/x/tools/cmd/cover
 	$(GO) get github.com/mattn/goveralls
-	$(GO) test -v -covermode=count -coverprofile=coverage.out $(PKGS)
+	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
 	$$HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $$COVERALLS_TOKEN
