@@ -15,12 +15,31 @@ var Fformat = struct {
 }{
 	JPGHistogramTiny: `
 set terminal jpeg size 300,200;
-set boxwidth 0.8;
-set style fill solid;
+
+# the bar width
+set boxwidth 0.7 relative
+
+set style fill solid border;
+
+# show horizontal grid
 set grid ytics;
 
 set style line 101 lc rgb '#909090' lt 1 lw 1
+
+# left and bottom border
 set border 3 front ls 101
+
+# plot title at the right top
+set key font ",8"
+
+# x-axis, the numbers
+set tics font "Verdana,8"
+
+# space between x-axis and x-tics label
+set xtics offset 0,0.3,0
+
+# cluster spacing is 1(bar-width)
+set style histogram cluster gap 1
 `,
 	JPGHistogramSmall: `
 set terminal jpeg size 400,300;
@@ -43,36 +62,68 @@ set border 3 front ls 101
 }
 
 var LineStyles = struct {
-	Green  string
-	Yellow string
-	Orange string
+	Colorful string
+	Orange   string
+	Yellow   string
+	Green    string
+	Cyan     string
+	Blue     string
+	Purple   string
 }{
-	Green: `
-set style line 1 lc rgb '#aaffa5' pt 1 ps 1 lt 1 lw 2;
-set style line 2 lc rgb '#99f094' pt 6 ps 1 lt 1 lw 2;
-set style line 3 lc rgb '#87e082' pt 6 ps 1 lt 1 lw 2;
-set style line 4 lc rgb '#76d171' pt 6 ps 1 lt 1 lw 2;
-set style line 5 lc rgb '#65c260' pt 6 ps 1 lt 1 lw 2;
-set style line 6 lc rgb '#54b34f' pt 6 ps 1 lt 1 lw 2;
-set style line 7 lc rgb '#42a33d' pt 6 ps 1 lt 1 lw 2;
-set style line 8 lc rgb '#31942c' pt 6 ps 1 lt 1 lw 2;
-`,
-	Yellow: `
-set style line 1  lc rgb '#e6f082' pt 1 ps 1 lt 1 lw 2;
-set style line 2  lc rgb '#dfeb5f' pt 6 ps 1 lt 1 lw 2;
-set style line 3  lc rgb '#d4e52b' pt 6 ps 1 lt 1 lw 2;
+	Colorful: `
+set style line 1 lc rgb '#4688F1' pt 1 ps 1 lt 1 lw 2;
+set style line 2 lc rgb '#CA4E5D' pt 6 ps 1 lt 1 lw 2;
+set style line 3 lc rgb '#79A2F1' pt 6 ps 1 lt 1 lw 2;
+set style line 4 lc rgb '#8ED0F1' pt 6 ps 1 lt 1 lw 2;
+set style line 5 lc rgb '#8AE7CC' pt 6 ps 1 lt 1 lw 2;
+
+set style line 1 lc rgb '#4688F1' pt 1 ps 1 lt 1 lw 2;
+set style line 2 lc rgb '#6CA8F3' pt 6 ps 1 lt 1 lw 2;
+set style line 3 lc rgb '#79A2F1' pt 6 ps 1 lt 1 lw 2;
+set style line 4 lc rgb '#8ED0F1' pt 6 ps 1 lt 1 lw 2;
+set style line 5 lc rgb '#8AE7CC' pt 6 ps 1 lt 1 lw 2;
 `,
 	Orange: `
-set style line 1  lc rgb '#ffdd00' pt 1 ps 1 lt 1 lw 2;
-set style line 2  lc rgb '#f9d000' pt 6 ps 1 lt 1 lw 2;
-set style line 3  lc rgb '#f4c300' pt 6 ps 1 lt 1 lw 2;
-set style line 4  lc rgb '#eeb500' pt 6 ps 1 lt 1 lw 2;
-set style line 5  lc rgb '#e8a800' pt 6 ps 1 lt 1 lw 2;
-set style line 6  lc rgb '#e39b00' pt 6 ps 1 lt 1 lw 2;
-set style line 7  lc rgb '#dd8e00' pt 6 ps 1 lt 1 lw 2;
-set style line 8  lc rgb '#d78000' pt 6 ps 1 lt 1 lw 2;
-set style line 9  lc rgb '#d27300' pt 6 ps 1 lt 1 lw 2;
-set style line 10 lc rgb '#cc6600' pt 6 ps 1 lt 1 lw 2;
+set style line 1  lc rgb '#edbe8a' pt 1 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#e29543' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#da7409' pt 6 ps 1 lt 1 lw 2;
+set style line 4  lc rgb '#c16400' pt 6 ps 1 lt 1 lw 2;
+set style line 5  lc rgb '#ad5900' pt 6 ps 1 lt 1 lw 2;
+`,
+	Yellow: `
+set style line 1  lc rgb '#e9d16c' pt 1 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#e2c444' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#daaf08' pt 6 ps 1 lt 1 lw 2;
+set style line 4  lc rgb '#cfb033' pt 6 ps 1 lt 1 lw 2;
+set style line 5  lc rgb '#ad8a00' pt 6 ps 1 lt 1 lw 2;
+`,
+	Green: `
+set style line 1 lc rgb '#a2e2b8' pt 1 ps 1 lt 1 lw 2;
+set style line 2 lc rgb '#6ecd9b' pt 6 ps 1 lt 1 lw 2;
+set style line 3 lc rgb '#5db191' pt 6 ps 1 lt 1 lw 2;
+set style line 4 lc rgb '#519d7f' pt 6 ps 1 lt 1 lw 2;
+set style line 5 lc rgb '#49856e' pt 6 ps 1 lt 1 lw 2;
+
+`,
+	Cyan: `
+set style line 1 lc rgb '#adece1' pt 1 ps 1 lt 1 lw 2;
+set style line 2 lc rgb '#5cd4d9' pt 6 ps 1 lt 1 lw 2;
+set style line 3 lc rgb '#70bcca' pt 6 ps 1 lt 1 lw 2;
+set style line 4 lc rgb '#4297a7' pt 6 ps 1 lt 1 lw 2;
+
+`,
+	Blue: `
+set style line 1 lc rgb '#97c8d5' pt 1 ps 1 lt 1 lw 2;
+set style line 2 lc rgb '#5ca6d9' pt 6 ps 1 lt 1 lw 2;
+set style line 3 lc rgb '#4c80bc' pt 6 ps 1 lt 1 lw 2;
+set style line 4 lc rgb '#4172a7' pt 6 ps 1 lt 1 lw 2;
+
+`,
+	Purple: `
+set style line 1  lc rgb '#c4aecf' pt 1 ps 1 lt 1 lw 2;
+set style line 2  lc rgb '#b674c0' pt 6 ps 1 lt 1 lw 2;
+set style line 3  lc rgb '#a562a6' pt 6 ps 1 lt 1 lw 2;
+set style line 4  lc rgb '#915593' pt 6 ps 1 lt 1 lw 2;
 `,
 }
 
@@ -84,9 +135,9 @@ stats fn skip 1 nooutput
 max_col = STATS_columns
 
 plot for [col=2:max_col] fn \
-using col:xtic(1) \
-with histogram \
-linestyle col-1 \
+using col:xticlabels(gprintf('10^{%T}',column(1)))           \
+with histogram              \
+linestyle col-1             \
 title columnheader
 `,
 }

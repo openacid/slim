@@ -59,7 +59,7 @@ memory, as a minimized index of huge amount external data.
     **Features**:
 
     -   **Minimized**:
-        **11 bits per key**(even less than an 8-byte pointer!!).
+        **11 bits per key**(far less than an 64-bits pointer!!).
 
     -   **Stable**:
         memory consumption is stable in various scenarios.
@@ -95,34 +95,36 @@ memory, as a minimized index of huge amount external data.
 
 <!-- TODO toc -->
 
+<!-- TODO add FPR benchmark -->
+
 ## Memory overhead
 
-**Bits/key** is stable when key-count(`n`) increases,
-and does not relate to key-length(`k`) either!
-
-The more dense a key set is, the less memory a trie-like data structure costs.
+**Bits/key**: memory or disk-space in bits a key consumed in average.
+It does not change when key-length(`k`) becomes larger!
 
 ![](trie/report/mem_usage.jpg)
-
-{% include 'trie/report/mem_usage.md' %}
 
 
 ## Performance
 
-The following chart shows the time(in nano second) spent on a `Get()` operation
-with golang-map, SlimTrie, array and [btree][] by google.
-It is about **2.2 times faster** than the [btree][] by google, or **1.5 times
-faster** than binary search on a sorted array.
-**Smaller is better**.
+Time(in nano second) spent on a `Get()` with golang-map, SlimTrie, array and [btree][] by google.
 
-<!-- use img instead of markdown image to control width -->
+- **3.3 times faster** than the [btree][].
+- **2.3 times faster** than binary search.
 
-<img src="docs/trie/charts/bench_get_2019_06_04.png" width="400px"/>
+![](trie/report/bench_msab_present.jpg)
 
 
 Time(in nano second) spent on a `Get()` with different key count(`n`) and key length(`k`):
 
 ![](trie/report/bench_get_present.jpg)
+
+
+## False Positive Rate
+
+![](trie/report/fpr_get.jpg)
+
+> Bloom filter requires about 9 bits/key to archieve less than 1% FPR.
 
 See: [trie/report/](trie/report/)
 
@@ -140,13 +142,13 @@ See: [trie/report/](trie/report/)
 ## Roadmap
 
 -   [ ] Query by range
--   [ ] Reduce false positive rate
--   [x] **2019-06-03** v0.5.9 Large key set benchmark
--   [x] **2019-05-29** v0.5.6 Support up to 2 billion keys
--   [x] **2019-05-18** v0.5.4 Reduce memory usage from 40 to 14 bits/key
--   [x] **2019-04-20** v0.4.3 Range index: many keys share one index item
--   [x] **2019-04-18** v0.4.1 Marshaling support
--   [x] **2019-03-08** v0.1.0 SlimIndex SlimTrie
+-   [x] **2019-09-18** v0.5.10 Reduce false positive rate to less than 0.05%
+-   [x] **2019-06-03** v0.5.9  Large key set benchmark
+-   [x] **2019-05-29** v0.5.6  Support up to 2 billion keys
+-   [x] **2019-05-18** v0.5.4  Reduce memory usage from 40 to 14 bits/key
+-   [x] **2019-04-20** v0.4.3  Range index: many keys share one index item
+-   [x] **2019-04-18** v0.4.1  Marshaling support
+-   [x] **2019-03-08** v0.1.0  SlimIndex SlimTrie
 
 ## Change-log
 

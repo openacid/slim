@@ -9,6 +9,16 @@ import (
 	"github.com/openacid/slim/trie/benchmark"
 )
 
+var (
+	// different key counts for benchmark.
+	keyCounts = []int{
+		1000,
+		10 * 1000,
+		100 * 1000,
+		1000 * 1000,
+	}
+)
+
 var flg *benchhelper.ReportCmdFlag
 
 func main() {
@@ -16,13 +26,13 @@ func main() {
 
 	getPresent()
 	getAbsent()
+	getMapSlimArrayBtree()
 	memOverhead()
 	fprGet()
 }
 
 func getPresent() {
 	if flg.Bench {
-		keyCounts := []int{1000, 10 * 1000, 100 * 1000, 1000 * 1000}
 		results := benchmark.GetPresent(keyCounts)
 		benchhelper.WriteTableFiles("report/bench_get_present", results)
 	}
@@ -30,12 +40,12 @@ func getPresent() {
 	if flg.Plot {
 		script := `
 fn = "report/bench_get_present.data"
-set yr [50:250]
-set xlabel 'key-count (n)'
-set ylabel 'Get() present key ns/op' offset 1,0
+set yr [0:300]
+set xlabel 'key-count: n'
+set ylabel 'ns/Get() present key' offset 1,0
 `
-		script += benchhelper.Fformat.JPGHistogramMid
-		script += benchhelper.LineStyles.Yellow
+		script += benchhelper.Fformat.JPGHistogramTiny
+		script += benchhelper.LineStyles.Green
 		script += benchhelper.Plot.Histogram
 
 		benchhelper.Fplot("report/bench_get_present.jpg", script)
@@ -44,7 +54,6 @@ set ylabel 'Get() present key ns/op' offset 1,0
 
 func getAbsent() {
 	if flg.Bench {
-		keyCounts := []int{1000, 10 * 1000, 100 * 1000, 1000 * 1000}
 		results := benchmark.GetAbsent(keyCounts)
 		benchhelper.WriteTableFiles("report/bench_get_absent", results)
 	}
@@ -52,15 +61,36 @@ func getAbsent() {
 	if flg.Plot {
 		script := `
 fn = "report/bench_get_absent.data"
-set yr [50:300]
-set xlabel 'key-count (n)'
-set ylabel 'Get() present key ns/op' offset 1,0
+set yr [00:300]
+set xlabel 'key-count: n'
+set ylabel 'ns/Get() absent key' offset 1,0
 `
-		script += benchhelper.Fformat.JPGHistogramMid
-		script += benchhelper.LineStyles.Orange
+		script += benchhelper.Fformat.JPGHistogramTiny
+		script += benchhelper.LineStyles.Green
 		script += benchhelper.Plot.Histogram
 
 		benchhelper.Fplot("report/bench_get_absent.jpg", script)
+	}
+}
+
+func getMapSlimArrayBtree() {
+	if flg.Bench {
+		results := benchmark.GetMapSlimArrayBtree(keyCounts)
+		benchhelper.WriteTableFiles("report/bench_msab_present", results)
+	}
+
+	if flg.Plot {
+		script := `
+fn = "report/bench_msab_present.data"
+set yr [0:700]
+set xlabel 'key-count: n'
+set ylabel 'ns/Get()' offset 1,0
+`
+		script += benchhelper.Fformat.JPGHistogramTiny
+		script += benchhelper.LineStyles.Blue
+		script += benchhelper.Plot.Histogram
+
+		benchhelper.Fplot("report/bench_msab_present.jpg", script)
 	}
 }
 
@@ -74,12 +104,12 @@ func memOverhead() {
 	if flg.Plot {
 		script := `
 fn = "report/mem_usage.data"
-set yr [0:50]
-set xlabel 'key-count (n)'
+set yr [0:30]
+set xlabel 'key-count: n'
 set ylabel 'bits/key' offset 1,0
 `
 		script += benchhelper.Fformat.JPGHistogramTiny
-		script += benchhelper.LineStyles.Green
+		script += benchhelper.LineStyles.Yellow
 		script += benchhelper.Plot.Histogram
 
 		benchhelper.Fplot("report/mem_usage.jpg", script)
@@ -89,20 +119,20 @@ set ylabel 'bits/key' offset 1,0
 func fprGet() {
 
 	if flg.FPR {
-		rsts := benchmark.GetFPR([]int{1000, 10000, 20000})
+		rsts := benchmark.GetFPR(keyCounts)
 		benchhelper.WriteTableFiles("report/fpr_get", rsts)
 	}
 
 	if flg.Plot {
 		script := `
 fn = "report/fpr_get.data"
-set yr [0:100]
+set yr [0:0.05]
 set format y "%g%%"
-set xlabel 'key-count (n)'
+set xlabel 'key-count: n'
 set ylabel 'false positive'
 `
 		script += benchhelper.Fformat.JPGHistogramTiny
-		script += benchhelper.LineStyles.Green
+		script += benchhelper.LineStyles.Purple
 		script += benchhelper.Plot.Histogram
 
 		benchhelper.Fplot("report/fpr_get.jpg", script)

@@ -3,6 +3,7 @@ package benchmark
 
 import (
 	"math/rand"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -38,6 +39,15 @@ type GetResult struct {
 	K64      int `tw-title:"k=64"`
 	K128     int `tw-title:"k=128"`
 	K256     int `tw-title:"k=256"`
+}
+
+// MSABResult defines the ns/Get() for Map, SlimTrie, Array and Btree.
+type MSABResult struct {
+	KeyCount int `tw-title:"key-count"`
+	Map      int `tw-title:"map"`
+	Slim     int `tw-title:"SlimTrie"`
+	Array    int `tw-title:"array"`
+	Btree    int `tw-title:"Btree"`
 }
 
 // FPRResult represent the false positive rate.
@@ -207,6 +217,107 @@ func benchGet(setting *GetSetting, typ string) int {
 	return int(rst.NsPerOp())
 }
 
+func GetMapSlimArrayBtree(keyCounts []int) []MSABResult {
+
+	var rst = make([]MSABResult, 0, len(keyCounts))
+
+	for _, n := range keyCounts {
+
+		mp := benchGet_map_slim_array_btree(NewGetSetting(n, 64), "present")
+
+		r := MSABResult{
+			KeyCount: n,
+			Map:      mp["map"],
+			Slim:     mp["slim"],
+			Array:    mp["array"],
+			Btree:    mp["btree"],
+		}
+
+		rst = append(rst, r)
+	}
+
+	return rst
+}
+
+var OutputMSAB int32 = 0
+
+func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]int {
+
+	gst := setting
+	var keys []string
+
+	nsops := make(map[string]int)
+
+	if typ == "present" {
+		keys = setting.Keys
+	} else {
+		keys = setting.AbsentKeys
+	}
+
+	n := len(keys)
+	mask := 1
+	for ; (mask << 1) <= n; mask <<= 1 {
+	}
+
+	v := int32(0)
+
+	rst := testing.Benchmark(
+		func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				v += gst.SlimKV.Get(keys[i&mask])
+			}
+		})
+	nsops["slim"] = int(rst.NsPerOp())
+
+	rst = testing.Benchmark(
+		func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				v += gst.Map[keys[i&mask]]
+			}
+		})
+	nsops["map"] = int(rst.NsPerOp())
+
+	rst = testing.Benchmark(
+		func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				itm := &KVElt{Key: keys[i&mask], Val: gst.Values[i&mask]}
+				ee := gst.Btree.Get(itm)
+				v += ee.(*KVElt).Val
+			}
+		})
+	nsops["btree"] = int(rst.NsPerOp())
+
+	rst = testing.Benchmark(
+		func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				v += sortedArraySearch(keys, gst.Values, keys[i&mask])
+			}
+		})
+	nsops["array"] = int(rst.NsPerOp())
+
+	OutputMSAB += v
+
+	return nsops
+}
+
+func sortedArraySearch(keys []string, values []int32, searchKey string) int32 {
+
+	n := len(keys)
+
+	idx := sort.Search(
+		n,
+		func(i int) bool {
+			return strings.Compare(keys[i], searchKey) >= 0
+		},
+	)
+
+	if idx < n && strings.Compare(keys[idx], searchKey) == 0 {
+		return values[idx]
+	}
+
+	return -1
+}
+
 func NewGetSetting(cnt int, keyLen int) *GetSetting {
 
 	ks := benchhelper.RandSortedStrings(cnt*2, keyLen, nil)
@@ -289,15 +400,13 @@ type slimKV struct {
 }
 
 func (s *slimKV) Get(key string) int32 {
-	idx, found := s.slim.Get(key)
+	idx, found := s.slim.GetI32(key)
 	if !found {
 		return -1
 	}
 
-	i := idx.(int32)
-
-	elt := s.Elts[i]
-	if strings.Compare(elt.Key, key) != 0 {
+	elt := s.Elts[idx]
+	if elt.Key != key {
 		return -1
 	}
 

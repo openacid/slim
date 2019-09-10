@@ -75,9 +75,8 @@ func (st *SlimTrie) GetI32(key string) (int32, bool) {
 		return 0, false
 	}
 
-	ithLeaf, _ := st.getLeafIndex(eqID)
-
-	stIdx := ithLeaf << 2
+	ith, _ := st.getLeafIndex(eqID)
+	stIdx := ith << 2
 
 	b := st.nodes.LeafBytes[stIdx : stIdx+4]
 
