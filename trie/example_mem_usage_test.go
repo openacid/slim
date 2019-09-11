@@ -1,57 +1,41 @@
-package trie_test
+package trie
 
 import (
 	"fmt"
-	"runtime"
 
+	"github.com/openacid/low/size"
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/slim/trie"
-	"github.com/openacid/slimcompatible/testkeys"
 )
 
 var (
 	m = encode.String16{}
 )
 
-func makeCopies(ncopy int, keys []string, offsets []uint16) []*trie.SlimTrie {
-	copies := make([]*trie.SlimTrie, ncopy)
-
-	for i := 0; i < len(copies); i++ {
-		copies[i], _ = trie.NewSlimTrie(encode.U16{}, keys, offsets)
-	}
-	return copies
-}
-
 func Example_memoryUsage() {
 
 	data := make([]byte, 0)
 
-	keys := []string{}
+	keys := getKeys("50kl10")
 	offsets := []uint16{}
-	ksize := 0
 
-	for i, k := range testkeys.Keys["50kl10"] {
+	for i, k := range keys {
 		v := fmt.Sprintf("is the %d-th word", i)
 
-		keys = append(keys, k)
 		offsets = append(offsets, uint16(len(data)))
 
 		data = append(data, m.Encode(k)...)
 		data = append(data, m.Encode(v)...)
 
-		ksize += len(k)
 	}
 
-	ncopy := 100
 	vsize := 2.0
 
-	rss1 := readRss()
-	copies := makeCopies(ncopy, keys, offsets)
-	rss2 := readRss()
+	st, _ := NewSlimTrie(encode.U16{}, keys, offsets)
+	ksize := size.Of(keys)
 
-	diff := float64(rss2 - rss1)
+	sz := size.Of(st)
 
-	avgIdxLen := diff/float64(ncopy)/float64(len(keys)) - vsize
+	avgIdxLen := float64(sz)/float64(len(keys)) - vsize
 	avgKeyLen := float64(ksize) / float64(len(keys))
 
 	ratio := avgIdxLen / avgKeyLen * 100
@@ -64,16 +48,4 @@ func Example_memoryUsage() {
 		100-ratio,
 	)
 
-	for _, cc := range copies {
-		_ = cc.Children
-	}
-}
-
-func readRss() int64 {
-	var stats runtime.MemStats
-
-	runtime.GC()
-	runtime.ReadMemStats(&stats)
-
-	return int64(stats.Alloc)
 }

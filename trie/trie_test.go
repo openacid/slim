@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -496,27 +497,27 @@ func TestToStrings(t *testing.T) {
 
 	expect := `
 *3
--097->
-      -098->*2
-            -099->*2
-                  -00$->=0
-                  -100->
-                        -00$->=1
-            -100->*2
-                  -00$->=2
-                  -101->
-                        -00$->=3
--098->
-      -099->*2
-            -00$->=4
-            -100->*2
-                  -00$->=5
-                  -101->
-                        -00$->=6
--099->
-      -100->
-            -101->
-                  -00$->=7`[1:]
+-97->
+     -98->*2
+          -99->*2
+               -$->=0
+               -100->
+                     -$->=1
+          -100->*2
+                -$->=2
+                -101->
+                      -$->=3
+-98->
+     -99->*2
+          -$->=4
+          -100->*2
+                -$->=5
+                -101->
+                      -$->=6
+-99->
+     -100->
+           -101->
+                 -$->=7`[1:]
 
 	var trie, _ = NewTrie(keys, values, false)
 	trie, err := NewTrie(keys, values, false)
@@ -547,24 +548,227 @@ func TestTrie_removeSameLeaf(t *testing.T) {
 
 	want := `
 *2
--097->
-      -098->*2
-            -099->
-                  -00$->=0
-            -100->
-                  -101->
-                        -00$->=3
--098->
-      -099->*2
-            -00$->=4
-            -100->
-                  -00$->=5`[1:]
+-97->
+     -98->*2
+          -99->
+               -$->=0
+          -100->
+                -101->
+                      -$->=3
+-98->
+     -99->*2
+          -$->=4
+          -100->
+                -$->=5`[1:]
 
 	trie, err := NewTrie(keys, values, false)
 	ta.Nil(err)
 
 	trie.removeSameLeaf()
+	fmt.Println(trie)
 
 	ta.Equal(want, trie.String())
 	ta.Equal(9, trie.NodeCnt, "non-leaf node count")
+}
+
+func TestTrie_UnsquashedSearch(t *testing.T) {
+
+	cases := []slimCase{
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 4),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 5),
+				from8bit(3, 4, 5),
+			},
+			values: []int{0, 1, 2, 3, 4},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
+				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
+			},
+		},
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 3, 4),
+				from8bit(2, 3),
+				from8bit(2, 3, 0),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 4, 5),
+				from8bit(2, 3, 15),
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
+				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
+				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
+				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
+			},
+		},
+		{
+			keys: []string{
+				"abc",
+				"abcd",
+				"abd",
+				"abde",
+				"bc",
+				"bcd",
+				"bcde",
+				"cde",
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6, 7},
+			searches: []searchCase{
+				{"ab", searchRst{nil, nil, 0}},
+				{"abc", searchRst{nil, 0, 1}},
+				{"abcde", searchRst{1, nil, 2}},
+				{"abd", searchRst{1, 2, 3}},
+				{"ac", searchRst{3, nil, 4}},
+				{"acb", searchRst{3, nil, 4}},
+				{"acd", searchRst{3, nil, 4}},
+				{"adc", searchRst{3, nil, 4}},
+				{"bcd", searchRst{4, 5, 6}},
+				{"bce", searchRst{6, nil, 7}},
+				{"c", searchRst{6, nil, 7}},
+				{"cde", searchRst{6, 7, nil}},
+				{"cfe", searchRst{7, nil, nil}},
+				{"cff", searchRst{7, nil, nil}},
+			},
+		},
+	}
+
+	for _, c := range cases {
+
+		keys := bw4.FromStrs(c.keys)
+
+		// Unsquashed Trie
+
+		trie, err := NewTrie(keys, c.values, false)
+		if err != nil {
+			t.Fatalf("expected no error but: %+v", err)
+		}
+
+		for _, ex := range c.searches {
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
+			rst := searchRst{lt, eq, gt}
+
+			if !reflect.DeepEqual(ex.want, rst) {
+				fmt.Println(trie)
+				fmt.Println("search:", bw4.FromStr(ex.key))
+				t.Fatal("key: ", bw4.FromStr(ex.key), "expected value: ", ex.want, "rst: ", rst)
+			}
+		}
+	}
+}
+
+func TestTrie_SquashedTrieSearch(t *testing.T) {
+
+	cases := []slimCase{
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 4),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 5),
+				from8bit(3, 4, 5),
+			},
+			values: []int{0, 1, 2, 3, 4},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3, 4), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 5), searchRst{2, 3, 4}},
+				{from8bit(3, 4, 5), searchRst{3, 4, nil}},
+			},
+		},
+		{
+			keys: []string{
+				from8bit(1, 2, 3),
+				from8bit(1, 2, 3, 4),
+				from8bit(2, 3),
+				from8bit(2, 3, 0),
+				from8bit(2, 3, 4),
+				from8bit(2, 3, 4, 5),
+				from8bit(2, 3, 15),
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6},
+			searches: []searchCase{
+				{from8bit(1, 2, 3), searchRst{nil, 0, 1}},
+				{from8bit(1, 2, 3, 4), searchRst{0, 1, 2}},
+				{from8bit(2, 3), searchRst{1, 2, 3}},
+				{from8bit(2, 3, 0), searchRst{2, 3, 4}},
+				{from8bit(2, 3, 4), searchRst{3, 4, 5}},
+				{from8bit(2, 3, 4, 5), searchRst{4, 5, 6}},
+				{from8bit(2, 3, 15), searchRst{5, 6, nil}},
+			},
+		},
+		{
+			keys: []string{
+				"abc",
+				"abcd",
+				"abd",
+				"abde",
+				"bc",
+				"bcd",
+				"bcde",
+				"cde",
+			},
+			values: []int{0, 1, 2, 3, 4, 5, 6, 7},
+			searches: []searchCase{
+				{"ab", searchRst{nil, nil, 0}},
+				{"abc", searchRst{nil, 0, 1}},
+				{"abcde", searchRst{1, nil, 2}},
+				{"abd", searchRst{1, 2, 3}},
+				{"ac", searchRst{nil, nil, 0}},
+				{"acb", searchRst{nil, nil, 0}},
+				{"acd", searchRst{1, 2, 3}},
+				{"adc", searchRst{nil, 0, 1}},
+				{"bcd", searchRst{4, 5, 6}},
+				{"bce", searchRst{4, 5, 6}},
+				{"c", searchRst{6, nil, 7}},
+				{"cde", searchRst{6, 7, nil}},
+				{"cfe", searchRst{6, 7, nil}},
+				{"cff", searchRst{6, 7, nil}},
+			},
+		},
+	}
+
+	for _, c := range cases {
+
+		keys := bw4.FromStrs(c.keys)
+
+		// Squashed Trie
+
+		trie, err := NewTrie(keys, c.values, true)
+		if err != nil {
+			t.Fatalf("expected no error but: %+v", err)
+		}
+
+		for _, ex := range c.searches {
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
+			rst := searchRst{lt, eq, gt}
+
+			if !reflect.DeepEqual(ex.want, rst) {
+				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
+			}
+		}
+
+		// Squashed twice Trie
+
+		trie.Squash()
+		for _, ex := range c.searches {
+			lt, eq, gt := trie.Search(bw4.FromStr(ex.key))
+			rst := searchRst{lt, eq, gt}
+
+			if !reflect.DeepEqual(ex.want, rst) {
+				t.Fatal("key: ", ex.key, "expected value: ", ex.want, "rst: ", rst)
+			}
+		}
+	}
 }

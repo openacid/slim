@@ -36,7 +36,7 @@ func ExampleSlimTrie_RangeGet() {
 		key string
 		msg string
 	}{
-		{"ab", "FALSE POSITIVE: all known key starts with a are mapped to 1"},
+		{"ab", "out of range"},
 
 		{"abc", "in range"},
 		{"abc1", "FALSE POSITIVE"},
@@ -52,7 +52,7 @@ func ExampleSlimTrie_RangeGet() {
 
 		{"bcd1", "FALSE POSITIVE"},
 
-		{"def", "FALSE POSITIVE"},
+		// {"def", "FALSE POSITIVE"},
 	}
 
 	for _, c := range cases {
@@ -61,7 +61,7 @@ func ExampleSlimTrie_RangeGet() {
 	}
 
 	// Output:
-	// ab         1     true : FALSE POSITIVE: all known key starts with a are mapped to 1
+	// ab         <nil> false: out of range
 	// abc        1     true : in range
 	// abc1       1     true : FALSE POSITIVE
 	// abc2       1     true : FALSE POSITIVE
@@ -69,7 +69,8 @@ func ExampleSlimTrie_RangeGet() {
 	// abcde      1     true : FALSE POSITIVE: a suffix of abcd
 	// acc        1     true : FALSE POSITIVE
 	// bc         2     true : in single key range [bc]
-	// bc1        2     true : FALSE POSITIVE
+	// bc1        3     true : FALSE POSITIVE
 	// bcd1       3     true : FALSE POSITIVE
-	// def        3     true : FALSE POSITIVE
+
+	// def        1     true : FALSE POSITIVE
 }

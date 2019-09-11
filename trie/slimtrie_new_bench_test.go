@@ -1,17 +1,15 @@
-package trie_test
+package trie
 
 import (
 	"testing"
 
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/slim/trie"
-	"github.com/openacid/slimcompatible/testkeys"
 )
 
 var Output int
 
-func BenchmarkNewSlimTrie(b *testing.B) {
-	keys := testkeys.Keys["300vl50"]
+func BenchmarkNewSlimTrie_300(b *testing.B) {
+	keys := getKeys("300vl50")
 	values := make([]uint32, len(keys))
 	for i := 0; i < len(keys); i++ {
 		values[i] = uint32(i)
@@ -19,11 +17,11 @@ func BenchmarkNewSlimTrie(b *testing.B) {
 	b.ResetTimer()
 	var s int
 	for i := 0; i < b.N; i++ {
-		st, err := trie.NewSlimTrie(encode.U32{}, keys, values)
+		st, err := NewSlimTrie(encode.U32{}, keys, values)
 		if err != nil {
 			panic(err)
 		}
-		s += int(st.Children.Cnt)
+		s += int(st.nodes.NodeTypeBM.Words[0])
 	}
 
 	Output = s
