@@ -13,6 +13,7 @@ import (
 	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/slim/array"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/slimcompatible/testkeys"
 	"github.com/stretchr/testify/require"
 )
 
@@ -594,7 +595,7 @@ func TestSlimTrie_u16step_bug_2019_05_29(t *testing.T) {
 
 	ta := require.New(t)
 
-	keys := keys50k
+	keys := testkeys.Keys["50kl10"]
 	n := len(keys)
 	values := make([]int32, n)
 	for i := 0; i < n; i++ {

@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/slimcompatible/testkeys"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,7 +78,7 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 		err = proto.Unmarshal(b, st)
 		ta.Nil(err)
 
-		keys := keys50k
+		keys := testkeys.Keys["50kl10"]
 		for i, key := range keys {
 			v, found := st.Get(key)
 			ta.True(found)

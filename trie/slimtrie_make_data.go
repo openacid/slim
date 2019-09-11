@@ -6,12 +6,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/slimcompatible/testkeys"
 )
 
 func MakeMarshaledData(fn string, keys []string) {
 
 	if len(keys) == 0 {
-		keys = keys50k
+		keys = testkeys.Keys["50kl10"]
 	}
 
 	n := len(keys)

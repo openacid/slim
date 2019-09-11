@@ -6,6 +6,7 @@ import (
 
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
+	"github.com/openacid/slimcompatible/testkeys"
 )
 
 var (
@@ -29,7 +30,7 @@ func Example_memoryUsage() {
 	offsets := []uint16{}
 	ksize := 0
 
-	for i, k := range words2 {
+	for i, k := range testkeys.Keys["50kl10"] {
 		v := fmt.Sprintf("is the %d-th word", i)
 
 		keys = append(keys, k)

@@ -5,12 +5,13 @@ import (
 
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/slim/trie"
+	"github.com/openacid/slimcompatible/testkeys"
 )
 
 var Output int
 
 func BenchmarkNewSlimTrie(b *testing.B) {
-	keys := words2
+	keys := testkeys.Keys["300vl50"]
 	values := make([]uint32, len(keys))
 	for i := 0; i < len(keys); i++ {
 		values[i] = uint32(i)
