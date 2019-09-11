@@ -3,7 +3,7 @@ package trie
 import (
 	"github.com/openacid/errors"
 	"github.com/openacid/low/tree"
-	"github.com/openacid/slim/typehelper"
+	"github.com/openacid/low/typehelper"
 )
 
 // Node is a Trie node.
