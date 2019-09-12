@@ -3,6 +3,6 @@ _extends: gh-config
 
 repository:
   name: slim
-  description: Unbelievably space efficient data structures in Golang.
+  description: Surprisingly space efficient trie in Golang(11 bits/key; 100 ns/get).
   homepage: https://openacid.github.io/
   topics: go, golang, memory, compacted, compress, datastructure, trie, tree
