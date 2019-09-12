@@ -59,35 +59,29 @@ memory, as a minimized index of huge amount external data.
     **Features**:
 
     -   **Minimized**:
-        requires only **6 bytes per key**(even less than an 8-byte pointer!!).
+        **11 bits per key**(even less than an 8-byte pointer!!).
 
     -   **Stable**:
         memory consumption is stable in various scenarios.
         The Worst case converges to average consumption tightly.
         See benchmark.
 
-    -   **Unlimited key length**:
-        You can have **VERY** long keys, without bothering yourself with any
-        waste of memory(and money).
+    -   **Loooong keys**:
+        You can have **VERY** long keys(`16K bytes`), without any waste of memory(and money).
         Do not waste your life writing another prefix compression`:)`.
         ([aws-s3][] limits key length to 1024 bytes).
         Memory consumption only relates to key count, **not to key length**.
 
     -   **Ordered**:
-        like [btree][], keys are stored in alphabetic order, but faster to access.
-        Range-scan is supported!(under development)
+        like [btree][], keys are stored.
+        Range-scan will be ready in `0.6.0`.
 
     -   **Fast**:
-        time complexity for a get is `O(log(n) + k); n: key count; k: key length`.
-        With comparison to [btree][], which is `O(log(n) * k)`(tree-like).
-        And golang-map is `O(k)`(hash-table-like).
+        **~100 ns** per `Get()`.
+        Time complexity for a get is `O(log(n) + k); n: key count; k: key length`.
 
     -   **Ready for transport**:
-        `SlimTrie` has no gap between its in-memory layout and its on-disk
-        layout or transport presentation.
-        Unlike other data-structure such as the popular [red-black-tree][],
-        which is designed for in-memory use only and requires additional work to
-        persist or transport it.
+        a single `proto.Marshal()` is all it requires to serialize, transport or persisting on disk etc.
 
     -   **Loosely coupled design**:
         index logic and data storage is completely separated.
@@ -103,7 +97,7 @@ memory, as a minimized index of huge amount external data.
 
 ## Memory overhead
 
-**Bits/key** is very stable when key-count(`n`) increaes,
+**Bits/key** is stable when key-count(`n`) increases,
 and does not relate to key-length(`k`) either!
 
 The more dense a key set is, the less memory a trie-like data structure costs.
@@ -113,10 +107,10 @@ The more dense a key set is, the less memory a trie-like data structure costs.
 {% include 'trie/report/mem_usage.md' %}
 
 
-## Performance benchmark
+## Performance
 
-Time(in nano second) spent on a `get` operation with golan-map, SlimTrie, array and
-[btree][] by google.
+The following chart shows the time(in nano second) spent on a `Get()` operation
+with golang-map, SlimTrie, array and [btree][] by google.
 It is about **2.2 times faster** than the [btree][] by google, or **1.5 times
 faster** than binary search on a sorted array.
 **Smaller is better**.
@@ -126,7 +120,7 @@ faster** than binary search on a sorted array.
 <img src="docs/trie/charts/bench_get_2019_06_04.png" width="400px"/>
 
 
-Time(in nano second) spent on a `get` with different key count(`n`) and key length(`k`):
+Time(in nano second) spent on a `Get()` with different key count(`n`) and key length(`k`):
 
 ![](trie/report/bench_get_present.jpg)
 
