@@ -9,14 +9,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
-	"github.com/openacid/low/bitword"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/testkeys"
 	"github.com/stretchr/testify/require"
-)
-
-var (
-	bw4 = bitword.BitWord[4]
 )
 
 type searchRst struct {
