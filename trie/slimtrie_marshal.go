@@ -129,7 +129,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Bitmap16
 		}
 
 		// before 0.5.10 it stores steps only, no prefix
-		c := newCreator(64, Opt{})
+		c := newCreator(64, true, Opt{})
 
 		// before 0.5.10 there is no big inner
 		c.isBig = false

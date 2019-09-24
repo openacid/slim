@@ -103,13 +103,8 @@ func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 
 	// an "equal" macth means key is a prefix of either start or end of a range.
 	if eqID != -1 {
-		v := st.getLeaf(eqID)
-		if v != nil {
-			return v, true
-
-		}
-
-		// else: eqID matched at an inner node.
+		// TODO eqID must be a leaf if it is not -1
+		return st.getLeaf(eqID), true
 	}
 
 	// key is smaller than any range-start or range-end.
@@ -567,6 +562,10 @@ func (st *SlimTrie) getLeaf(nodeid int32) interface{} {
 }
 
 func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
+
+	if !st.nodes.WithLeaves {
+		return nil
+	}
 
 	eltsize := st.encoder.GetEncodedSize(nil)
 	stIdx := ith * int32(eltsize)

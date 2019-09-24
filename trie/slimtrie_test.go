@@ -152,6 +152,144 @@ func TestSlimTrie_GRS_1_zerokeys(t *testing.T) {
 	}
 }
 
+func TestSlimTrie_GRS_1_zeroLengthValues(t *testing.T) {
+
+	ta := require.New(t)
+
+	keys := []string{
+		"abc",
+		"abcd",
+		"abd",
+		"abde",
+		"bc",
+		"bcd",
+		"bcde",
+		"cde",
+	}
+	// values := make([]interface{}, len(keys))
+
+	// TODO values should be optional for dummy mode.
+	// TODO as a filter, the check a range.
+	st, err := NewSlimTrie(encode.Dummy{}, keys, nil)
+	ta.NoError(err)
+
+	wantstr := trim(`
+#000+4*3
+    -0001->#001+12*2
+               -0011->#004*2
+                          -->#008=<nil>
+                          -0110->#009=<nil>
+               -0100->#005*2
+                          -->#010=<nil>
+                          -0110->#011=<nil>
+    -0010->#002+8*2
+               -->#006=<nil>
+               -0110->#007+4*2
+                          -->#012=<nil>
+                          -0110->#013=<nil>
+    -0011->#003=<nil>
+`)
+	dd(st)
+
+	ta.Equal(wantstr, st.String())
+
+	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+
+	for _, key := range keys {
+
+		dd("test Get: present: %s", key)
+
+		v, found := st.Get(key)
+		ta.True(found, "get %v", key)
+		ta.Nil(v, "search for %v", key)
+	}
+	for _, key := range keys {
+
+		dd("test RangeGet: present:%s", key)
+
+		v, found := st.RangeGet(key)
+		ta.True(found, "RangeGet:%v", key)
+		ta.Nil(v, "RangeGet:%v", key)
+	}
+	for _, key := range keys {
+
+		dd("test Search: present: %s", key)
+
+		l, e, r := st.Search(key)
+		ta.Nil(l, "Search:%v, l", key)
+		ta.Nil(e, "Search:%v, e", key)
+		ta.Nil(r, "Search:%v, r", key)
+	}
+}
+
+func TestSlimTrie_GRS_1_nilValuesIgnoreEncoder(t *testing.T) {
+
+	ta := require.New(t)
+
+	keys := []string{
+		"abc",
+		"abcd",
+		"abd",
+		"abde",
+		"bc",
+		"bcd",
+		"bcde",
+		"cde",
+	}
+
+	// use I32, but actually ignored.
+	st, err := NewSlimTrie(encode.I32{}, keys, nil)
+	ta.NoError(err)
+
+	wantstr := trim(`
+#000+4*3
+    -0001->#001+12*2
+               -0011->#004*2
+                          -->#008=<nil>
+                          -0110->#009=<nil>
+               -0100->#005*2
+                          -->#010=<nil>
+                          -0110->#011=<nil>
+    -0010->#002+8*2
+               -->#006=<nil>
+               -0110->#007+4*2
+                          -->#012=<nil>
+                          -0110->#013=<nil>
+    -0011->#003=<nil>
+`)
+	dd(st)
+
+	ta.Equal(wantstr, st.String())
+
+	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+
+	for _, key := range keys {
+
+		dd("test Get: present: %s", key)
+
+		v, found := st.Get(key)
+		ta.True(found, "get %v", key)
+		ta.Nil(v, "search for %v", key)
+	}
+	for _, key := range keys {
+
+		dd("test RangeGet: present:%s", key)
+
+		v, found := st.RangeGet(key)
+		ta.True(found, "RangeGet:%v", key)
+		ta.Nil(v, "RangeGet:%v", key)
+	}
+	for _, key := range keys {
+
+		dd("test Search: present: %s", key)
+
+		l, e, r := st.Search(key)
+		ta.Nil(l, "Search:%v, l", key)
+		ta.Nil(e, "Search:%v, e", key)
+		ta.Nil(r, "Search:%v, r", key)
+	}
+}
+
 func TestSlimTrie_GRS_1_onekey(t *testing.T) {
 
 	ta := require.New(t)
@@ -876,8 +1014,8 @@ func testPresentKeysRangeGet(t *testing.T, st *SlimTrie, keys []string, values [
 		dd("test RangeGet: present:%s", key)
 
 		v, found := st.RangeGet(key)
-		ta.True(found, "get %v", key)
-		ta.Equal(values[i], v, "search for %v", key)
+		ta.True(found, "RangeGet:%v", key)
+		ta.Equal(values[i], v, "RangeGet:%v", key)
 	}
 }
 

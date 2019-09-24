@@ -36,6 +36,8 @@ type creator struct {
 	bigCnt  int32
 	nodeCnt int32
 
+	withLeaves bool
+
 	// options
 
 	option Opt
@@ -68,13 +70,15 @@ type creator struct {
 	innerBMCnt []map[uint64]int32
 }
 
-func newCreator(n int, opt Opt) *creator {
+func newCreator(n int, withLeaves bool, opt Opt) *creator {
 
 	c := &creator{
 
 		isBig:   true,
 		bigCnt:  0,
 		nodeCnt: 0,
+
+		withLeaves: withLeaves,
 
 		option: opt,
 
@@ -205,7 +209,10 @@ func (c *creator) addLeaf(nid int32, v interface{}) {
 
 	c.nodeCnt++
 
-	c.leaves = append(c.leaves, v)
+	if c.withLeaves {
+		c.leaves = append(c.leaves, v)
+	}
+
 }
 
 // counterElt stores an at most 17 bit bitmap and how many times it is used.
@@ -303,6 +310,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 		BigInnerCnt:       c.bigCnt,
 		WithPrefixContent: c.option.CompleteInner,
 		WithLeafPrefix:    c.option.CompleteLeaf,
+		WithLeaves:        c.withLeaves,
 	}
 
 	// Mapping most used 17-bit bitmap inner node to short inner node.
@@ -376,7 +384,9 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	}
 
 	// TODO separate leaf init
-	ns.initLeaves(c.leaves, e)
+	if c.withLeaves {
+		ns.initLeaves(c.leaves, e)
+	}
 
 	if c.option.CompleteLeaf {
 		ns.LeafPrefixBM = newBM(c.leafPrefixIndexes, int32(len(c.leaves)), "r64")
@@ -392,6 +402,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	return st
 }
 
+// TODO filter mode: CompleteInner
 func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (*SlimTrie, error) {
 
 	n := len(keys)
@@ -399,27 +410,31 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 		return &SlimTrie{encoder: e, nodes: &Nodes{}}, nil
 	}
 
-	for i := 0; i < len(keys)-1; i++ {
+	for i := 0; i < n-1; i++ {
 		if keys[i] >= keys[i+1] {
 			return nil, errors.Wrapf(ErrKeyOutOfOrder,
 				"keys[%d] >= keys[%d] %s %s", i, i+1, keys[i], keys[i+1])
 		}
 	}
 
+	tokeep := newValueToKeep(keys, values)
+
 	rvals := reflect.ValueOf(values)
 
 	must.Be.OK(func() {
 
-		must.Be.Equal(reflect.Slice, rvals.Kind(),
-			"values must be slice")
+		// Not filter mode:
+		if values != nil {
+			must.Be.Equal(reflect.Slice, rvals.Kind(),
+				"values must be slice")
 
-		must.Be.Equal(n, rvals.Len(),
-			"len(keys) must equal len(values)")
+			must.Be.Equal(n, rvals.Len(),
+				"len(keys) must equal len(values)")
+		}
 	})
 
-	tokeep := newValueToKeep(rvals)
 	sb := sigbits.New(keys)
-	c := newCreator(n, opt)
+	c := newCreator(n, values != nil, opt)
 
 	queue := make([]subset, 0, n*2)
 	queue = append(queue, subset{0, int32(n), 0})
@@ -432,7 +447,11 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 		// single key, it is a leaf
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
-			c.addLeaf(nid, getV(rvals, int(s)))
+			if values == nil {
+				c.addLeaf(nid, nil)
+			} else {
+				c.addLeaf(nid, getV(rvals, s))
+			}
 			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
 			continue
 		}
@@ -541,25 +560,42 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 
 // newValueToKeep creates a slice indicating which key to keep.
 // Value of key[i+1] with the same value with key[i] do not need to keep.
-func newValueToKeep(rvals reflect.Value) []bool {
+func newValueToKeep(keys []string, values interface{}) []bool {
 
-	n := rvals.Len()
-
+	n := len(keys)
 	tokeep := make([]bool, n)
-	tokeep[0] = true
 
-	prev := getV(rvals, 0)
+	// In filter mode, it only returns existence.
+	// In filter mode, by default to keep all keys.
+	if values == nil {
+		for i := 0; i < n; i++ {
+			tokeep[i] = true
+		}
+	} else {
 
-	for i := 1; i < n; i++ {
-		v := getV(rvals, i)
-		tokeep[i] = prev != v
-		prev = v
+		// Use SlimTrie as an index, do not keep keys with same value as
+		// previous.
+		rvals := reflect.ValueOf(values)
+
+		tokeep[0] = true
+
+		prev := getV(rvals, 0)
+
+		for i := 1; i < n; i++ {
+			v := getV(rvals, int32(i))
+			tokeep[i] = prev != v
+			prev = v
+		}
 	}
+
 	return tokeep
 }
 
-func getV(reflectSlice reflect.Value, i int) interface{} {
-	return reflectSlice.Index(i).Interface()
+func getV(reflectSlice reflect.Value, i int32) interface{} {
+	if reflectSlice.IsNil() {
+		return nil
+	}
+	return reflectSlice.Index(int(i)).Interface()
 }
 
 func (ns *Nodes) initLeaves(elts interface{}, e encode.Encoder) {

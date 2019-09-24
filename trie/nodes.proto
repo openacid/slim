@@ -32,6 +32,12 @@ message Bitmap {
 // Since 0.5.10
 message Nodes {
 
+    // WithLeaves indicates whether to store leaf values(as an index).
+    // Otherwise, it is a "filter" which can only provide existence information
+    // but not location information.
+    //
+    // Since 0.5.10
+    bool WithLeaves = 8;
 
     // WithPrefixContent indicates whether full inner prefixes are stored or only the
     // lengths of inner prefix are stored.
@@ -95,6 +101,7 @@ message Nodes {
     //
     // Since 0.5.10
     int32 InnerPrefixCnt = 16;
+
 
 
     // NodeTypeBM is a bitmap in which a "1" indicates the i-th node is an inner
