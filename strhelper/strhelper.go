@@ -6,48 +6,7 @@ import (
 	"math/bits"
 	"reflect"
 	"strings"
-
-	"github.com/openacid/low/bitword"
 )
-
-// ToBitWords split a string into a slice of byte.
-// A char in string is split into 8/`n` `n`-bit words
-// Value of every byte is in range [0, 2^n-1].
-// `n` must be a one of [1, 2, 4, 8].
-//
-// Significant bits in a char is place at left.
-// Thus the result byte slice keeps order with the original string.
-//
-// Deprecated: It will be removed since 1.0.0 .
-// Use "github.com/openacid/low/bitword"
-func ToBitWords(s string, n int) []byte {
-	return bitword.BitWord[n].FromStr(s)
-}
-
-// SliceToBitWords converts a `[]string` to a n-bit word `[][]byte`.
-//
-// Deprecated: It will be removed since 1.0.0 .
-// Use "github.com/openacid/low/bitword"
-func SliceToBitWords(strs []string, n int) [][]byte {
-	return bitword.BitWord[n].FromStrs(strs)
-}
-
-// FromBitWords is the reverse of ToBitWords.
-// It composes a string of which each byte is formed from 8/n words from bs.
-//
-// Deprecated: It will be removed since 1.0.0 .
-// Use "github.com/openacid/low/bitword"
-func FromBitWords(bs []byte, n int) string {
-	return bitword.BitWord[n].ToStr(bs)
-}
-
-// SliceFromBitWords converts a `[][]byte` back to a `[]string`.
-//
-// Deprecated: It will be removed since 1.0.0 .
-// Use "github.com/openacid/low/bitword"
-func SliceFromBitWords(bytesslice [][]byte, n int) []string {
-	return bitword.BitWord[n].ToStrs(bytesslice)
-}
 
 // ToBin converts integer or slice of integer to binary format string.
 // Significant bits are at right.
