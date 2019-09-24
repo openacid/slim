@@ -57,7 +57,7 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 
 	// 0.5.10 and 0.5.11 share the same protobuf format:
 
-	if vers.Check(ver, slimtrieVersion, "0.5.10") {
+	if vers.Check(ver, slimtrieVersion, "==0.5.10") {
 		_, _, err := pbcmpl.Unmarshal(reader, st.inner)
 		if err != nil {
 			return errors.WithMessage(err, "failed to unmarshal inner")
