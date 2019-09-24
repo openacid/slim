@@ -3,7 +3,6 @@ module github.com/openacid/slim
 go 1.12
 
 require (
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/golang/protobuf v1.3.1
 	github.com/google/btree v1.0.0
 	github.com/kr/pretty v0.1.0
@@ -12,7 +11,7 @@ require (
 	github.com/openacid/low v0.1.11-0.20190918052027-76b5225d1eae
 	github.com/openacid/must v0.1.3
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
-	github.com/openacid/testkeys v0.1.1
+	github.com/openacid/testkeys v0.1.2
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.3.0
 	gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc

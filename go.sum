@@ -23,6 +23,8 @@ github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86 h1:VDKQXFTUgO
 github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86/go.mod h1:iJAvCLjVGFyZOV2Oh123q4PMcoBv2qQLEvjlVIM9E2E=
 github.com/openacid/testkeys v0.1.1 h1:gv6Y+y9W7B9EafRN1DtQ5KnTMQTy2oscTcZWZspD+Jw=
 github.com/openacid/testkeys v0.1.1/go.mod h1:lPy2bEPGgLbDo6oF1JSdo9d2NG5TvzZ26ppHvzfAJis=
+github.com/openacid/testkeys v0.1.2 h1:rowVfJr49Rfl8/rE1vGpZ3XMNvV+KpujSb2007AaWRQ=
+github.com/openacid/testkeys v0.1.2/go.mod h1:lPy2bEPGgLbDo6oF1JSdo9d2NG5TvzZ26ppHvzfAJis=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
