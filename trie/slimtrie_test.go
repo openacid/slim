@@ -1,10 +1,7 @@
 package trie
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -1084,42 +1081,17 @@ func fmtMsg(msgAndArgs ...interface{}) string {
 	return ""
 }
 
-func getKeys(fn string) []string {
-	// runtime.Caller
-	p := "./../vendor/github.com/openacid/testkeys"
-	return loadKeys(p, fn)
-}
-
 var cache map[string][]string = map[string][]string{}
 
-func loadKeys(path, fn string) []string {
+func getKeys(fn string) []string {
+
 	ss, ok := cache[fn]
 	if ok {
 		return ss
 	}
 
-	p := filepath.Join(path, fn)
-	fmt.Println("load from:", p)
-
-	f, err := os.Open(p)
-	if err != nil {
-		panic("fail to open: " + p + ":" + err.Error())
-	}
-	defer f.Close()
-
-	rst := []string{}
-
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		str := s.Text()
-		rst = append(rst, str)
-	}
-
-	err = s.Err()
-	if err != nil {
-		panic("scan: " + p + ":" + err.Error())
-	}
-
-	cache[fn] = rst
-	return rst
+	p := "./../vendor/github.com/openacid/testkeys"
+	ks := testkeys.Load(p, fn)
+	cache[fn] = ks
+	return ks
 }
