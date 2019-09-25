@@ -62,7 +62,7 @@ func (st *SlimTrie) Get(key string) (interface{}, bool) {
 	return v, true
 }
 
-// GetI32 is same as Get() except it optimized for int32.
+// GetI32 is same as Get() except it is optimized for int32.
 //
 // Since 0.5.10
 func (st *SlimTrie) GetI32(key string) (int32, bool) {
