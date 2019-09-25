@@ -62,29 +62,6 @@ func (st *SlimTrie) Get(key string) (interface{}, bool) {
 	return v, true
 }
 
-// GetI32 is same as Get() except it is optimized for int32.
-//
-// Since 0.5.10
-func (st *SlimTrie) GetI32(key string) (int32, bool) {
-
-	// TODO test and doc
-
-	eqID := st.GetID(key)
-
-	if eqID == -1 {
-		return 0, false
-	}
-
-	ith, _ := st.getLeafIndex(eqID)
-	stIdx := ith << 2
-
-	b := st.nodes.LeafBytes[stIdx : stIdx+4]
-
-	v := int32(b[0]) | int32(b[1])<<8 | int32(b[2])<<16 | int32(b[3])<<24
-
-	return v, true
-}
-
 // RangeGet look for a range that contains a key in SlimTrie.
 //
 // A range that contains a key means range-start <= key <= range-end.
