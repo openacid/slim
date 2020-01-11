@@ -8,7 +8,7 @@ require (
 	github.com/kr/pretty v0.1.0
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/openacid/errors v0.8.1
-	github.com/openacid/low v0.1.7
+	github.com/openacid/low v0.1.10
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.3.0
