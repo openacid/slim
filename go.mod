@@ -11,6 +11,6 @@ require (
 	github.com/openacid/low v0.1.7
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.5.1
 	gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc
 )
