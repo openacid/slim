@@ -13,7 +13,7 @@ def rr(tmpl_path, tmpl_vars, output_path):
     txt = template.render(tmpl_vars)
 
     with open(output_path, 'w') as f:
-        f.write(txt.encode('utf-8'))
+        f.write(txt)
 
 if __name__ == "__main__":
     rr('docs/README.md.j2', {}, 'README.md')

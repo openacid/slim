@@ -187,7 +187,7 @@ func TestSlimTrie_Complete_GRS_2_small_keyset(t *testing.T) {
 
 	ta := require.New(t)
 
-	for _, typ := range testkeys.Keys {
+	for _, typ := range testkeys.AssetNames() {
 
 		keys := getKeys(typ)
 
@@ -286,7 +286,7 @@ func TestSlimTrie_Complete_GRS_9_allkeyset(t *testing.T) {
 
 	ta := require.New(t)
 
-	for _, typ := range testkeys.Keys {
+	for _, typ := range testkeys.AssetNames() {
 
 		keys := getKeys(typ)
 

@@ -11,8 +11,8 @@ require (
 	github.com/openacid/low v0.1.11-0.20190918052027-76b5225d1eae
 	github.com/openacid/must v0.1.3
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
-	github.com/openacid/testkeys v0.1.2
+	github.com/openacid/testkeys v0.1.6
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.6.1
 	gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc
 )
