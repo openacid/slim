@@ -160,7 +160,7 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 
 	ta := require.New(t)
 
-	for _, typ := range testkeys.Keys {
+	for _, typ := range testkeys.AssetNames() {
 
 		ks := getKeys(typ)
 
@@ -197,7 +197,7 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 	finfos, err := ioutil.ReadDir(folder)
 	ta.NoError(err)
 
-	for _, typ := range testkeys.Keys {
+	for _, typ := range testkeys.AssetNames() {
 
 		ks := getKeys(typ)
 

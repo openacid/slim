@@ -13,13 +13,15 @@ GO := go
 
 check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
-travis: test vet gofmt misspell unconvert ineffassign unparam coveralls
+travis: test vet gofmt misspell unconvert ineffassign unparam
 
 test:
 	$(GO) test -tags debug $(PKGS)
 	$(GO) test             $(PKGS)
 
-vet: | test
+lint: vet gofmt misspell unconvert ineffassign unparam
+
+vet:
 	$(GO) vet $(PKGS)
 
 staticcheck:
