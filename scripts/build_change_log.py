@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import sys
-import subprocess32
+import subprocess
 import semantic_version
 import yaml
 from collections import defaultdict
@@ -34,9 +34,10 @@ to_display = {
 }
 
 def cmd(cmds):
-    subproc = subprocess32.Popen(cmds,
-                                  stdout=subprocess32.PIPE,
-                                  stderr=subprocess32.PIPE, )
+    subproc = subprocess.Popen(cmds,
+                               encoding='utf-8',
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, )
     out, err = subproc.communicate()
     subproc.wait()
 
@@ -49,6 +50,7 @@ def cmd(cmds):
 def list_tags():
     out = cmd(["git", "tag", "-l"])
     tags = out.splitlines()
+    tags[0].lstrip('v')
     tags = [semantic_version.Version(t.lstrip('v'))
             for t in tags
             if t != '' ]
@@ -139,6 +141,8 @@ def build_changelog():
             f.write(cont + '\n')
 
 if __name__ == "__main__":
+    # Usage: to build change log from git log
+    # ./scripts/build_change_log.py v0.5.10
     newver = sys.argv[1]
     build_ver_changelog(newver)
     build_changelog()
