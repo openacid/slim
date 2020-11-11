@@ -52,7 +52,6 @@ func TestNewBits(t *testing.T) {
 	for i, c := range cases {
 		for _, got := range []Bitmap{
 			NewBits(c.input),
-			NewDenseBits(c.input),
 		} {
 			ta.Equal(c.wantn, got.Len(),
 				"%d-th: input: %#v; wantn: %#v; got: %#v",
@@ -78,22 +77,19 @@ func TestNewBitsJoin(t *testing.T) {
 
 	subs := []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	for _, dense := range []bool{false, true} {
+	b := NewBitsJoin(subs, 4)
+	ta.Equal([]uint64{1 + (2 << 4) + (3 << 8) + (4 << 12) + (5 << 16) + (6 << 20) + (7 << 24) + (8 << 28) + (9 << 32)}, b.Bits())
 
-		b := NewBitsJoin(subs, 4, dense)
-		ta.Equal([]uint64{1 + (2 << 4) + (3 << 8) + (4 << 12) + (5 << 16) + (6 << 20) + (7 << 24) + (8 << 28) + (9 << 32)}, b.Bits())
+	b = NewBitsJoin(subs, 8)
+	ta.Equal([]uint64{
+		1 + (2 << 8) + (3 << 16) + (4 << 24) + (5 << 32) + (6 << 40) + (7 << 48) + (8 << 56),
+		9}, b.Bits())
 
-		b = NewBitsJoin(subs, 8, dense)
-		ta.Equal([]uint64{
-			1 + (2 << 8) + (3 << 16) + (4 << 24) + (5 << 32) + (6 << 40) + (7 << 48) + (8 << 56),
-			9}, b.Bits())
-
-		b = NewBitsJoin(subs, 16, dense)
-		ta.Equal([]uint64{
-			1 + (2 << 16) + (3 << 32) + (4 << 48),
-			5 + (6 << 16) + (7 << 32) + (8 << 48),
-			9}, b.Bits())
-	}
+	b = NewBitsJoin(subs, 16)
+	ta.Equal([]uint64{
+		1 + (2 << 16) + (3 << 32) + (4 << 48),
+		5 + (6 << 16) + (7 << 32) + (8 << 48),
+		9}, b.Bits())
 }
 
 func TestBits_Stat(t *testing.T) {
@@ -110,12 +106,6 @@ func TestBits_Stat(t *testing.T) {
 
 	ta.Equal(int32(8), st["bits/one"])
 	ta.True(st["mem_total"] > int32(3*n)/8)
-
-	got = NewDenseBits(nums)
-	st = got.Stat()
-
-	ta.Equal(int32(7), st["bits/one"])
-	ta.True(st["mem_total"] > int32(3*n)/8)
 }
 
 func TestBits_Has(t *testing.T) {
@@ -125,7 +115,6 @@ func TestBits_Has(t *testing.T) {
 
 	for _, got := range []Bitmap{
 		NewBits(nums),
-		NewDenseBits(nums),
 	} {
 
 		for _, j := range nums {
@@ -149,7 +138,6 @@ func TestBits_Rank_panic(t *testing.T) {
 	nums := []int32{1, 3, 64, 129}
 	for _, got := range []Bitmap{
 		NewBits(nums),
-		NewDenseBits(nums),
 	} {
 
 		ta.Panics(func() {
@@ -173,7 +161,6 @@ func TestBits_MarshalUnmarshal(t *testing.T) {
 	nums := []int32{1, 3, 64, 129}
 	for _, a := range []Bitmap{
 		NewBits(nums),
-		NewDenseBits(nums),
 	} {
 
 		bytes, err := proto.Marshal(a)
@@ -295,20 +282,6 @@ func TestConcatBitss(t *testing.T) {
 }
 
 var DsOutput int
-
-func BenchmarkBits_Rank_Dense(b *testing.B) {
-
-	got := NewDenseBits([]int32{1, 2, 3, 64, 129})
-
-	b.ResetTimer()
-
-	var gotrank int32
-	for i := 0; i < b.N; i++ {
-		gotrank += got.Rank(int32(i & 127))
-	}
-
-	DsOutput = int(gotrank)
-}
 
 func BenchmarkBits_Rank(b *testing.B) {
 

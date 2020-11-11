@@ -27,5 +27,7 @@ message Bits {
     //
     // Since 0.5.4
     repeated int32 RankIndex = 30;
+
+    // Not used anymore.
     PolyArray RankIndexDense = 31;
 }

@@ -65,7 +65,7 @@ func NewBits(nums []int32) Bitmap {
 // NewBitsJoin creates a new Bitmap instance from a serias of sub bitmap.
 //
 // Since 0.5.4
-func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
+func NewBitsJoin(elts []uint64, eltWidth int32) Bitmap {
 
 	n, words := concatBits(elts, eltWidth)
 	index := bitmap.IndexRank128(words)
@@ -76,35 +76,8 @@ func NewBitsJoin(elts []uint64, eltWidth int32, dense bool) Bitmap {
 		Words: words,
 	}
 
-	if dense {
-		bm.Flags |= BitsFlagDenseRank
-		bm.RankIndexDense = NewPolyArray(index)
-	} else {
-		bm.RankIndex = index
-	}
+	bm.RankIndex = index
 
-	return bm
-}
-
-// NewDenseBits creates a new Bitmap instance from a serias of int32.
-// The input specifies what bit to set to 1.
-//
-// It compress rand index to reduce memory cost.
-// But increase query time.
-//
-// Since 0.5.4
-func NewDenseBits(nums []int32) Bitmap {
-
-	n, words, index := newBitsData(nums)
-
-	d := NewPolyArray(index)
-
-	bm := &Bits{
-		Flags:          BitsFlagDenseRank,
-		N:              n,
-		Words:          words,
-		RankIndexDense: d,
-	}
 	return bm
 }
 
@@ -232,11 +205,7 @@ func (b *Bits) Rank(i int32) int32 {
 	iWord := uint64(i >> 6)
 
 	var n int32
-	if b.Flags&BitsFlagDenseRank == 0 {
-		n = b.RankIndex[(i+64)>>7]
-	} else {
-		n = b.RankIndexDense.Get((i + 64) >> 7)
-	}
+	n = b.RankIndex[(i+64)>>7]
 
 	if iWord&1 == 0 {
 		word := b.Words[iWord] << (64 - uint(i&63))

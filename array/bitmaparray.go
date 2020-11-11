@@ -22,7 +22,7 @@ func NewBitmap16(index []int32, elts []uint64, eltWidth int32) (*Bitmap16, error
 		return nil, err
 	}
 
-	bm := NewBitsJoin(elts, eltWidth, false).(*Bits)
+	bm := NewBitsJoin(elts, eltWidth).(*Bits)
 	b.BMElts = bm
 
 	return b, nil
