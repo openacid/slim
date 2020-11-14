@@ -19,7 +19,7 @@ test:
 	# fail fast with severe bugs
 	$(GO) test -short      $(PKGS)
 	$(GO) test -tags debug $(PKGS)
-	# $(GO) test             $(PKGS)
+	# test release version and generate coverage data for task `coveralls`.
 	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
 
 lint: vet gofmt misspell unconvert ineffassign unparam
@@ -90,5 +90,5 @@ coverage:
 coveralls:
 	$(GO) get golang.org/x/tools/cmd/cover
 	$(GO) get github.com/mattn/goveralls
-	goveralls -ignore='*.pb.go' -coverprofile=coverage.out -service=travis-ci
+	goveralls -ignore='**/*.pb.go' -coverprofile=coverage.out -service=travis-ci
 	# -repotoken $$COVERALLS_TOKEN
