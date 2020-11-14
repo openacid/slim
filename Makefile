@@ -78,9 +78,15 @@ fix:
 	gofmt -s -w $(GOFILES)
 	unconvert -v -apply $(PKGS)
 
+# local coverage
+coverage:
+	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
+	go tool cover -func=coverage.out
+	go tool cover -html=coverage.out
 
 coveralls:
 	$(GO) get golang.org/x/tools/cmd/cover
 	$(GO) get github.com/mattn/goveralls
 	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
-	$$HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $$COVERALLS_TOKEN
+	goveralls -ignore='*.pb.go' -coverprofile=coverage.out -service=travis-ci
+	# -repotoken $$COVERALLS_TOKEN

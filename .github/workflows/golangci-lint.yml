@@ -1,35 +1,30 @@
 name: golangci-lint
 on:
   push:
+    tags:
+      - v*
+    branches:
+      - '*'
   pull_request:
-
 jobs:
-  test:
-    strategy:
-      matrix:
-        go-version:
-            - 1.14.x
-        os:
-            - ubuntu-latest
-
-    runs-on: ${{ matrix.os }}
-
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
     steps:
-        - name: Install Go
-          uses: actions/setup-go@v2
-          with:
-            go-version: ${{ matrix.go-version }}
+      - uses: actions/checkout@v2
 
-        - name: checkout
-          uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: v1.29
 
-        - name: cache
-          uses: actions/cache@v2
-          with:
-            path: ~/go/pkg/mod
-            key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-            restore-keys: |
-              ${{ runner.os }}-go-
+          # Optional: working directory, useful for monorepos
+          # working-directory: somedir
 
-        - name: test
-          run: make lint
+          # disable staticcheck:
+          # SA1019: package github.com/golang/protobuf/proto is deprecated: Use the "google.golang.org/protobuf/proto" package instead
+          args: --issues-exit-code=0 --exclude SA1019
+
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          # only-new-issues: true
