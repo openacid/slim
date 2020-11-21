@@ -367,36 +367,6 @@ func TestBaseMemSize(t *testing.T) {
 	}
 }
 
-func TestBase_Indexes(t *testing.T) {
-
-	ta := require.New(t)
-
-	cases := []struct {
-		input []int32
-	}{
-		{
-			[]int32{},
-		},
-		{
-			[]int32{1, 2, 3},
-		},
-		{
-			[]int32{0, 1025},
-		},
-	}
-
-	for i, c := range cases {
-		a := &array.Base{}
-		err := a.Init(c.input, c.input)
-		ta.Nil(err)
-
-		got := a.Indexes()
-		ta.Equal(c.input, got,
-			"%d-th: input: %#v; want: %#v; got: %#v",
-			i+1, c.input, c.input, got)
-	}
-}
-
 var OutputBool bool
 
 func BenchmarkBase_Has(b *testing.B) {

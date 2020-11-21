@@ -239,21 +239,3 @@ func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {
 	stIdx := int32(eltsize) * dataIndex
 	return a.Elts[stIdx : stIdx+int32(eltsize)], true
 }
-
-// Indexes returns indexes of all present elements.
-//
-// Since 0.5.4
-func (a *Base) Indexes() []int32 {
-
-	rst := make([]int32, a.Cnt)
-	j := int32(0)
-
-	for i := int32(0); i < a.Cnt; {
-		if a.Has(j) {
-			rst[i] = j
-			i++
-		}
-		j++
-	}
-	return rst
-}
