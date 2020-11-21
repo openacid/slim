@@ -126,7 +126,7 @@ def build_changelog():
     vers = out.splitlines()
     # remove "yaml"
     vers = [x.rsplit('.', 1)[0] for x in vers if x != '']
-    vers.sort()
+    vers.sort(key=lambda x: semantic_version.Version(x.lstrip('v')))
 
     with open('docs/change-log.yaml', 'w') as f:
         for v in reversed(vers):
