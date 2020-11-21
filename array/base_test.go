@@ -351,22 +351,6 @@ func TestBase_Get(t *testing.T) {
 	}
 }
 
-func TestBaseMemSize(t *testing.T) {
-	ab := &array.Base{}
-	ab.EltEncoder = encode.U16{}
-
-	err := ab.Init([]int32{1, 2, 3}, []uint16{2, 4, 6})
-	if err != nil {
-		t.Fatalf("expected no error but: %+v", err)
-	}
-
-	sz := ab.MemSize()
-	expect := 4 + 8 + 4*1 + 2*3
-	if sz != expect {
-		t.Fatalf("expect: %v; but: %v", expect, sz)
-	}
-}
-
 var OutputBool bool
 
 func BenchmarkBase_Has(b *testing.B) {
