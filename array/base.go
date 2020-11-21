@@ -59,7 +59,7 @@ func (a *Base) InitIndex(index []int32) error {
 		panic("newBitmapWords only accept uint64 as bitmap word")
 	}
 
-	_, a.Bitmaps = newBitsWords(index)
+	a.Bitmaps = bitmap.Of(index)
 	a.Offsets = bitmap.IndexRank64(a.Bitmaps)
 	a.Cnt = int32(len(index))
 
