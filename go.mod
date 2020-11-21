@@ -14,5 +14,4 @@ require (
 	github.com/openacid/testkeys v0.1.6
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.6.1
-	gonum.org/v1/gonum v0.0.0-20190502212712-4a2eb0188cbc
 )
