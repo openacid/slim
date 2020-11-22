@@ -288,11 +288,6 @@ func TestBaseHasAndGetEltIndex(t *testing.T) {
 
 		_, inMap := indexMap[i]
 
-		has := arr.Has(i)
-		if inMap != has {
-			t.Fatalf("Has(%d) expect: %v; but: %v", i, inMap, has)
-		}
-
 		eltIndex, inElts := arr.GetEltIndex(i)
 		if inMap != inElts {
 			t.Fatalf("Has(%d) expect: %v; but: %v", i, inMap, inElts)
@@ -320,7 +315,6 @@ func TestBase_HasAndGetEltIndex_panic(t *testing.T) {
 	maxValid := (maxIndex + 63) & (^63)
 
 	// -1 does not cause an panic
-	ta.Panics(func() { a.Has(maxValid) })
 	ta.Panics(func() { a.GetEltIndex(maxValid) })
 }
 
@@ -352,28 +346,6 @@ func TestBase_Get(t *testing.T) {
 }
 
 var OutputBool bool
-
-func BenchmarkBase_Has(b *testing.B) {
-
-	cnt := int32(1024 * 1024)
-	mask := cnt - 1
-
-	indexes := randIndexes(cnt)
-
-	arr := &array.Base{}
-	err := arr.InitIndex(indexes)
-	if err != nil {
-		panic(err)
-	}
-
-	b.ResetTimer()
-
-	var s bool = false
-	for i := 0; i < b.N; i++ {
-		s = s || arr.Has(int32(i)&mask)
-	}
-	OutputBool = s
-}
 
 var OutputInt32 int32 = 0
 

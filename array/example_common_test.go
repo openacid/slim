@@ -21,12 +21,9 @@ func Example() {
 		return
 	}
 
-	fmt.Printf("array has %d-th elt: %t\n", 4, arr.Has(4))
-
 	val, found := arr.Get(5)
 	fmt.Printf("get arr[%d] value:%v found: %t\n", 5, val, found)
 
 	// Output:
-	// array has 4-th elt: false
 	// get arr[5] value:15 found: true
 }

@@ -106,14 +106,6 @@ func (a *Base) GetEltIndex(idx int32) (int32, bool) {
 	return r, b == 1
 }
 
-// Has returns true if idx is in array, else return false.
-//
-// Since 0.2.0
-func (a *Base) Has(idx int32) bool {
-	iBm := idx / bmWidth
-	return ((a.Bitmaps[iBm] >> uint32(idx&bmMask)) & 1) != 0
-}
-
 // Init initializes an array from the "indexes" and "elts".
 // The indexes must be an ascending int32 slice,
 // otherwise, return the ErrIndexNotAscending error.
