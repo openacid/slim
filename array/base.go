@@ -14,11 +14,6 @@ var endian = binary.LittleEndian
 
 // Base is the base of: Array and U16 etc.
 //
-// Performance note.
-//
-//	   Has():          9~10 ns / call; 1 memory accesses
-//	   GetEltIndex(): 10~20 ns / call; 2 memory accesses
-//
 // Since 0.2.0
 type Base struct {
 	Array32
@@ -72,16 +67,6 @@ func (a *Base) InitIndex(index []int32) error {
 	}
 
 	return nil
-}
-
-// GetEltIndex returns the position in a.Elts of element[idx] and a bool
-// indicating if found or not.
-// If "idx" absents it returns "0, false".
-//
-// Since 0.2.0
-func (a *Base) GetEltIndex(idx int32) (int32, bool) {
-	r, b := bitmap.Rank64(a.Bitmaps, a.Offsets, idx)
-	return r, b == 1
 }
 
 // Init initializes an array from the "indexes" and "elts".
@@ -181,11 +166,11 @@ func (a *Base) Get(idx int32) (interface{}, bool) {
 //
 // Since 0.2.0
 func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {
-	dataIndex, ok := a.GetEltIndex(idx)
-	if !ok {
+	r, b := bitmap.Rank64(a.Bitmaps, a.Offsets, idx)
+	if b == 0 {
 		return nil, false
 	}
 
-	stIdx := int32(eltsize) * dataIndex
+	stIdx := int32(eltsize) * r
 	return a.Elts[stIdx : stIdx+int32(eltsize)], true
 }

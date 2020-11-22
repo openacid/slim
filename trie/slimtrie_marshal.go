@@ -234,8 +234,8 @@ func getBM16Child(ch *array.Bitmap16, idx int32) uint64 {
 
 	endian := binary.LittleEndian
 
-	eltIdx, found := ch.GetEltIndex(idx)
-	must.Be.True(found, "node must be in children array")
+	eltIdx, bitset := bitmap.Rank64(ch.Bitmaps, ch.Offsets, idx)
+	must.Be.True(bitset == 1, "node must be in children array")
 
 	var bm uint64
 

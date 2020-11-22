@@ -244,55 +244,6 @@ func TestBaseInitWithEncoder(t *testing.T) {
 	}
 }
 
-func TestBaseHasAndGetEltIndex(t *testing.T) {
-
-	cnt := int32(024)
-	indexes := randIndexes(cnt)
-	indexMap := makeIndexMap(indexes)
-
-	maxIndex := indexes[len(indexes)-1]
-
-	arr := &array.Base{}
-	err := arr.InitIndex(indexes)
-	if err != nil {
-		t.Fatalf("expect no err but: %s", err)
-	}
-
-	maxValid := (maxIndex + 63) & (^63)
-	for i := int32(0); i < maxValid; i++ {
-
-		_, inMap := indexMap[i]
-
-		eltIndex, inElts := arr.GetEltIndex(i)
-		if inMap != inElts {
-			t.Fatalf("Has(%d) expect: %v; but: %v", i, inMap, inElts)
-		}
-
-		if inMap && indexes[eltIndex] != i {
-			t.Fatalf("i=%d should be at %d", i, eltIndex)
-		}
-	}
-}
-
-func TestBase_HasAndGetEltIndex_panic(t *testing.T) {
-
-	ta := require.New(t)
-
-	cnt := int32(024)
-	indexes := randIndexes(cnt)
-
-	maxIndex := indexes[len(indexes)-1]
-
-	a := &array.Base{}
-	err := a.InitIndex(indexes)
-	ta.Nil(err)
-
-	maxValid := (maxIndex + 63) & (^63)
-
-	// -1 does not cause an panic
-	ta.Panics(func() { a.GetEltIndex(maxValid) })
-}
-
 func TestBase_Get(t *testing.T) {
 
 	ta := require.New(t)
@@ -321,32 +272,6 @@ func TestBase_Get(t *testing.T) {
 }
 
 var OutputBool bool
-
-var OutputInt32 int32 = 0
-
-func BenchmarkBase_GetEltIndex(b *testing.B) {
-
-	cnt := int32(1024 * 1024)
-	mask := cnt - 1
-
-	indexes := randIndexes(cnt)
-
-	arr := &array.Base{}
-	err := arr.InitIndex(indexes)
-	if err != nil {
-		panic(err)
-	}
-
-	b.ResetTimer()
-
-	var s int32
-
-	for i := 0; i < b.N; i++ {
-		v, _ := arr.GetEltIndex(int32(i) & mask)
-		s += v
-	}
-	OutputInt32 = s
-}
 
 func BenchmarkBaseGet(b *testing.B) {
 
