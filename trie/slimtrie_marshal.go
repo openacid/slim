@@ -65,7 +65,7 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 
 	// ver: "==1.0.0 || <0.5.10"
 
-	children := &array.Bitmap16{}
+	children := &array.Array32{}
 	steps := &array.U16{}
 	leaves := &array.Array{}
 	leaves.EltEncoder = st.encoder
@@ -104,14 +104,14 @@ func (st *SlimTrie) Reset() {
 	st.nodes = &Nodes{}
 }
 
-func before000510(st *SlimTrie, ver string, ch *array.Bitmap16, steps *array.U16, lvs *array.Array) {
+func before000510(st *SlimTrie, ver string, ch *array.Array32, steps *array.U16, lvs *array.Array) {
 	if !vers.Check(ver, "==1.0.0", "<0.5.10") {
 		return
 	}
 	before000510ToNewChildrenArray(st, ver, ch, steps, lvs)
 }
 
-func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Bitmap16, steps *array.U16, lvs *array.Array) {
+func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32, steps *array.U16, lvs *array.Array) {
 
 	// 1.0.0 is the initial version.
 	// From 0.5.8 it starts writing version to marshaled data.
@@ -226,11 +226,13 @@ func bmhas(bm []uint64, i int32) bool {
 	return bitmap.SafeGet1(bm, i) == 1
 }
 
-func getBM16Child(ch *array.Bitmap16, idx int32) uint64 {
+func getBM16Child(ch *array.Array32, idx int32) uint64 {
 
 	// There are two format with version 1.0.0:
-	// Before 0.5.4 Children elements are in Elts
-	// From 0.5.4 Children elements are in BMElts
+	// Before 0.5.4 Child elements are in Elts, every elt is uint32:
+	// 16 bit bitmap in lower 16 bit. and the rank in upper 16 bit.
+	//
+	// Since 0.5.4 Child elements are in BMElts, every child is a 16-bit bitmap
 
 	endian := binary.LittleEndian
 

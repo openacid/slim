@@ -80,6 +80,10 @@ type Array struct {
 	Base
 }
 
+const (
+	ArrayFlagIsBitmap = uint32(0x00000002)
+)
+
 // NewEmpty creates an empty Array with element of type of "v".
 // If v is a pointer, the value type it points to is used.
 //
