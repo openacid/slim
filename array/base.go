@@ -21,9 +21,6 @@ type Base struct {
 }
 
 const (
-	// bmWidth defines how many bits for a bitmap word
-	// Never change this
-	bmWidth = int32(64)
 	bmShift = uint(6) // log₂64
 	bmMask  = int32(63)
 )
@@ -46,10 +43,6 @@ func (a *Base) InitIndex(index []int32) error {
 		if index[i] >= index[i+1] {
 			return ErrIndexNotAscending
 		}
-	}
-
-	if bmWidth != 64 {
-		panic("newBitmapWords only accept uint64 as bitmap word")
 	}
 
 	a.Bitmaps = bitmap.Of(index)
