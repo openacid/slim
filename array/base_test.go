@@ -1,7 +1,6 @@
 package array_test
 
 import (
-	"fmt"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -111,30 +110,6 @@ func TestBaseInitIndex(t *testing.T) {
 			}
 		}
 	}
-}
-
-func TestBase_ExtendIndex(t *testing.T) {
-
-	ta := require.New(t)
-
-	a := &array.Base{}
-	err := a.InitIndex([]int32{0, 1, 64, 66})
-	ta.Nil(err)
-
-	a.ExtendIndex(-1)
-	ta.Equal([]uint64{3, 5}, a.Bitmaps)
-	ta.Equal([]int32{0, 2}, a.Offsets)
-
-	a.ExtendIndex(128)
-	ta.Equal([]uint64{3, 5}, a.Bitmaps)
-	ta.Equal([]int32{0, 2}, a.Offsets)
-
-	a.ExtendIndex(256)
-	fmt.Println(a)
-
-	ta.Equal([]uint64{3, 5, 0, 0}, a.Bitmaps)
-	ta.Equal([]int32{0, 2, 0, 0}, a.Offsets)
-
 }
 
 func TestBaseInit(t *testing.T) {
