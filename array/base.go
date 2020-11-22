@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"reflect"
 
-	"math/bits"
-
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitmap"
 	"github.com/openacid/slim/encode"
@@ -104,17 +102,8 @@ func (a *Base) ExtendIndex(n int32) {
 //
 // Since 0.2.0
 func (a *Base) GetEltIndex(idx int32) (int32, bool) {
-	iBm, iBit := bmBit(idx)
-
-	var bmWord = a.Bitmaps[iBm]
-
-	if ((bmWord >> uint(iBit)) & 1) == 0 {
-		return 0, false
-	}
-
-	base := a.Offsets[iBm]
-	cnt1 := bits.OnesCount64(bmWord & ((uint64(1) << uint(iBit)) - 1))
-	return base + int32(cnt1), true
+	r, b := bitmap.Rank64(a.Bitmaps, a.Offsets, idx)
+	return r, b == 1
 }
 
 // Has returns true if idx is in array, else return false.
