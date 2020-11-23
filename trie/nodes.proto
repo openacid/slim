@@ -25,6 +25,45 @@ message Bitmap {
     repeated int32 SelectIndex = 40;
 }
 
+// VLenArray stores var-length []byte elts.
+//
+// Since 0.5.10
+message VLenArray {
+
+    // N is the max set bit index plus 1.
+    //
+    // Since 0.5.10
+    int32 N = 10;
+
+    // EltCnt is the number of present elts.
+    //
+    // Since 0.5.10
+    int32 EltCnt = 11;
+
+    // PresenceBM set 1 at the i-th bit if the i-th elt presents.
+    //
+    // Since 0.5.10
+    Bitmap PresenceBM = 61;
+
+
+    // PositionBM is a bitmap of starting position of every present elt.
+    //
+    // Since 0.5.10
+    Bitmap PositionBM = 20;
+
+
+    // FixedSize is set to elt size in Bytes field, if all the elts have equal sizes.
+    //
+    // Since 0.5.10
+    int32 FixedSize = 23;
+
+
+    // Bytes is the content in bytes
+    //
+    // Since 0.5.10
+    bytes Bytes = 30;
+}
+
 // Nodes is array of all inner nodes in slim trie.
 // It is NOT a public type and do not rely on it.
 // Since protobuf just makes all message public.
@@ -32,28 +71,11 @@ message Bitmap {
 // Since 0.5.10
 message Nodes {
 
-    // WithLeaves indicates whether to store leaf values(as an index).
-    // Otherwise, it is a "filter" which can only provide existence information
-    // but not location information.
-    //
-    // Since 0.5.10
-    bool WithLeaves = 8;
-
-    // WithPrefixContent indicates whether full inner prefixes are stored or only the
-    // lengths of inner prefix are stored.
-    //
-    // Since 0.5.10
-    bool WithPrefixContent = 9;
-
-    // WithLeafPrefix indicates whether to store prefix of leaves.
-    //
-    // Since 0.5.10
-    bool WithLeafPrefix = 10;
-
     // BigInnerCnt is number of big (267 bit) inner node.
     //
     // Since 0.5.10
     int32 BigInnerCnt = 11;
+
 
     // BigInnerOffset is the offset caused by "BigInner" nodes:
     //
@@ -85,23 +107,18 @@ message Nodes {
     // Since 0.5.10
     int32 ShortMinusInner = 13;
 
+
     // ShortSize is the number of bit of short bitmap that reduce most memory
     // cost.
     //
     // Since 0.5.10
     int32 ShortSize = 14;
 
+
     // ShortMask has the lower ShortSize bit set to 1.
     //
     // Since 0.5.10
     uint64 ShortMask = 15;
-
-    // Number of InnerPrefixes.
-    // It is used to speed up lookup when there are not any prefixes.
-    //
-    // Since 0.5.10
-    int32 InnerPrefixCnt = 16;
-
 
 
     // NodeTypeBM is a bitmap in which a "1" indicates the i-th node is an inner
@@ -131,28 +148,12 @@ message Nodes {
     repeated uint32 ShortTable = 32;
 
 
-    // InnerPrefixBM indicates whether an inner node has a prefix.
-    // Its bit index is inner node index but not node-id.
-    //
-    // Since 0.5.10
-    Bitmap InnerPrefixBM = 50;
-
-
-    // InnerPrefixLens stores how many bits to move forword before looking up a key on an
-    // inner node.
-    // The length of this array is len(inner nodes).
-    // Whether an inner node has prefix is stored in InnerPrefixBM.
-    //
-    // Since 0.5.10
-    bytes  InnerPrefixLens = 51;
-
-
-    // InnerPrefixStartBM is a bitmap of starting position of a prefix. aligned to 8.
-    //
-    // Since 0.5.10
-    Bitmap InnerPrefixStartBM = 52;
-
     // InnerPrefixes of inner nodes.
+    // There are two usages with this field:
+    // - If inner node prefix is stored, it is a var-len array of stored prefix string.
+    // - If only inner node prefix length is stored, it is a array with fixed-size elts. An array elt is the length in 4-bit of a prefix.
+    //
+    // In full-prefix mode:
     // An array element is a control byte followed by several data bytes.
     //
     // The 0-th bit in the control byte indicates whether a prefix is
@@ -175,33 +176,18 @@ message Nodes {
     //   stored prefix:  00000001 11001100 11010000;  control byte = 1
     //
     // Since 0.5.10
-    bytes InnerPrefixes = 54;
+    VLenArray InnerPrefixes = 38;
 
 
-
-    // LeafBytes stores serialized leaf values.
+    // LeafPrefixes stores prefix of every leaf if it is not nil.
+    // A leaf prefix unlike inner node prefix, is just a byte sequence, without a control byte.
     //
     // Since 0.5.10
-    bytes  LeafBytes             = 60;
+    VLenArray LeafPrefixes = 58;
 
 
-    // LeafPrefixBM indicates whether a leaf node has a prefix.
-    // Its bit index is leaf node index but not node-id.
+    // Leaves stores serialized leaf values.
     //
     // Since 0.5.10
-    Bitmap LeafPrefixBM = 61;
-
-
-    // LeafPrefixStartBM is a bitmap of starting position of a prefix. aligned to 8.
-    //
-    // Since 0.5.10
-    Bitmap LeafPrefixStartBM = 62;
-
-
-    // LeafPrefixes are prefixes of leaf nodes.
-    //
-    // Since 0.5.10
-    bytes LeafPrefixes = 63;
-
-
+    VLenArray Leaves = 60;
 }

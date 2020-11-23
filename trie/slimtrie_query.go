@@ -185,7 +185,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 	// eqID must not be -1
 
-	if st.nodes.WithLeafPrefix {
+	if st.nodes.LeafPrefixes != nil {
 		if i == l {
 			if qr.hasLeafPrefix {
 				return -1
@@ -208,7 +208,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 func (st *SlimTrie) cmpLeafPrefix(tail string, qr *querySession) int32 {
 
-	if st.nodes.WithLeafPrefix {
+	if st.nodes.LeafPrefixes != nil {
 		var leafPrefix []byte
 		if qr.hasLeafPrefix {
 			leafPrefix = qr.leafPrefix
@@ -375,20 +375,22 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 
 	qr.hasLeafPrefix = false
 
-	if st.nodes.WithLeafPrefix {
+	if st.nodes.LeafPrefixes != nil {
 
 		ns := st.nodes
 
 		wordI := qr.ithLeaf >> 6
 		bitI := uint32(qr.ithLeaf & 63)
 
-		if ns.LeafPrefixBM.Words[wordI]&bitmap.Bit[bitI] != 0 {
-			ithPref := ns.LeafPrefixBM.RankIndex[wordI] + int32(bits.OnesCount64(ns.LeafPrefixBM.Words[wordI]&bitmap.Mask[bitI]))
-			ps := ns.LeafPrefixStartBM
+		lp := ns.LeafPrefixes
+
+		if lp.PresenceBM.Words[wordI]&bitmap.Bit[bitI] != 0 {
+			ithPref := lp.PresenceBM.RankIndex[wordI] + int32(bits.OnesCount64(lp.PresenceBM.Words[wordI]&bitmap.Mask[bitI]))
+			ps := lp.PositionBM
 			from, to := ps.select32(ithPref)
 
 			qr.hasLeafPrefix = true
-			qr.leafPrefix = ns.LeafPrefixes[from:to]
+			qr.leafPrefix = lp.Bytes[from:to]
 
 		}
 	}
@@ -449,22 +451,24 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 	// if this node has prefix
 	// TODO no prefix mode when create
-	if ns.InnerPrefixCnt > 0 && ns.InnerPrefixBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
+	prefs := ns.InnerPrefixes
+	if prefs.EltCnt > 0 && prefs.PresenceBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
 
-		ithPref := rank128(ns.InnerPrefixBM.Words, ns.InnerPrefixBM.RankIndex, ithInner)
+		inn := prefs.PresenceBM
+		ithPref := rank128(inn.Words, inn.RankIndex, ithInner)
 
-		if ns.WithPrefixContent {
+		if prefs.PositionBM != nil {
 
 			// stored actual prefix of a node.
-			ps := ns.InnerPrefixStartBM
+			ps := prefs.PositionBM
 			from, to := ps.select32(ithPref)
 
-			qr.prefix = ns.InnerPrefixes[from:to]
+			qr.prefix = prefs.Bytes[from:to]
 			qr.prefixLen = prefixLen(qr.prefix)
 			qr.hasPrefixContent = true
 
 		} else {
-			qr.prefixLen = decStep(ns.InnerPrefixLens[ithPref<<1:])
+			qr.prefixLen = decStep(prefs.Bytes[ithPref<<1:])
 		}
 	}
 }
@@ -539,14 +543,15 @@ func (st *SlimTrie) getLeaf(nodeid int32) interface{} {
 
 func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 
-	if !st.nodes.WithLeaves {
+	ls := st.nodes.Leaves
+	if ls == nil {
 		return nil
 	}
 
 	eltsize := st.encoder.GetEncodedSize(nil)
 	stIdx := ith * int32(eltsize)
 
-	bs := st.nodes.LeafBytes[stIdx:]
+	bs := ls.Bytes[stIdx:]
 
 	_, v := st.encoder.Decode(bs)
 	return v

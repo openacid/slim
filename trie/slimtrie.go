@@ -118,7 +118,7 @@ type Opt struct {
 	CompleteLeaf bool
 
 	// Complete tells SlimTrie to store complete keys content.
-	// This option implies "WithPrefixContent" and "WithLeafPrefix".
+	// This option implies "CompleteInner" and "CompleteLeaf".
 	// With this option there is no false positive and SlimTrie works just like
 	// a static key-value map.
 	//
@@ -178,11 +178,11 @@ func (st *SlimTrie) content() []string {
 	rst := []string{}
 	ns := st.nodes
 	rst = append(rst, fmt.Sprintf(`InnerBM: %+v`, bitmap.ToArray(ns.NodeTypeBM.Words)))
-	rst = append(rst, fmt.Sprintf(`StepBM: %+v`, bitmap.ToArray(ns.InnerPrefixBM.Words)))
-	if ns.WithPrefixContent {
-		rst = append(rst, fmt.Sprintf(`PrefixStarts: %+v`, bitmap.ToArray(ns.InnerPrefixStartBM.Words)))
+	rst = append(rst, fmt.Sprintf(`StepBM: %+v`, bitmap.ToArray(ns.InnerPrefixes.PresenceBM.Words)))
+	if ns.InnerPrefixes.PositionBM != nil {
+		rst = append(rst, fmt.Sprintf(`PrefixStarts: %+v`, bitmap.ToArray(ns.InnerPrefixes.PositionBM.Words)))
 	} else {
-		rst = append(rst, fmt.Sprintf(`Steps: %+v`, ns.InnerPrefixLens))
+		rst = append(rst, fmt.Sprintf(`Steps: %+v`, ns.InnerPrefixes.Bytes))
 	}
 
 	return rst

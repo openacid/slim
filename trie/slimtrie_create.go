@@ -303,14 +303,11 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	_ = shortCnt
 
 	ns := &Nodes{
-		ShortSize:         shortSize,
-		ShortMask:         bitmap.Mask[shortSize],
-		ShortMinusInner:   shortSize - innerSize,
-		BigInnerOffset:    (bigInnerSize - innerSize) * c.bigCnt,
-		BigInnerCnt:       c.bigCnt,
-		WithPrefixContent: c.option.CompleteInner,
-		WithLeafPrefix:    c.option.CompleteLeaf,
-		WithLeaves:        c.withLeaves,
+		ShortSize:       shortSize,
+		ShortMask:       bitmap.Mask[shortSize],
+		ShortMinusInner: shortSize - innerSize,
+		BigInnerOffset:  (bigInnerSize - innerSize) * c.bigCnt,
+		BigInnerCnt:     c.bigCnt,
 	}
 
 	// Mapping most used 17-bit bitmap inner node to short inner node.
@@ -373,14 +370,16 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	}
 	ns.Inners.indexit("r128")
 
-	ns.InnerPrefixCnt = int32(len(c.prefixIndexes))
-	ns.InnerPrefixBM = newBM(c.prefixIndexes, innerCnt, "r128")
+	ns.InnerPrefixes = &VLenArray{}
+	ns.InnerPrefixes.EltCnt = int32(len(c.prefixIndexes))
+	ns.InnerPrefixes.PresenceBM = newBM(c.prefixIndexes, innerCnt, "r128")
 	if c.option.CompleteInner {
-		ns.InnerPrefixStartBM = newBM(stepToPos(c.prefixByteLens, 0), 0, "s32")
-		ns.InnerPrefixes = c.prefixes
+		ns.InnerPrefixes.PositionBM = newBM(stepToPos(c.prefixByteLens, 0), 0, "s32")
+		ns.InnerPrefixes.Bytes = c.prefixes
 
 	} else {
-		ns.InnerPrefixLens = c.prefix4BitLens
+		ns.InnerPrefixes.FixedSize = 2
+		ns.InnerPrefixes.Bytes = c.prefix4BitLens
 	}
 
 	// TODO separate leaf init
@@ -389,9 +388,10 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	}
 
 	if c.option.CompleteLeaf {
-		ns.LeafPrefixBM = newBM(c.leafPrefixIndexes, int32(len(c.leaves)), "r64")
-		ns.LeafPrefixStartBM = newBM(stepToPos(c.leafPrefixLens, 0), 0, "s32")
-		ns.LeafPrefixes = c.leafPrefixes
+		ns.LeafPrefixes = &VLenArray{}
+		ns.LeafPrefixes.PresenceBM = newBM(c.leafPrefixIndexes, int32(len(c.leaves)), "r64")
+		ns.LeafPrefixes.PositionBM = newBM(stepToPos(c.leafPrefixLens, 0), 0, "s32")
+		ns.LeafPrefixes.Bytes = c.leafPrefixes
 	}
 
 	st := &SlimTrie{
@@ -611,7 +611,8 @@ func (ns *Nodes) initLeaves(elts interface{}, e encode.Encoder) {
 		bs := e.Encode(ee)
 		lb = append(lb, bs...)
 	}
-	ns.LeafBytes = lb
+	ns.Leaves = &VLenArray{}
+	ns.Leaves.Bytes = lb
 }
 
 func stepToPos(steps []int32, shift int32) []int32 {
