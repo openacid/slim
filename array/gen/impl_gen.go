@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/openacid/slim/genhelper"
+	"github.com/openacid/genr"
 )
 
 var implHead = `package array
@@ -48,7 +48,7 @@ func (a *{{.Name}}) Get(idx int32) ({{.ValType}}, bool) {
 
 	stIdx := a.Offsets[iBm]*{{.ValLen}} + int32(cnt1)*{{.ValLen}}
 
-	return {{.ValType}}(endian.{{.Decoder}}(a.Elts[stIdx:])), true
+	return {{.ValType}}(endian.{{.Codec}}(a.Elts[stIdx:])), true
 }
 `
 
@@ -220,7 +220,7 @@ func Test{{.Name}}EncodeDecode(t *testing.T) {
 			want = append(c.want, byte(c.n*{{.ValLen}}))
 			for i := 0; i < c.n; i++ {
 				b := make([]byte, {{.ValLen}})
-				binary.LittleEndian.Put{{.Decoder}}(b, {{.EncodeCast}}(elts[i]))
+				binary.LittleEndian.Put{{.Codec}}(b, {{.EncodeCast}}(elts[i]))
 				want = append(want, b...)
 			}
 		}
@@ -317,14 +317,14 @@ func main() {
 	testfn := pref + "_test.go"
 
 	impls := []interface{}{
-		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
-		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
+		genr.NewIntConfig("U16", "uint16"),
+		genr.NewIntConfig("U32", "uint32"),
+		genr.NewIntConfig("U64", "uint64"),
+		genr.NewIntConfig("I16", "int16"),
+		genr.NewIntConfig("I32", "int32"),
+		genr.NewIntConfig("I64", "int64"),
 	}
 
-	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
-	genhelper.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
+	genr.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
+	genr.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
 }

@@ -8,6 +8,7 @@ require (
 	github.com/kr/pretty v0.2.1
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/openacid/errors v0.8.1
+	github.com/openacid/genr v0.1.1
 	github.com/openacid/low v0.1.11-0.20190918052027-76b5225d1eae
 	github.com/openacid/must v0.1.3
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86

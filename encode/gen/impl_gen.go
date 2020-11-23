@@ -1,6 +1,8 @@
 package main
 
-import "github.com/openacid/slim/genhelper"
+import (
+	"github.com/openacid/genr"
+)
 
 var implHead = `package encode
 
@@ -15,7 +17,7 @@ type {{.Name}} struct{}
 func (c {{.Name}}) Encode(d interface{}) []byte {
 	b := make([]byte, {{.ValLen}})
 	v := {{.EncodeCast}}(d.({{.ValType}}))
-	binary.LittleEndian.Put{{.Decoder}}(b, v)
+	binary.LittleEndian.Put{{.Codec}}(b, v)
 	return b
 }
 
@@ -26,7 +28,7 @@ func (c {{.Name}}) Decode(b []byte) (int, interface{}) {
 	size := int({{.ValLen}})
 	s := b[:size]
 
-	d := {{.ValType}}(binary.LittleEndian.{{.Decoder}}(s))
+	d := {{.ValType}}(binary.LittleEndian.{{.Codec}}(s))
 	return size, d
 }
 
@@ -110,14 +112,14 @@ func main() {
 	testfn := pref + "_test.go"
 
 	impls := []interface{}{
-		genhelper.IntConfig{Name: "U16", ValType: "uint16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		genhelper.IntConfig{Name: "U32", ValType: "uint32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		genhelper.IntConfig{Name: "U64", ValType: "uint64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
-		genhelper.IntConfig{Name: "I16", ValType: "int16", ValLen: 2, Decoder: "Uint16", EncodeCast: "uint16"},
-		genhelper.IntConfig{Name: "I32", ValType: "int32", ValLen: 4, Decoder: "Uint32", EncodeCast: "uint32"},
-		genhelper.IntConfig{Name: "I64", ValType: "int64", ValLen: 8, Decoder: "Uint64", EncodeCast: "uint64"},
+		genr.NewIntConfig("U16", "uint16"),
+		genr.NewIntConfig("U32", "uint32"),
+		genr.NewIntConfig("U64", "uint64"),
+		genr.NewIntConfig("I16", "int16"),
+		genr.NewIntConfig("I32", "int32"),
+		genr.NewIntConfig("I64", "int64"),
 	}
 
-	genhelper.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
-	genhelper.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
+	genr.Render(implfn, implHead, implTemplate, impls, []string{"gofmt", "unconvert"})
+	genr.Render(testfn, testHead, testTemplate, impls, []string{"gofmt", "unconvert"})
 }
