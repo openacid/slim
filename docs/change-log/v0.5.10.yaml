@@ -1,0 +1,58 @@
+api-change:
+  array:
+  - remove NewDenseBits. It saves a few bits for rank but query is slow ~10ns; by
+    drdr xp; 2020-11-11
+  - remove polyarray, new repo https//github.com/openacid/polyarray; by drdr xp; 2019-06-04
+  - remove unused types interface Bitmap and corresponding methods.; by drdr xp; 2020-11-14
+  - remove Dense-array. It is slow and not used any more. The standalone impl is now
+    at https//github.com/openacid/polyarray; by drdr xp; 2020-11-21
+  - remove Base.Indexes(); the same thing can be done with bitmap.ToArray(); see https//github.com/openacid/low/tree/master/bitmap;
+    by drdr xp; 2020-11-22
+  - remove Base.MemSize(); the same thing can be done with size.Of(); see https//github.com/openacid/low/tree/master/size;
+    by drdr xp; 2020-11-22
+  - remove Has(); It is barely a bitmap.Get1() and no other component uses it.; by
+    drdr xp; 2020-11-22
+  - remove array.ExtendIndex(), use bitmap instead, see https//github.com/openacid/low/tree/master/bitmap;
+    by drdr xp; 2020-11-22
+  - remove GetEltIndex() use bitmap.Rank64() instead, see https//github.com/openacid/low/tree/master/bitmap;
+    by drdr xp; 2020-11-22
+  - remove struct Bitmap16. It is kept only for loading old version data. But it does
+    not need this type. It only need the underlying type Array32; by drdr xp; 2020-11-22
+  benhelper:
+  - remove RandI64Slice and RandI32Slice. moved to https//github.com/openacid/testutil;
+    by drdr xp; 2020-11-21
+  bits:
+  - removed; by drdr xp; 2019-09-24
+  iohelper:
+  - removed; by drdr xp; 2019-09-24
+  polyfit:
+  - remove polyfit, moved to https//github.com/openacid/slimarray/tree/main/polyfit;
+    by drdr xp; 2020-11-21
+  serialize:
+  - removed; by drdr xp; 2019-09-24
+  strhelper:
+  - remove deprecated functions; by drdr xp; 2019-09-24
+  - remove strhelper moved to https//github.com/openacid/low/tree/master/bitmap; by
+    drdr xp; 2020-11-21
+  trie:
+  - remove Trie; by drdr xp; 2019-09-23
+  typehelper:
+  - removed; by drdr xp; 2019-09-24
+  version:
+  - removed; by drdr xp; 2019-09-24
+fixbug:
+  scripts/requirements.txt:
+  - to reduce vulnerabilities; by snyk-bot; 2020-03-20
+fixdoc:
+  slimtrie:
+  - fix typo GetI32; by drdr xp; 2019-09-25
+new-feature:
+  array:
+  - add more bitmap flags; by drdr xp; 2019-06-24
+  encode:
+  - add Dummy to encode anything to nothing; by drdr xp; 2019-09-24
+  - add I8 to encode int8; by drdr xp; 2019-09-25
+  slimtrie:
+  - add GetIxx to optimize integer value; by drdr xp; 2019-09-25
+  - add option ReduceSameValue to remove adjasent records with the same value. By
+    default true; by drdr xp; 2020-11-27
