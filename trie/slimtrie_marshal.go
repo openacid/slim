@@ -156,7 +156,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 			if qelt.leafOnly || (!hasInner && hasLeaf) {
 				must.Be.OK(func() { bmhas(lvs.Bitmaps, oldid) })
 
-				lv, found := lvs.Get(oldid)
+				lv, found := lvs.GetBytes(oldid, st.encoder.GetEncodedSize(nil))
 				must.Be.True(found)
 
 				c.addLeaf(newid, lv)
@@ -202,8 +202,8 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 			c.addInner(newid, bmidx, innerSize, qelt.step, "", -1)
 		}
 
-		st2 := c.build(st.encoder)
-		*st = *st2
+		ns := c.build()
+		st.nodes = ns
 	}
 }
 

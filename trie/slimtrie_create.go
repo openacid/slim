@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"bytes"
 	"math/bits"
 	"reflect"
 	"sort"
@@ -58,7 +59,7 @@ type creator struct {
 	prefixes       []byte
 
 	// len: nr of leaf nodes = len(nodes) - len(inner_nodes)
-	leaves []interface{}
+	leaves [][]byte
 
 	leafPrefixIndexes []int32
 	leafPrefixLens    []int32
@@ -91,7 +92,7 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 		prefixByteLens: make([]int32, 0, n),
 		prefixes:       make([]byte, 0, n),
 
-		leaves: make([]interface{}, 0, n),
+		leaves: make([][]byte, 0, n),
 
 		leafPrefixIndexes: make([]int32, 0, n),
 		leafPrefixLens:    make([]int32, 0, n),
@@ -203,7 +204,7 @@ func (c *creator) setLeafPrefix(nid int32, key string, keyidx int32) {
 	}
 }
 
-func (c *creator) addLeaf(nid int32, v interface{}) {
+func (c *creator) addLeaf(nid int32, v []byte) {
 
 	must.Be.Equal(c.nodeCnt, nid)
 
@@ -295,7 +296,7 @@ func findMinShortSize(sorted [][]counterElt) (int32, int32) {
 	return sz, shortCnt
 }
 
-func (c *creator) build(e encode.Encoder) *SlimTrie {
+func (c *creator) build() *Nodes {
 
 	sorted := sortedBMCounts(c.innerBMCnt)
 	shortSize, shortCnt := findMinShortSize(sorted)
@@ -384,7 +385,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 
 	// TODO separate leaf init
 	if c.withLeaves {
-		ns.initLeaves(c.leaves, e)
+		ns.initLeaves(c.leaves)
 	}
 
 	if *c.option.LeafPrefix {
@@ -394,12 +395,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 		ns.LeafPrefixes.Bytes = c.leafPrefixes
 	}
 
-	st := &SlimTrie{
-		nodes:   ns,
-		encoder: e,
-	}
-
-	return st
+	return ns
 }
 
 // TODO filter mode: InnerPrefix
@@ -410,26 +406,8 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 		return &SlimTrie{encoder: e, nodes: &Nodes{}}, nil
 	}
 
-	for i := 0; i < n-1; i++ {
-		if keys[i] >= keys[i+1] {
-			return nil, errors.Wrapf(ErrKeyOutOfOrder,
-				"keys[%d] >= keys[%d] %s %s", i, i+1, keys[i], keys[i+1])
-		}
-	}
-
-	var tokeep []bool
-	if *opt.DedupValue {
-		tokeep = newValueToKeep(keys, values)
-	} else {
-		tokeep = make([]bool, n)
-		for i := 0; i < n; i++ {
-			tokeep[i] = true
-		}
-	}
-
-	rvals := reflect.ValueOf(values)
-
 	must.Be.OK(func() {
+		rvals := reflect.ValueOf(values)
 
 		// Not filter mode:
 		if values != nil {
@@ -441,8 +419,27 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 		}
 	})
 
+	vals := encodeValues(n, values, e)
+
+	for i := 0; i < n-1; i++ {
+		if keys[i] >= keys[i+1] {
+			return nil, errors.Wrapf(ErrKeyOutOfOrder,
+				"keys[%d] >= keys[%d] %s %s", i, i+1, keys[i], keys[i+1])
+		}
+	}
+
+	var tokeep []bool
+	if *opt.DedupValue {
+		tokeep = newValueToKeep(keys, vals)
+	} else {
+		tokeep = make([]bool, n)
+		for i := 0; i < n; i++ {
+			tokeep[i] = true
+		}
+	}
+
 	sb := sigbits.New(keys)
-	c := newCreator(n, values != nil, opt)
+	c := newCreator(n, vals != nil, opt)
 
 	queue := make([]subset, 0, n*2)
 	queue = append(queue, subset{0, int32(n), 0})
@@ -455,10 +452,10 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 		// single key, it is a leaf
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
-			if values == nil {
+			if vals == nil {
 				c.addLeaf(nid, nil)
 			} else {
-				c.addLeaf(nid, getV(rvals, s))
+				c.addLeaf(nid, vals[s])
 			}
 			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
 			continue
@@ -563,12 +560,32 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 		}
 	}
 
-	return c.build(e), nil
+	ns := c.build()
+	return &SlimTrie{
+		nodes:   ns,
+		encoder: e,
+	}, nil
+}
+
+func encodeValues(n int, values interface{}, e encode.Encoder) [][]byte {
+	if values == nil {
+		return nil
+	}
+
+	vals := make([][]byte, 0, n)
+	rvals := reflect.ValueOf(values)
+
+	for i := 0; i < n; i++ {
+		v := getV(rvals, int32(i))
+		bs := e.Encode(v)
+		vals = append(vals, bs)
+	}
+	return vals
 }
 
 // newValueToKeep creates a slice indicating which key to keep.
 // Value of key[i+1] with the same value with key[i] do not need to keep.
-func newValueToKeep(keys []string, values interface{}) []bool {
+func newValueToKeep(keys []string, values [][]byte) []bool {
 
 	n := len(keys)
 	tokeep := make([]bool, n)
@@ -583,15 +600,14 @@ func newValueToKeep(keys []string, values interface{}) []bool {
 
 		// Use SlimTrie as an index, do not keep keys with same value as
 		// previous.
-		rvals := reflect.ValueOf(values)
 
 		tokeep[0] = true
 
-		prev := getV(rvals, 0)
+		prev := values[0]
 
 		for i := 1; i < n; i++ {
-			v := getV(rvals, int32(i))
-			tokeep[i] = prev != v
+			v := values[i]
+			tokeep[i] = bytes.Compare(prev, v) != 0
 			prev = v
 		}
 	}
@@ -606,18 +622,17 @@ func getV(reflectSlice reflect.Value, i int32) interface{} {
 	return reflectSlice.Index(int(i)).Interface()
 }
 
-func (ns *Nodes) initLeaves(elts interface{}, e encode.Encoder) {
+func (ns *Nodes) initLeaves(elts [][]byte) {
 
-	rElts := reflect.ValueOf(elts)
-	n := rElts.Len()
-	eltsize := e.GetEncodedSize(nil)
-	sz := eltsize * n
+	n := len(elts)
+	sz := 0
+	for _, elt := range elts {
+		sz += len(elt)
+	}
 
 	lb := make([]byte, 0, sz)
 	for i := 0; i < n; i++ {
-		ee := rElts.Index(i).Interface()
-		bs := e.Encode(ee)
-		lb = append(lb, bs...)
+		lb = append(lb, elts[i]...)
 	}
 	ns.Leaves = &VLenArray{}
 	ns.Leaves.Bytes = lb
