@@ -94,12 +94,8 @@ memory, as a minimized index of huge amount external data.
 
 
 <!-- TODO array -->
-
 <!-- TODO list data types -->
 <!-- TODO other data types -->
-
-<!-- TODO toc -->
-
 <!-- TODO add FPR benchmark -->
 
 ## Memory overhead
