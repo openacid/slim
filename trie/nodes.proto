@@ -13,13 +13,13 @@ message Bitmap {
     repeated uint64 Words = 20;
 
 
-    // RankIndex speeds up rank() by pre-calcuate it
+    // RankIndex speeds up rank() by pre-calculated it
     //
     // Since 0.5.10
     repeated int32 RankIndex = 30;
 
 
-    // SelectIndex speeds up select() by pre-calcuate it
+    // SelectIndex speeds up select() by pre-calculated it
     //
     // Since 0.5.10
     repeated int32 SelectIndex = 40;
@@ -71,7 +71,7 @@ message VLenArray {
 // Since 0.5.10
 message Nodes {
 
-    // BigInnerCnt is number of big (267 bit) inner node.
+    // BigInnerCnt is number of big (257 bit) inner node.
     //
     // Since 0.5.10
     int32 BigInnerCnt = 11;
@@ -157,7 +157,7 @@ message Nodes {
     // An array element is a control byte followed by several data bytes.
     //
     // The 0-th bit in the control byte indicates whether a prefix is
-    // trucated(not aligned to 8-bit).
+    // truncated(not aligned to 8-bit).
     //
     // An inner node may have a prefix, if the starting bit of the node > the end
     // of previous node.
@@ -166,7 +166,7 @@ message Nodes {
     // Thus we need a bitmap to indicated this.
     // If prefix length is not 8-bit aligned, the trailing bits a filled with a
     // "1" followed by "0"s.
-    // To retrieve the acturate prefix, remove the bits from the last "1".
+    // To retrieve the accurate prefix, remove the bits from the last "1".
     // E.g.:
     //
     //   prefix:                  11001100 11000011

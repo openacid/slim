@@ -26,11 +26,11 @@ type Bitmap struct {
 	//
 	// Since 0.5.10
 	Words []uint64 `protobuf:"varint,20,rep,packed,name=Words,proto3" json:"Words,omitempty"`
-	// RankIndex speeds up rank() by pre-calcuate it
+	// RankIndex speeds up rank() by pre-calculated it
 	//
 	// Since 0.5.10
 	RankIndex []int32 `protobuf:"varint,30,rep,packed,name=RankIndex,proto3" json:"RankIndex,omitempty"`
-	// SelectIndex speeds up select() by pre-calcuate it
+	// SelectIndex speeds up select() by pre-calculated it
 	//
 	// Since 0.5.10
 	SelectIndex          []int32  `protobuf:"varint,40,rep,packed,name=SelectIndex,proto3" json:"SelectIndex,omitempty"`
@@ -43,7 +43,7 @@ func (m *Bitmap) Reset()         { *m = Bitmap{} }
 func (m *Bitmap) String() string { return proto.CompactTextString(m) }
 func (*Bitmap) ProtoMessage()    {}
 func (*Bitmap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nodes_d87be1751d89eed1, []int{0}
+	return fileDescriptor_nodes_c959d60ab49fe7f4, []int{0}
 }
 func (m *Bitmap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Bitmap.Unmarshal(m, b)
@@ -121,7 +121,7 @@ func (m *VLenArray) Reset()         { *m = VLenArray{} }
 func (m *VLenArray) String() string { return proto.CompactTextString(m) }
 func (*VLenArray) ProtoMessage()    {}
 func (*VLenArray) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nodes_d87be1751d89eed1, []int{1}
+	return fileDescriptor_nodes_c959d60ab49fe7f4, []int{1}
 }
 func (m *VLenArray) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VLenArray.Unmarshal(m, b)
@@ -189,7 +189,7 @@ func (m *VLenArray) GetBytes() []byte {
 //
 // Since 0.5.10
 type Nodes struct {
-	// BigInnerCnt is number of big (267 bit) inner node.
+	// BigInnerCnt is number of big (257 bit) inner node.
 	//
 	// Since 0.5.10
 	BigInnerCnt int32 `protobuf:"varint,11,opt,name=BigInnerCnt,proto3" json:"BigInnerCnt,omitempty"`
@@ -257,7 +257,7 @@ type Nodes struct {
 	// An array element is a control byte followed by several data bytes.
 	//
 	// The 0-th bit in the control byte indicates whether a prefix is
-	// trucated(not aligned to 8-bit).
+	// truncated(not aligned to 8-bit).
 	//
 	// An inner node may have a prefix, if the starting bit of the node > the end
 	// of previous node.
@@ -266,7 +266,7 @@ type Nodes struct {
 	// Thus we need a bitmap to indicated this.
 	// If prefix length is not 8-bit aligned, the trailing bits a filled with a
 	// "1" followed by "0"s.
-	// To retrieve the acturate prefix, remove the bits from the last "1".
+	// To retrieve the accurate prefix, remove the bits from the last "1".
 	// E.g.:
 	//
 	//   prefix:                  11001100 11000011
@@ -295,7 +295,7 @@ func (m *Nodes) Reset()         { *m = Nodes{} }
 func (m *Nodes) String() string { return proto.CompactTextString(m) }
 func (*Nodes) ProtoMessage()    {}
 func (*Nodes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nodes_d87be1751d89eed1, []int{2}
+	return fileDescriptor_nodes_c959d60ab49fe7f4, []int{2}
 }
 func (m *Nodes) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Nodes.Unmarshal(m, b)
@@ -405,9 +405,9 @@ func init() {
 	proto.RegisterType((*Nodes)(nil), "Nodes")
 }
 
-func init() { proto.RegisterFile("nodes.proto", fileDescriptor_nodes_d87be1751d89eed1) }
+func init() { proto.RegisterFile("nodes.proto", fileDescriptor_nodes_c959d60ab49fe7f4) }
 
-var fileDescriptor_nodes_d87be1751d89eed1 = []byte{
+var fileDescriptor_nodes_c959d60ab49fe7f4 = []byte{
 	// 413 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x92, 0xc1, 0x8e, 0xd3, 0x30,
 	0x10, 0x86, 0x15, 0xa5, 0xc9, 0x6a, 0x27, 0xe9, 0xae, 0x64, 0x55, 0xe0, 0x03, 0xea, 0x9a, 0x1c,

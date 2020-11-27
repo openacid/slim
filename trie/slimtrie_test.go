@@ -1026,7 +1026,7 @@ func testPresentKeysSearch(t *testing.T, st *SlimTrie, keys []string, values []i
 			ta.Equal(values[i-1], l, "Search:%v, l", key)
 		}
 
-		ta.Equal(int32(i), e, "Search:%v, eq", key)
+		ta.Equal(values[i], e, "Search:%v, eq", key)
 
 		if i == len(keys)-1 {
 			ta.Equal(nil, r)

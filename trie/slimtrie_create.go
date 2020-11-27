@@ -40,7 +40,7 @@ type creator struct {
 
 	// options
 
-	option Opt
+	option *Opt
 
 	// data
 
@@ -70,7 +70,7 @@ type creator struct {
 	innerBMCnt []map[uint64]int32
 }
 
-func newCreator(n int, withLeaves bool, opt Opt) *creator {
+func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 
 	c := &creator{
 
@@ -159,7 +159,7 @@ func (c *creator) setPrefix(nid int32, prefBitLen int32, key string, keyidx int3
 
 	c.prefixIndexes = append(c.prefixIndexes, int32(len(c.innerIndexes)-1))
 
-	if c.option.CompleteInner {
+	if *c.option.InnerPrefix {
 
 		prefix := newPrefix(key, keyidx, keyidx+prefBitLen)
 
@@ -186,7 +186,7 @@ func (c *creator) setLeafPrefix(nid int32, key string, keyidx int32) {
 
 	must.Be.Equal(c.nodeCnt-1, nid)
 
-	if c.option.CompleteLeaf {
+	if *c.option.LeafPrefix {
 
 		pref := key[keyidx>>3:]
 		if len(pref) > 0 {
@@ -373,7 +373,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	ns.InnerPrefixes = &VLenArray{}
 	ns.InnerPrefixes.EltCnt = int32(len(c.prefixIndexes))
 	ns.InnerPrefixes.PresenceBM = newBM(c.prefixIndexes, innerCnt, "r128")
-	if c.option.CompleteInner {
+	if *c.option.InnerPrefix {
 		ns.InnerPrefixes.PositionBM = newBM(stepToPos(c.prefixByteLens, 0), 0, "s32")
 		ns.InnerPrefixes.Bytes = c.prefixes
 
@@ -387,7 +387,7 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 		ns.initLeaves(c.leaves, e)
 	}
 
-	if c.option.CompleteLeaf {
+	if *c.option.LeafPrefix {
 		ns.LeafPrefixes = &VLenArray{}
 		ns.LeafPrefixes.PresenceBM = newBM(c.leafPrefixIndexes, int32(len(c.leaves)), "r64")
 		ns.LeafPrefixes.PositionBM = newBM(stepToPos(c.leafPrefixLens, 0), 0, "s32")
@@ -402,8 +402,8 @@ func (c *creator) build(e encode.Encoder) *SlimTrie {
 	return st
 }
 
-// TODO filter mode: CompleteInner
-func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (*SlimTrie, error) {
+// TODO filter mode: InnerPrefix
+func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) (*SlimTrie, error) {
 
 	n := len(keys)
 	if n == 0 {
@@ -417,7 +417,15 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 		}
 	}
 
-	tokeep := newValueToKeep(keys, values)
+	var tokeep []bool
+	if *opt.DedupValue {
+		tokeep = newValueToKeep(keys, values)
+	} else {
+		tokeep = make([]bool, n)
+		for i := 0; i < n; i++ {
+			tokeep[i] = true
+		}
+	}
 
 	rvals := reflect.ValueOf(values)
 
@@ -514,7 +522,7 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 		must.Be.True(len(labelPaths) > 0)
 
 		// Without the bits of label word at parent node
-		step := (wordStart - o.fromKeyBit)
+		step := wordStart - o.fromKeyBit
 
 		idxs := make([]int32, len(labelPaths))
 		for i, p := range labelPaths {
@@ -548,7 +556,7 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt Opt) (
 				keyEnd:   j,
 
 				// skip the label word
-				fromKeyBit: (wordStart + bmtree.PathLen(pth)),
+				fromKeyBit: wordStart + bmtree.PathLen(pth),
 			}
 			queue = append(queue, p)
 			s = j

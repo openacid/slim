@@ -45,7 +45,7 @@ func TestSlimTrie_withPrefixContent_Get(t *testing.T) {
 	}
 
 	st, err := NewSlimTrie(encode.I32{}, keys, values,
-		Opt{CompleteInner: true})
+		Opt{InnerPrefix: Bool(true)})
 	ta.NoError(err)
 
 	fmt.Println(st.content())
@@ -95,7 +95,7 @@ func TestSlimTrie_withPrefixContent_Get_small_keyset(t *testing.T) {
 
 		values := makeI32s(len(keys))
 		st, err := NewSlimTrie(encode.I32{}, keys, values,
-			Opt{CompleteInner: true})
+			Opt{InnerPrefix: Bool(true)})
 		ta.NoError(err)
 
 		dd(st)
@@ -116,7 +116,7 @@ func TestSlimTrie_withPrefixContent_GRS_all_keyset(t *testing.T) {
 
 		values := makeI32s(len(keys))
 		st, err := NewSlimTrie(encode.I32{}, keys, values,
-			Opt{CompleteInner: true})
+			Opt{InnerPrefix: Bool(true)})
 		ta.NoError(err)
 
 		testPresentKeysGRS(t, st, keys, values)

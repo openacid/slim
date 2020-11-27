@@ -98,7 +98,24 @@ type SlimTrie struct {
 //
 // Since 0.5.10
 type Opt struct {
-	// CompleteInner tells SlimTrie to store text on a trie branch to inner
+
+	// DedupValue remove branches that leads to a record with the same value as the previous one.
+	// By default it is true.
+	//
+	// Reducing leaves with the same value is a effective way to optimize index.
+	// E.g., in memory an application stores indexes of 3 keys:
+	// a,b,c, pointing to disk offset 4096, 4098, 4099
+	// In this case the gaps between a,b,c are very small and with the assumption that one disk IO reading less than 4KB costs the same time.
+	// Thus the index does not need to store the exact offset. But instead, only the 4KB-aligned index.
+	// Thus a,b,c have the same offset: offsetOf(x) & ~(4096-1)
+	// With this assumption, the in memory index will be significantly reduced.
+	// by only recording the index of a.
+	// Because we know that a<b<c, and offsetOf(c) - offsetOf(a) < 4KB
+	//
+	// Since 0.5.10
+	DedupValue *bool
+
+	// InnerPrefix tells SlimTrie to store text on a trie branch to inner
 	// node(not to leaf node), instead of storing only branch length.
 	// With this option SlimTrie costs more space but reduces false positive
 	// rate.
@@ -106,26 +123,47 @@ type Opt struct {
 	// Default false.
 	//
 	// Since 0.5.10
-	CompleteInner bool
+	InnerPrefix *bool
 
-	// CompleteLeaf tells SlimTrie to store text on a branch to leaf node.
+	// LeafPrefix tells SlimTrie to store text on a branch to leaf node.
 	// With this option SlimTrie costs more space but reduces false positive
 	// rate.
 	//
 	// Default false.
 	//
 	// Since 0.5.10
-	CompleteLeaf bool
+	LeafPrefix *bool
 
 	// Complete tells SlimTrie to store complete keys content.
-	// This option implies "CompleteInner" and "CompleteLeaf".
+	// This option implies "InnerPrefix" and "LeafPrefix".
 	// With this option there is no false positive and SlimTrie works just like
 	// a static key-value map.
 	//
 	// Default false.
 	//
 	// Since 0.5.10
-	Complete bool
+	Complete *bool
+}
+
+func Bool(v bool) *bool {
+	return &v
+}
+
+func normalizeOpt(o *Opt) *Opt {
+	if o.DedupValue == nil {
+		o.DedupValue = Bool(true)
+	}
+	if o.InnerPrefix == nil {
+		o.InnerPrefix = Bool(false)
+	}
+	if o.LeafPrefix == nil {
+		o.LeafPrefix = Bool(false)
+	}
+	if o.Complete != nil && *o.Complete == true {
+		o.InnerPrefix = Bool(true)
+		o.LeafPrefix = Bool(true)
+	}
+	return o
 }
 
 func (va *Nodes) GetVersion() string {
@@ -162,12 +200,9 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 		opt = opts[0]
 	}
 
-	if opt.Complete {
-		opt.CompleteInner = true
-		opt.CompleteLeaf = true
-	}
+	normalizeOpt(&opt)
 
-	return newSlimTrie(e, keys, values, opt)
+	return newSlimTrie(e, keys, values, &opt)
 }
 
 // func (st *SlimTrie) GetStat() map[string]float64 {

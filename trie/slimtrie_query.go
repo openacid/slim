@@ -25,7 +25,7 @@ type querySession struct {
 	key       string
 
 	// Whether an inner node has common prefix.
-	// It may stores only length of prefix in prefixBitLen, or extact prefix
+	// It may stores only length of prefix in prefixBitLen, or exact prefix
 	// string in prefix.
 	hasPrefixContent bool
 
@@ -77,7 +77,7 @@ func (st *SlimTrie) RangeGet(key string) (interface{}, bool) {
 
 	lID, eqID, _ := st.searchID(key)
 
-	// an "equal" macth means key is a prefix of either start or end of a range.
+	// an "equal" match means key is a prefix of either start or end of a range.
 	if eqID != -1 {
 		// TODO eqID must be a leaf if it is not -1
 		return st.getLeaf(eqID), true

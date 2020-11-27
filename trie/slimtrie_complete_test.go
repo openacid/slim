@@ -24,7 +24,7 @@ func TestSlimTrie_Complete_GRS_0_tiny(t *testing.T) {
 	}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	// prefix len of #007 is 8 because WithPrefixContent stores prefix aligned
@@ -74,7 +74,7 @@ func TestSlimTrie_Complete_GRS_1_empty_string_branch(t *testing.T) {
 	}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	wantstr := trim(`
@@ -103,7 +103,7 @@ func TestSlimTrie_Complete_GRS_1_zerokeys(t *testing.T) {
 	keys := []string{}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	ta.Equal("", st.String())
@@ -144,7 +144,7 @@ func TestSlimTrie_Complete_GRS_1_onekey(t *testing.T) {
 	}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	wantstr := trim(`
@@ -167,7 +167,7 @@ func TestSlimTrie_Complete_GRS_1_twokeys_emptysteps(t *testing.T) {
 	}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	wantstr := trim(`
@@ -198,7 +198,7 @@ func TestSlimTrie_Complete_GRS_2_small_keyset(t *testing.T) {
 		dd("small keyset: %s", typ)
 
 		values := makeI32s(len(keys))
-		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 		ta.NoError(err)
 
 		dd(st)
@@ -214,7 +214,7 @@ func TestSlimTrie_Complete_GRS_3_bigInner_300(t *testing.T) {
 	keys := getKeys("300vl50")
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	dd(st)
@@ -252,7 +252,7 @@ func TestSlimTrie_Complete_GRS_3_bigInner_a2t(t *testing.T) {
 	}
 	values := makeI32s(len(keys))
 
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	dd(st)
@@ -271,7 +271,7 @@ func TestSlimTrie_Complete_GRS_4_20kvlen10(t *testing.T) {
 
 	keys := getKeys("20kvl10")
 	values := makeI32s(len(keys))
-	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
 	dd(st)
@@ -291,7 +291,7 @@ func TestSlimTrie_Complete_GRS_9_allkeyset(t *testing.T) {
 		keys := getKeys(typ)
 
 		values := makeI32s(len(keys))
-		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: true})
+		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 		ta.NoError(err)
 
 		testAbsentKeysGRS(t, st, keys)

@@ -37,7 +37,7 @@ func BenchmarkSlimTrie_withPrefixContent_GetID_20k_vlen10(b *testing.B) {
 	keys := getKeys("20kvl10")
 	values := makeI32s(len(keys))
 	st, _ := NewSlimTrie(encode.I32{}, keys, values,
-		Opt{CompleteInner: true},
+		Opt{InnerPrefix: Bool(true)},
 	)
 
 	var id int32
