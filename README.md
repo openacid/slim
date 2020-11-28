@@ -5,15 +5,14 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
 # Slim - surprisingly space efficient data types in Golang
 
-[![Travis-CI](https://api.travis-ci.org/openacid/slim.svg?branch=master)](https://travis-ci.org/openacid/slim)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/ah6hlsojleqg8j9i/branch/master?svg=true)](https://ci.appveyor.com/project/drmingdrmer/slim/branch/master)
-![test](https://github.com/openacid/slim/workflows/test/badge.svg?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/openacid/slim/badge.svg?branch=master)](https://coveralls.io/github/openacid/slim?branch=master)
+[![Travis](https://travis-ci.com/openacid/slim.svg?branch=main)](https://travis-ci.com/openacid/slim)
+![test](https://github.com/openacid/slim/workflows/test/badge.svg)
 
 [![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
-![golangci-lint](https://github.com/openacid/slim/workflows/golangci-lint/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/openacid/slim/badge.svg?branch=main&service=github)](https://coveralls.io/github/openacid/slim?branch=main&service=github)
 
 [![GoDoc](https://godoc.org/github.com/openacid/slim?status.svg)](http://godoc.org/github.com/openacid/slim)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/openacid/slim)](https://pkg.go.dev/github.com/openacid/slim)
 [![Sourcegraph](https://sourcegraph.com/github.com/openacid/slim/-/badge.svg)](https://sourcegraph.com/github.com/openacid/slim?badge)
 
 Slim is collection of surprisingly space efficient data types, with
@@ -92,11 +91,6 @@ memory, as a minimized index of huge amount external data.
         index logic and data storage is completely separated.
         Piece of cake using `SlimTrie` to index huge data.
 
-
-<!-- TODO array -->
-<!-- TODO list data types -->
-<!-- TODO other data types -->
-<!-- TODO add FPR benchmark -->
 
 ## Memory overhead
 
@@ -325,34 +319,9 @@ func Example_indexRanges() {
 go get github.com/openacid/slim
 ```
 
-All dependency packages are included in `vendor/` dir.
-
 
 <!-- TODO add FAQ -->
 <!-- TODO add serialization explanation, on-disk data structure etc. -->
-
-**Prerequisites**
-
--   **For users** (who'd like to build cool stuff with `slim`):
-
-    **Nothing**.
-
--   **For contributors** (who'd like to make `slim` better):
-
-    -   `dep`:
-        for dependency management.
-    -   `protobuf`:
-        for re-compiling `*.proto` file if on-disk data structure changes.
-
-    Max OS X:
-    ```sh
-    brew install dep protobuf
-    ```
-
-    On other platforms you can read more:
-    [dep-install][],
-    [protoc-install][].
-
 
 ## Who are using slim
 

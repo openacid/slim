@@ -72,7 +72,7 @@ gen:
 	$(GO) generate ./...
 
 readme:
-	python ./scripts/build_readme.py
+	python ./scripts/build_md.py
 	# brew install nodejs
 	# npm install -g doctoc
 	doctoc --title '' --github README.md
