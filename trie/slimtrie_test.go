@@ -602,7 +602,6 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 
 	ta := require.New(t)
 	keys := getKeys("300vl50")
-	fmt.Println(keys)
 	values := makeI32s(len(keys))
 
 	st, err := NewSlimTrie(encode.I32{}, keys, values)
@@ -616,64 +615,24 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 	testPresentKeysGRS(t, st, keys, values)
 }
 
-func TestSlimTrie_GRS_4_20kvlen10(t *testing.T) {
-
-	iambig(t)
-
-	ta := require.New(t)
-
-	keys := getKeys("20kvl10")
-	values := makeI32s(len(keys))
-	st, err := NewSlimTrie(encode.I32{}, keys, values)
-	ta.NoError(err)
-
-	dd(st)
-
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
-	testPresentKeysGRS(t, st, keys, values)
-}
-
-func TestSlimTrie_GRS_2_small_keyset(t *testing.T) {
-
-	ta := require.New(t)
-
-	for _, typ := range testkeys.AssetNames() {
-
-		keys := getKeys(typ)
-
-		if len(keys) >= 1000 {
-			continue
-		}
-
-		dd("small keyset: %s", typ)
-
-		values := makeI32s(len(keys))
-		st, err := NewSlimTrie(encode.I32{}, keys, values)
-		ta.NoError(err)
-
-		dd(st)
-
-		testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
-		testPresentKeysGRS(t, st, keys, values)
-	}
-}
-
 func TestSlimTrie_GRS_9_allkeyset(t *testing.T) {
 
-	iambig(t)
-
-	ta := require.New(t)
-
 	for _, typ := range testkeys.AssetNames() {
 
-		keys := getKeys(typ)
+		t.Run(fmt.Sprintf("keyset: %s", typ), func(t *testing.T) {
+			ta := require.New(t)
+			keys := getKeys(typ)
+			if len(keys) >= 1000 {
+				iambig(t)
+			}
 
-		values := makeI32s(len(keys))
-		st, err := NewSlimTrie(encode.I32{}, keys, values)
-		ta.NoError(err)
+			values := makeI32s(len(keys))
+			st, err := NewSlimTrie(encode.I32{}, keys, values)
+			ta.NoError(err)
 
-		testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
-		testPresentKeysGRS(t, st, keys, values)
+			testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
+			testPresentKeysGRS(t, st, keys, values)
+		})
 	}
 }
 
