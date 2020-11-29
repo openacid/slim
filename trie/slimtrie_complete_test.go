@@ -48,7 +48,7 @@ func TestSlimTrie_Complete_GRS_0_tiny(t *testing.T) {
 
 	dd(st.content())
 	dd(st)
-	dd(st.nodes)
+	dd(st.inner)
 
 	ta.Equal(wantstr, st.String())
 
@@ -219,7 +219,7 @@ func TestSlimTrie_Complete_GRS_3_bigInner_300(t *testing.T) {
 
 	dd(st)
 
-	ta.True(st.nodes.BigInnerCnt > 0)
+	ta.True(st.inner.BigInnerCnt > 0)
 
 	testAbsentKeysGRS(t, st, keys)
 	testPresentKeysGRS(t, st, keys, values)
@@ -257,7 +257,7 @@ func TestSlimTrie_Complete_GRS_3_bigInner_a2t(t *testing.T) {
 
 	dd(st)
 
-	ta.True(st.nodes.BigInnerCnt > 0)
+	ta.True(st.inner.BigInnerCnt > 0)
 
 	testAbsentKeysGRS(t, st, keys)
 	testPresentKeysGRS(t, st, keys, values)

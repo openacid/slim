@@ -30,17 +30,17 @@ import (
 func (st *SlimTrie) String() string {
 
 	// empty SlimTrie
-	if st.nodes.NodeTypeBM == nil {
+	if st.inner.NodeTypeBM == nil {
 		return ""
 	}
 
 	s := &slimTrieStringly{
 		st:     st,
-		inners: bitmap.ToArray(st.nodes.NodeTypeBM.Words),
+		inners: bitmap.ToArray(st.inner.NodeTypeBM.Words),
 		labels: make(map[int32]map[string]int32),
 	}
 
-	ch := st.nodes
+	ch := st.inner
 	n := &querySession{}
 	emp := querySession{}
 
@@ -128,7 +128,7 @@ func (s *slimTrieStringly) NodeInfo(node interface{}) string {
 	n := &querySession{}
 	emp := querySession{}
 
-	if bitmap.Get(s.st.nodes.NodeTypeBM.Words, nid) != 0 {
+	if bitmap.Get(s.st.inner.NodeTypeBM.Words, nid) != 0 {
 
 		*n = emp
 

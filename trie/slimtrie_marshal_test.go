@@ -144,7 +144,7 @@ func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 	st2.Reset()
 	empty := &SlimTrie{
 		encoder: encode.Int{},
-		nodes:   &Nodes{},
+		inner:   &Slim{},
 	}
 	if !reflect.DeepEqual(st2, empty) {
 		t.Fatalf("reset slimtrie error")

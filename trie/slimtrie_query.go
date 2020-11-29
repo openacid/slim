@@ -130,7 +130,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 	eqID := int32(0)
 
-	if st.nodes.NodeTypeBM == nil {
+	if st.inner.NodeTypeBM == nil {
 		return -1
 	}
 
@@ -185,7 +185,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 	// eqID must not be -1
 
-	if st.nodes.LeafPrefixes != nil {
+	if st.inner.LeafPrefixes != nil {
 		if i == l {
 			if qr.hasLeafPrefix {
 				return -1
@@ -208,7 +208,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 func (st *SlimTrie) cmpLeafPrefix(tail string, qr *querySession) int32 {
 
-	if st.nodes.LeafPrefixes != nil {
+	if st.inner.LeafPrefixes != nil {
 		var leafPrefix []byte
 		if qr.hasLeafPrefix {
 			leafPrefix = qr.leafPrefix
@@ -228,13 +228,13 @@ func (st *SlimTrie) cmpLeafPrefix(tail string, qr *querySession) int32 {
 // The id of smallest key > `key`. It is -1 if `key` is the greatest.
 func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 
-	if st.nodes.NodeTypeBM == nil {
+	if st.inner.NodeTypeBM == nil {
 		return -1, -1, -1
 	}
 
 	lID, eqID, rID = -1, 0, -1
 	l := int32(8 * len(key))
-	ns := st.nodes
+	ns := st.inner
 
 	qr := &querySession{
 		keyBitLen: l,
@@ -332,7 +332,7 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 
 func (st *SlimTrie) leftMost(idx int32) int32 {
 
-	ns := st.nodes
+	ns := st.inner
 
 	for {
 
@@ -351,7 +351,7 @@ func (st *SlimTrie) leftMost(idx int32) int32 {
 
 func (st *SlimTrie) rightMost(idx int32) int32 {
 
-	ns := st.nodes
+	ns := st.inner
 
 	for {
 		qr := &querySession{}
@@ -375,9 +375,9 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 
 	qr.hasLeafPrefix = false
 
-	if st.nodes.LeafPrefixes != nil {
+	if st.inner.LeafPrefixes != nil {
 
-		ns := st.nodes
+		ns := st.inner
 
 		wordI := qr.ithLeaf >> 6
 		bitI := uint32(qr.ithLeaf & 63)
@@ -400,7 +400,7 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 	var bm uint64
 
-	ns := st.nodes
+	ns := st.inner
 
 	wordI := nodeid >> 6
 	bitI := uint32(nodeid & 63)
@@ -475,7 +475,7 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 func (st *SlimTrie) getLEChildID(qr *querySession, ki int32) (int32, int32) {
 
-	ns := st.nodes
+	ns := st.inner
 
 	ithBit := int32(0)
 
@@ -527,7 +527,7 @@ func rank128(words []uint64, rindex []int32, i int32) int32 {
 
 // the second return value being 0 indicates it is a leaf
 func (st *SlimTrie) getLeafIndex(nodeid int32) (int32, int32) {
-	ns := st.nodes
+	ns := st.inner
 	r, ith := bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, nodeid)
 	return nodeid - r, ith
 }
@@ -543,7 +543,7 @@ func (st *SlimTrie) getLeaf(nodeid int32) interface{} {
 
 func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 
-	ls := st.nodes.Leaves
+	ls := st.inner.Leaves
 	if ls == nil {
 		return nil
 	}
@@ -559,7 +559,7 @@ func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 
 func (st *SlimTrie) getLabels(qr *querySession) []uint64 {
 
-	ns := st.nodes
+	ns := st.inner
 
 	if qr.to-qr.from == ns.ShortSize {
 		return bmtree.Decode(innerSize, []uint64{qr.bm})

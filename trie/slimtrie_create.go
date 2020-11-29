@@ -296,14 +296,14 @@ func findMinShortSize(sorted [][]counterElt) (int32, int32) {
 	return sz, shortCnt
 }
 
-func (c *creator) build() *Nodes {
+func (c *creator) build() *Slim {
 
 	sorted := sortedBMCounts(c.innerBMCnt)
 	shortSize, shortCnt := findMinShortSize(sorted)
 
 	_ = shortCnt
 
-	ns := &Nodes{
+	ns := &Slim{
 		ShortSize:       shortSize,
 		ShortMask:       bitmap.Mask[shortSize],
 		ShortMinusInner: shortSize - innerSize,
@@ -403,11 +403,11 @@ func (c *creator) build() *Nodes {
 }
 
 // TODO filter mode: InnerPrefix
-func newSlimTrie(keys []string, bytesValues [][]byte, opt *Opt) (*Nodes, error) {
+func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 
 	n := len(keys)
 	if n == 0 {
-		return &Nodes{}, nil
+		return &Slim{}, nil
 	}
 
 	for i := 0; i < n-1; i++ {
@@ -607,7 +607,7 @@ func getV(reflectSlice reflect.Value, i int32) interface{} {
 	return reflectSlice.Index(int(i)).Interface()
 }
 
-func (ns *Nodes) initLeaves(elts [][]byte) {
+func (ns *Slim) initLeaves(elts [][]byte) {
 
 	n := len(elts)
 	sz := 0

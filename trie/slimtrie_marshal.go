@@ -21,9 +21,9 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 	var buf []byte
 	writer := bytes.NewBuffer(buf)
 
-	_, err := pbcmpl.Marshal(writer, st.nodes)
+	_, err := pbcmpl.Marshal(writer, st.inner)
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to marshal st.nodes")
+		return nil, errors.WithMessage(err, "failed to marshal st.inner")
 	}
 
 	return writer.Bytes(), nil
@@ -34,7 +34,7 @@ func (st *SlimTrie) Marshal() ([]byte, error) {
 // Since 0.4.3
 func (st *SlimTrie) Unmarshal(buf []byte) error {
 
-	st.nodes = &Nodes{}
+	st.inner = &Slim{}
 
 	reader := bytes.NewReader(buf)
 
@@ -56,9 +56,9 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 	reader = bytes.NewReader(buf)
 
 	if vers.Check(ver, slimtrieVersion) {
-		_, _, err := pbcmpl.Unmarshal(reader, st.nodes)
+		_, _, err := pbcmpl.Unmarshal(reader, st.inner)
 		if err != nil {
-			return errors.WithMessage(err, "failed to unmarshal nodes")
+			return errors.WithMessage(err, "failed to unmarshal inner")
 		}
 		return nil
 	}
@@ -101,7 +101,7 @@ func (st *SlimTrie) ProtoMessage() {}
 //
 // Since 0.4.3
 func (st *SlimTrie) Reset() {
-	st.nodes = &Nodes{}
+	st.inner = &Slim{}
 }
 
 func before000510(st *SlimTrie, ver string, ch *array.Array32, steps *array.U16, lvs *array.Array) {
@@ -120,7 +120,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 
 	if vers.Check(ver, "==1.0.0", "<0.5.10") {
 
-		// rebuild nodes
+		// rebuild inner
 
 		type eltType struct {
 			oldid    int32
@@ -204,7 +204,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 		}
 
 		ns := c.build()
-		st.nodes = ns
+		st.inner = ns
 	}
 }
 

@@ -614,7 +614,7 @@ func TestSlimTrie_GRS_3_bigInner_a2t(t *testing.T) {
 
 	dd(st)
 
-	ta.True(st.nodes.BigInnerCnt > 0)
+	ta.True(st.inner.BigInnerCnt > 0)
 
 	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
 	testPresentKeysGRS(t, st, keys, values)
@@ -631,7 +631,7 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 
 	dd(st)
 
-	ta.True(st.nodes.BigInnerCnt > 0)
+	ta.True(st.inner.BigInnerCnt > 0)
 
 	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
@@ -790,10 +790,10 @@ func TestSlimTrie_Search_0_tiny(t *testing.T) {
 }
 
 func slimtrieEqual(st1, st2 *SlimTrie, t *testing.T) {
-	if !proto.Equal((st1.nodes), (st2.nodes)) {
+	if !proto.Equal((st1.inner), (st2.inner)) {
 		fmt.Println(st1)
 		fmt.Println(st2)
-		fmt.Println(pretty.Diff(st1.nodes, st2.nodes))
+		fmt.Println(pretty.Diff(st1.inner, st2.inner))
 		t.Fatalf("Children not the same")
 	}
 }

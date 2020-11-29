@@ -64,12 +64,12 @@ message VLenArray {
     bytes Bytes = 30;
 }
 
-// Nodes is array of all inner nodes in slim trie.
+// Slim is the internal structure of slim trie and other slim data structure.
 // It is NOT a public type and do not rely on it.
 // Since protobuf just makes all message public.
 //
 // Since 0.5.10
-message Nodes {
+message Slim {
 
     // BigInnerCnt is number of big (257 bit) inner node.
     //

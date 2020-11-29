@@ -73,7 +73,7 @@ const (
 //
 // Since 0.2.0
 type SlimTrie struct {
-	nodes   *Nodes
+	inner   *Slim
 	encoder encode.Encoder
 }
 
@@ -158,7 +158,7 @@ func normalizeOpt(o *Opt) *Opt {
 	return o
 }
 
-func (ns *Nodes) GetVersion() string {
+func (ns *Slim) GetVersion() string {
 	return slimtrieVersion
 }
 
@@ -210,24 +210,24 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 
 	vals := encodeValues(n, values, e)
 
-	ns, err := newSlimTrie(keys, vals, &opt)
+	ns, err := newSlim(keys, vals, &opt)
 	if err != nil {
 		return nil, err
 	}
 
 	return &SlimTrie{
-		nodes:   ns,
+		inner:   ns,
 		encoder: e,
 	}, nil
 }
 
 // func (st *SlimTrie) GetStat() map[string]float64 {
-//     return st.nodes.Stat
+//     return st.inner.Stat
 // }
 
 func (st *SlimTrie) content() []string {
 	rst := make([]string, 0)
-	ns := st.nodes
+	ns := st.inner
 	rst = append(rst, fmt.Sprintf(`InnerBM: %+v`, bitmap.ToArray(ns.NodeTypeBM.Words)))
 	rst = append(rst, fmt.Sprintf(`StepBM: %+v`, bitmap.ToArray(ns.InnerPrefixes.PresenceBM.Words)))
 	if ns.InnerPrefixes.PositionBM != nil {

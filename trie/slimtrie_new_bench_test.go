@@ -25,7 +25,7 @@ func BenchmarkNewSlimTrie_300(b *testing.B) {
 		if err != nil {
 			panic(err)
 		}
-		s += int(st.nodes.NodeTypeBM.Words[0])
+		s += int(st.inner.NodeTypeBM.Words[0])
 	}
 
 	Output = s
