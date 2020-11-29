@@ -2,6 +2,7 @@ package trie
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -189,8 +190,6 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 
 func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 
-	iambig(t)
-
 	ta := require.New(t)
 
 	folder := "testdata/"
@@ -214,20 +213,28 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 			parts := strings.Split(fn, "-")
 			ver := parts[len(parts)-1]
 
-			dd("load old data: %s %s", fn, ver)
+			t.Run(fmt.Sprintf("%s-%s", typ, ver),
+				func(t *testing.T) {
 
-			path := filepath.Join(folder, fn)
-			b, err := ioutil.ReadFile(path)
-			ta.NoError(err)
+					ta := require.New(t)
 
-			st, err := NewSlimTrie(encode.I32{}, nil, nil)
-			ta.NoError(err)
+					if len(ks) > 1000 {
+						iambig(t)
+					}
 
-			err = proto.Unmarshal(b, st)
-			ta.NoError(err)
+					path := filepath.Join(folder, fn)
+					b, err := ioutil.ReadFile(path)
+					ta.NoError(err)
 
-			testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
-			testPresentKeysGRS(t, st, ks, makeI32s(len(ks)))
+					st, err := NewSlimTrie(encode.I32{}, nil, nil)
+					ta.NoError(err)
+
+					err = proto.Unmarshal(b, st)
+					ta.NoError(err)
+
+					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+					testPresentKeysGRS(t, st, ks, makeI32s(len(ks)))
+				})
 		}
 	}
 }
