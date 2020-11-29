@@ -210,7 +210,15 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 
 	vals := encodeValues(n, values, e)
 
-	return newSlimTrie(e, keys, vals, &opt)
+	ns, err := newSlimTrie(keys, vals, &opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SlimTrie{
+		nodes:   ns,
+		encoder: e,
+	}, nil
 }
 
 // func (st *SlimTrie) GetStat() map[string]float64 {

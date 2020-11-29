@@ -403,11 +403,11 @@ func (c *creator) build() *Nodes {
 }
 
 // TODO filter mode: InnerPrefix
-func newSlimTrie(e encode.Encoder, keys []string, bytesValues [][]byte, opt *Opt) (*SlimTrie, error) {
+func newSlimTrie(keys []string, bytesValues [][]byte, opt *Opt) (*Nodes, error) {
 
 	n := len(keys)
 	if n == 0 {
-		return &SlimTrie{encoder: e, nodes: &Nodes{}}, nil
+		return &Nodes{}, nil
 	}
 
 	for i := 0; i < n-1; i++ {
@@ -549,11 +549,7 @@ func newSlimTrie(e encode.Encoder, keys []string, bytesValues [][]byte, opt *Opt
 		}
 	}
 
-	ns := c.build()
-	return &SlimTrie{
-		nodes:   ns,
-		encoder: e,
-	}, nil
+	return c.build(), nil
 }
 
 func encodeValues(n int, values interface{}, e encode.Encoder) [][]byte {
