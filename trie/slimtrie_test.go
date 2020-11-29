@@ -105,6 +105,28 @@ func TestNewSlimTrie_Error(t *testing.T) {
 	}
 }
 
+func TestNewSlimTrie_empty(t *testing.T) {
+
+	ta := require.New(t)
+
+	ks := []string{}
+	vs := []int32{}
+
+	st, err := NewSlimTrie(encode.I32{}, ks, vs)
+	ta.NoError(err)
+	testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+
+	// marshal
+	buf1, err := proto.Marshal(st)
+	ta.NoError(err)
+
+	st2, _ := NewSlimTrie(encode.I32{}, nil, nil)
+	err = proto.Unmarshal(buf1, st2)
+	ta.NoError(err)
+	slimtrieEqual(st, st2, t)
+	testUnknownKeysGRS(t, st2, randVStrings(100, 0, 10))
+}
+
 func TestSlimTrie_GRS_1_zerokeys(t *testing.T) {
 
 	ta := require.New(t)
