@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/openacid/errors"
 	"github.com/openacid/low/pbcmpl"
+	"github.com/openacid/low/vers"
 	"github.com/openacid/slim/encode"
 	"github.com/stretchr/testify/require"
 )
@@ -191,8 +192,29 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 			err = proto.Unmarshal(buf, st)
 			ta.NoError(err)
 
-			testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+			// < 0.5.10: slimtrie-data-10ll16k-0.5.9
+			// => 0.5.10: slimtrie-data-10ll16k-allpref-0.5.10
+
+			if vers.Check(ver, slimtrieVersion, ">=0.5.10") {
+				switch dataOpt {
+				case "nopref":
+					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+				case "innpref":
+					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+				case "allpref":
+					// in all prefmode, there is no false positive
+					testAbsentKeysGRS(t, st, keys)
+				}
+
+			} else {
+				// < 0.5.10, slimtrie does not store complete info. There is
+				// false positive
+				testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+			}
+
 			testPresentKeysGRS(t, st, keys, makeI32s(len(keys)))
+
+			// test scan
 
 			if dataOpt == "allpref" {
 				// only slim with Opt{Complete:true} support scan and iter
