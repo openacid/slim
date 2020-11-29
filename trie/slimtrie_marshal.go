@@ -151,7 +151,8 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 			hasInner := bmhas(ch.Bitmaps, oldid)
 			hasLeaf := bmhas(lvs.Bitmaps, oldid)
 
-			must.Be.True(hasInner || hasLeaf)
+			// it could be an empty slimtrie.
+			must.Be.True(hasInner || hasLeaf || (len(ch.Bitmaps) == 0 && len(lvs.Bitmaps) == 0))
 
 			if qelt.leafOnly || (!hasInner && hasLeaf) {
 				must.Be.OK(func() { bmhas(lvs.Bitmaps, oldid) })

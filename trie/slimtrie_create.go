@@ -364,8 +364,12 @@ func (c *creator) build() *Nodes {
 
 	ns.ShortBM = newBM(shortIndex, innerCnt, "r64")
 
-	// Extend to avoid index out of bound panic.
-	ns.NodeTypeBM = newBM(c.innerIndexes, c.nodeCnt, "r64")
+	// If it is empty, do not create NodeTypeBM. Query funcs check this field to
+	// to determine if it is empty.
+	if c.nodeCnt > 0 {
+		// Extend to avoid index out of bound panic.
+		ns.NodeTypeBM = newBM(c.innerIndexes, c.nodeCnt, "r64")
+	}
 	ns.Inners = &Bitmap{
 		Words: bitmap.OfMany(c.innerBMs, c.innerSizes),
 	}
