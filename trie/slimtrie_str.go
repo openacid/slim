@@ -13,7 +13,7 @@ import (
 // representation.
 //
 // A node is in form of
-//   <income-label>-><node-id>+<step>*<fanout-count>=<value>
+//   <income-label>-><node-id>+<step>*<fanOut-count>=<value>
 // E.g.:
 //   000->#000+4*3
 //            001->#001+4*2
@@ -53,11 +53,11 @@ func (st *SlimTrie) String() string {
 
 		paths := st.getLabels(n)
 
-		lChid, _ := bitmap.Rank128(ch.Inners.Words, ch.Inners.RankIndex, n.from)
+		leftChildId, _ := bitmap.Rank128(ch.Inners.Words, ch.Inners.RankIndex, n.from)
 
 		for i, l := range paths {
 			lstr := bmtree.PathStr(l)
-			s.labels[nid][lstr] = lChid + 1 + int32(i)
+			s.labels[nid][lstr] = leftChildId + 1 + int32(i)
 		}
 	}
 
@@ -92,7 +92,7 @@ func (s *slimTrieStringly) Labels(node interface{}) []interface{} {
 
 	n := stNodeID(node)
 
-	rst := []string{}
+	rst := make([]string, 0, n)
 	labels := s.labels[n]
 	for l := range labels {
 		rst = append(rst, l)

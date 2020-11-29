@@ -19,13 +19,15 @@
 //
 // False Positive
 //
-// Just like Bloomfilter, SlimTrie does not contain full information of keys,
+// Just like bloom-filter, SlimTrie does not contain full information of keys,
 // thus there could be a false positive return:
 // It returns some value and "true" but the key is not in there.
 package trie
 
 import (
 	"fmt"
+	"github.com/openacid/must"
+	"reflect"
 
 	"github.com/openacid/low/bitmap"
 	"github.com/openacid/slim/encode"
@@ -34,16 +36,6 @@ import (
 const (
 	// MaxNodeCnt is the max number of node. Node id in SlimTrie is int32.
 	MaxNodeCnt = (1 << 31) - 1
-
-	// NodeTypeInner represents an inner node.
-	//
-	// Since 0.5.10
-	NodeTypeInner = int32(1)
-
-	// NodeTypeLeaf represents a leaf node.
-	//
-	// Since 0.5.10
-	NodeTypeLeaf = int32(0)
 
 	// minPrefix is the minimal prefix to create.
 	// If a sub set keys have common prefix but prefix length is smaller than
@@ -166,7 +158,7 @@ func normalizeOpt(o *Opt) *Opt {
 	return o
 }
 
-func (va *Nodes) GetVersion() string {
+func (ns *Nodes) GetVersion() string {
 	return slimtrieVersion
 }
 
@@ -202,7 +194,23 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 
 	normalizeOpt(&opt)
 
-	return newSlimTrie(e, keys, values, &opt)
+	n := len(keys)
+	must.Be.OK(func() {
+		rvals := reflect.ValueOf(values)
+
+		// Not filter mode:
+		if values != nil {
+			must.Be.Equal(reflect.Slice, rvals.Kind(),
+				"values must be slice")
+
+			must.Be.Equal(n, rvals.Len(),
+				"len(keys) must equal len(values)")
+		}
+	})
+
+	vals := encodeValues(n, values, e)
+
+	return newSlimTrie(e, keys, vals, &opt)
 }
 
 // func (st *SlimTrie) GetStat() map[string]float64 {
@@ -210,7 +218,7 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 // }
 
 func (st *SlimTrie) content() []string {
-	rst := []string{}
+	rst := make([]string, 0)
 	ns := st.nodes
 	rst = append(rst, fmt.Sprintf(`InnerBM: %+v`, bitmap.ToArray(ns.NodeTypeBM.Words)))
 	rst = append(rst, fmt.Sprintf(`StepBM: %+v`, bitmap.ToArray(ns.InnerPrefixes.PresenceBM.Words)))

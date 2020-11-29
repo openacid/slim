@@ -403,27 +403,12 @@ func (c *creator) build() *Nodes {
 }
 
 // TODO filter mode: InnerPrefix
-func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) (*SlimTrie, error) {
+func newSlimTrie(e encode.Encoder, keys []string, bytesValues [][]byte, opt *Opt) (*SlimTrie, error) {
 
 	n := len(keys)
 	if n == 0 {
 		return &SlimTrie{encoder: e, nodes: &Nodes{}}, nil
 	}
-
-	must.Be.OK(func() {
-		rvals := reflect.ValueOf(values)
-
-		// Not filter mode:
-		if values != nil {
-			must.Be.Equal(reflect.Slice, rvals.Kind(),
-				"values must be slice")
-
-			must.Be.Equal(n, rvals.Len(),
-				"len(keys) must equal len(values)")
-		}
-	})
-
-	vals := encodeValues(n, values, e)
 
 	for i := 0; i < n-1; i++ {
 		if keys[i] >= keys[i+1] {
@@ -434,7 +419,7 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 
 	var tokeep []bool
 	if *opt.DedupValue {
-		tokeep = newValueToKeep(keys, vals)
+		tokeep = newValueToKeep(keys, bytesValues)
 	} else {
 		tokeep = make([]bool, n)
 		for i := 0; i < n; i++ {
@@ -443,7 +428,7 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 	}
 
 	sb := sigbits.New(keys)
-	c := newCreator(n, vals != nil, opt)
+	c := newCreator(n, bytesValues != nil, opt)
 
 	queue := make([]subset, 0, n*2)
 	queue = append(queue, subset{0, int32(n), 0})
@@ -456,10 +441,10 @@ func newSlimTrie(e encode.Encoder, keys []string, values interface{}, opt *Opt) 
 		// single key, it is a leaf
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
-			if vals == nil {
+			if bytesValues == nil {
 				c.addLeaf(nid, nil)
 			} else {
-				c.addLeaf(nid, vals[s])
+				c.addLeaf(nid, bytesValues[s])
 			}
 			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
 			continue
