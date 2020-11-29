@@ -26,6 +26,8 @@ categories = {
         'new-features:': typs['new-feature'],
         'docs:':         typs['doc'],
         'fix:':          typs['fixbug'],
+
+        'test:':         typs['test'],
 }
 
 to_display = {
