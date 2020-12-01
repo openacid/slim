@@ -168,7 +168,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 			return -1
 		}
 
-		lchID, has := st.getLEChildID(qr, i)
+		lchID, has := st.getLeftChildID(qr, i)
 		if has == 0 {
 			// no such branch of label
 			return -1
@@ -278,20 +278,23 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 			}
 		}
 
-		lchID, has := st.getLEChildID(qr, i)
-		chID := lchID + has
-		rchID := chID + 1
+		leftChild, has := st.getLeftChildID(qr, i)
+		// If branch bit is set, chID is the child node id, otherwise it is the left child id.
+		chID := leftChild + has
+		rightChild := chID + 1
 
-		chll, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
-		chll++
-		chrr, bit := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.to-1)
-		chrr += bit
+		// left most and right most child from this node
+		leftMostChild, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+		leftMostChild++
+		rightMostChild, bit := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.to-1)
+		rightMostChild += bit
 
-		if lchID >= chll && lchID <= chrr {
-			lID = lchID
+		// TODO leftChild should not be greater than rightMost?
+		if leftChild >= leftMostChild && leftChild <= rightMostChild {
+			lID = leftChild
 		}
-		if rchID >= chll && rchID <= chrr {
-			rID = rchID
+		if rightChild >= leftMostChild && rightChild <= rightMostChild {
+			rID = rightChild
 		}
 
 		if has == 0 {
@@ -473,15 +476,22 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 	}
 }
 
-func (st *SlimTrie) getLEChildID(qr *querySession, ki int32) (int32, int32) {
+// getLeftChildID returns the node id of the child on the left to the node current label pointing to,
+// and if the current label bit is set.
+// the left-child-id is the rank upto the ithBit(exclude),
+//
+// The child node id == NO. nodes before it == NO. "1" before the ithBit plus 1.
+// Because every node has a "1" pointing to it except the root node.
+//
+//          ithBit
+//          v
+//     010011
+//  A   B  C
+func (st *SlimTrie) getLeftChildID(qr *querySession, ki int32) (int32, int32) {
 
 	ns := st.inner
 
 	ithBit := int32(0)
-
-	// if ki > n.keyBitLen {
-	//     panic("xx")
-	// }
 
 	if ki < qr.keyBitLen {
 
