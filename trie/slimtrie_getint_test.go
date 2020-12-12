@@ -28,7 +28,7 @@ func TestSlimTrie_GetI8(t *testing.T) {
 
 	for i, key := range keys {
 
-		dd("test Get: present: %s", key)
+		// dd("test Get: present: %s", key)
 
 		v, found := st.GetI8(key)
 		ta.True(found, "Get:%v", key)
@@ -53,7 +53,7 @@ func TestSlimTrie_GetI16(t *testing.T) {
 
 	for i, key := range keys {
 
-		dd("test Get: present: %s", key)
+		// dd("test Get: present: %s", key)
 
 		v, found := st.GetI16(key)
 		ta.True(found, "Get:%v", key)
@@ -78,7 +78,7 @@ func TestSlimTrie_GetI32(t *testing.T) {
 
 	for i, key := range keys {
 
-		dd("test Get: present: %s", key)
+		// dd("test Get: present: %s", key)
 
 		v, found := st.GetI32(key)
 		ta.True(found, "Get:%v", key)
@@ -103,7 +103,7 @@ func TestSlimTrie_GetI64(t *testing.T) {
 
 	for i, key := range keys {
 
-		dd("test Get: present: %s", key)
+		// dd("test Get: present: %s", key)
 
 		v, found := st.GetI64(key)
 		ta.True(found, "Get:%v", key)

@@ -157,22 +157,15 @@ func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 
 func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 
-	iambig(t)
+	testBigKeySet(t, func(t *testing.T, keys []string) {
+		ta := require.New(t)
 
-	ta := require.New(t)
-
-	for _, typ := range testkeys.AssetNames() {
-
-		ks := getKeys(typ)
-
-		dd("test marshal/unmarshal: %s", typ)
-
-		values := makeI32s(len(ks))
-		st, err := NewSlimTrie(encode.I32{}, ks, values)
+		values := makeI32s(len(keys))
+		st, err := NewSlimTrie(encode.I32{}, keys, values)
 		ta.NoError(err)
 
 		testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
-		testPresentKeysGet(t, st, ks, values)
+		testPresentKeysGet(t, st, keys, values)
 
 		buf, err := proto.Marshal(st)
 		ta.NoError(err)
@@ -184,8 +177,8 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 		ta.NoError(err)
 
 		testUnknownKeysGRS(t, st2, randVStrings(100, 0, 10))
-		testPresentKeysGet(t, st2, ks, values)
-	}
+		testPresentKeysGet(t, st2, keys, values)
+	})
 }
 
 func TestSlimTrie_Unmarshal_old_data(t *testing.T) {

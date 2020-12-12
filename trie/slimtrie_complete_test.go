@@ -201,7 +201,7 @@ func TestSlimTrie_Complete_GRS_2_small_keyset(t *testing.T) {
 		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 		ta.NoError(err)
 
-		dd(st)
+		// dd(st)
 
 		testAbsentKeysGRS(t, st, keys)
 		testPresentKeysGet(t, st, keys, values)
@@ -217,7 +217,7 @@ func TestSlimTrie_Complete_GRS_3_bigInner_300(t *testing.T) {
 	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
-	dd(st)
+	// dd(st)
 
 	ta.True(st.inner.BigInnerCnt > 0)
 
@@ -274,27 +274,21 @@ func TestSlimTrie_Complete_GRS_4_20kvlen10(t *testing.T) {
 	st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 	ta.NoError(err)
 
-	dd(st)
+	// dd(st)
 
 	testAbsentKeysGRS(t, st, keys)
 	testPresentKeysGRS(t, st, keys, values)
 }
 
 func TestSlimTrie_Complete_GRS_9_allkeyset(t *testing.T) {
-
-	iambig(t)
-
-	ta := require.New(t)
-
-	for _, typ := range testkeys.AssetNames() {
-
-		keys := getKeys(typ)
-
+	testBigKeySet(t, func(t *testing.T, keys []string) {
+		ta := require.New(t)
 		values := makeI32s(len(keys))
 		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 		ta.NoError(err)
 
 		testAbsentKeysGRS(t, st, keys)
 		testPresentKeysGRS(t, st, keys, values)
-	}
+
+	})
 }

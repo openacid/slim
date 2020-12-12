@@ -629,7 +629,7 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 	st, err := NewSlimTrie(encode.I32{}, keys, values)
 	ta.NoError(err)
 
-	dd(st)
+	// dd(st)
 
 	ta.True(st.inner.BigInnerCnt > 0)
 
@@ -639,23 +639,16 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 
 func TestSlimTrie_GRS_9_allkeyset(t *testing.T) {
 
-	for _, typ := range testkeys.AssetNames() {
+	testBigKeySet(t, func(t *testing.T, keys []string) {
+		ta := require.New(t)
 
-		t.Run(fmt.Sprintf("keyset: %s", typ), func(t *testing.T) {
-			ta := require.New(t)
-			keys := getKeys(typ)
-			if len(keys) >= 1000 {
-				iambig(t)
-			}
+		values := makeI32s(len(keys))
+		st, err := NewSlimTrie(encode.I32{}, keys, values)
+		ta.NoError(err)
 
-			values := makeI32s(len(keys))
-			st, err := NewSlimTrie(encode.I32{}, keys, values)
-			ta.NoError(err)
-
-			testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
-			testPresentKeysGRS(t, st, keys, values)
-		})
-	}
+		testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
+		testPresentKeysGRS(t, st, keys, values)
+	})
 }
 
 func TestSlimTrie_GRS_1_empty_string_branch(t *testing.T) {
@@ -831,7 +824,7 @@ func testUnknownKeysGRS(t *testing.T, st *SlimTrie, keys []string) {
 	for i, key := range keys {
 		_ = i
 
-		dd("test unknown: %s", key)
+		// dd("test unknown: %s", key)
 
 		// There may be false positive result
 
@@ -891,7 +884,7 @@ func testAbsentKeysGet(t *testing.T, st *SlimTrie, absentKeys []string) {
 	for i, key := range absentKeys {
 		_ = i
 
-		dd("test Get: absent: %s", key)
+		// dd("test Get: absent: %s", key)
 
 		v, found := st.Get(key)
 		ta.Nil(v, "get absent %s", key)
@@ -913,10 +906,10 @@ func testAbsentKeysRangeGet(t *testing.T, st *SlimTrie, keys, absentKeys []strin
 			prev = j
 		}
 
-		dd("test RangeGet: absent: %s", key)
+		// dd("test RangeGet: absent: %s", key)
 
 		v, found := st.RangeGet(key)
-		dd(v, found)
+		// dd(v, found)
 
 		if prev == -1 {
 			ta.Nil(v, "range get %v", key)
@@ -940,7 +933,7 @@ func testAbsentKeysSearch(t *testing.T, st *SlimTrie, keys, absentKeys []string)
 			prev = j
 		}
 
-		dd("test Search: absent: %s", key)
+		// dd("test Search: absent: %s", key)
 
 		l, e, r := st.Search(key)
 
@@ -970,7 +963,7 @@ func testPresentKeysGet(t *testing.T, st *SlimTrie, keys []string, values []int3
 
 	for i, key := range keys {
 
-		dd("test Get: present: %s", key)
+		// dd("test Get: present: %s", key)
 
 		v, found := st.Get(key)
 		ta.True(found, "get %v", key)
@@ -984,7 +977,7 @@ func testPresentKeysRangeGet(t *testing.T, st *SlimTrie, keys []string, values [
 
 	for i, key := range keys {
 
-		dd("test RangeGet: present:%s", key)
+		// dd("test RangeGet: present:%s", key)
 
 		v, found := st.RangeGet(key)
 		ta.True(found, "RangeGet:%v", key)
@@ -998,7 +991,7 @@ func testPresentKeysSearch(t *testing.T, st *SlimTrie, keys []string, values []i
 
 	for i, key := range keys {
 
-		dd("test Search: present: %s", key)
+		// dd("test Search: present: %s", key)
 
 		l, e, r := st.Search(key)
 		if i == 0 {
