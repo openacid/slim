@@ -18,7 +18,7 @@ travis: vet gofmt misspell unconvert ineffassign unparam test
 test:
 	# fail fast with severe bugs
 	$(GO) test -short      $(PKGS)
-	$(GO) test -tags debug $(PKGS)
+	# $(GO) test -tags debug $(PKGS)
 	# test release version and generate coverage data for task `coveralls`.
 	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
 
