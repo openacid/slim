@@ -458,7 +458,7 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 	if prefs.EltCnt > 0 && prefs.PresenceBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
 
 		inn := prefs.PresenceBM
-		ithPref := rank128(inn.Words, inn.RankIndex, ithInner)
+		ithPref, _ := bitmap.Rank128(inn.Words, inn.RankIndex, ithInner)
 
 		if prefs.PositionBM != nil {
 
@@ -512,7 +512,7 @@ func (st *SlimTrie) getLeftChildID(qr *querySession, ki int32) (int32, int32) {
 
 	if qr.to-qr.from == ns.ShortSize {
 
-		r0 := rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+		r0, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
 		r0 += int32(bits.OnesCount64(qr.bm & bitmap.Mask[ithBit]))
 		return r0, int32(qr.bm >> uint(ithBit) & 1)
 
@@ -520,19 +520,6 @@ func (st *SlimTrie) getLeftChildID(qr *querySession, ki int32) (int32, int32) {
 		return bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from+ithBit)
 	}
 
-}
-
-func rank128(words []uint64, rindex []int32, i int32) int32 {
-
-	wordI := i >> 6
-	j := uint32(i & 63)
-	atRight := wordI & 1
-
-	n := rindex[(i+64)>>7]
-	w := words[wordI]
-
-	cnt1 := int32(bits.OnesCount64(w))
-	return n - atRight*cnt1 + int32(bits.OnesCount64(w&bitmap.Mask[j]))
 }
 
 // the second return value being 0 indicates it is a leaf
