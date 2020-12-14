@@ -49,7 +49,7 @@ func (st *SlimTrie) String() string {
 
 		s.labels[nid] = make(map[string]int32)
 
-		st.getInner(nid, n)
+		st.getNode(nid, n)
 
 		paths := st.getLabels(n)
 
@@ -132,8 +132,8 @@ func (s *slimTrieStringly) NodeInfo(node interface{}) string {
 
 		*n = emp
 
-		s.st.getInner(nid, n)
-		step := n.prefixLen
+		s.st.getNode(nid, n)
+		step := n.innerPrefixLen
 		if step > 0 {
 			return fmt.Sprintf("+%d", step)
 		}
