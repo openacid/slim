@@ -19,8 +19,7 @@ func (b *Bitmap) indexit(opts ...string) {
 			b.RankIndex = bitmap.IndexRank128(b.Words)
 		case "s32":
 			// select32 also requires rank index to locate a bit
-			b.RankIndex = bitmap.IndexRank64(b.Words, true)
-			b.SelectIndex = indexSelect32(b.Words)
+			b.SelectIndex, b.RankIndex = bitmap.IndexSelect32R64(b.Words)
 		default:
 			panic("unknown " + opt)
 		}

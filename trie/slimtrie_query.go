@@ -390,7 +390,7 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 		if lp.PresenceBM.Words[wordI]&bitmap.Bit[bitI] != 0 {
 			ithPref := lp.PresenceBM.RankIndex[wordI] + int32(bits.OnesCount64(lp.PresenceBM.Words[wordI]&bitmap.Mask[bitI]))
 			ps := lp.PositionBM
-			from, to := ps.select32(ithPref)
+			from, to := bitmap.Select32R64(ps.Words, ps.SelectIndex, ps.RankIndex, ithPref)
 
 			qr.hasLeafPrefix = true
 			qr.leafPrefix = lp.Bytes[from:to]
@@ -464,7 +464,7 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 			// stored actual prefix of a node.
 			ps := prefs.PositionBM
-			from, to := ps.select32(ithPref)
+			from, to := bitmap.Select32R64(ps.Words, ps.SelectIndex, ps.RankIndex, ithPref)
 
 			qr.prefix = prefs.Bytes[from:to]
 			qr.prefixLen = prefixLen(qr.prefix)
