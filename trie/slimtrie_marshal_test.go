@@ -2,18 +2,13 @@ package trie
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openacid/errors"
 	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/slim/encode"
-	"github.com/openacid/testkeys"
 	"github.com/stretchr/testify/require"
 )
 
@@ -183,53 +178,23 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 
 func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 
-	ta := require.New(t)
+	testOldData(t,
+		func(t *testing.T,
+			dataSetName, ver string,
+			keys []string,
+			buf []byte) {
 
-	folder := "testdata/"
-	finfos, err := ioutil.ReadDir(folder)
-	ta.NoError(err)
+			ta := require.New(t)
+			st, err := NewSlimTrie(encode.I32{}, nil, nil)
+			ta.NoError(err)
 
-	for _, typ := range testkeys.AssetNames() {
+			err = proto.Unmarshal(buf, st)
+			ta.NoError(err)
 
-		ks := getKeys(typ)
+			testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+			testPresentKeysGRS(t, st, keys, makeI32s(len(keys)))
 
-		prf := "slimtrie-data-" + typ + "-"
-
-		for _, finfo := range finfos {
-
-			fn := finfo.Name()
-
-			if !strings.HasPrefix(fn, prf) {
-				continue
-			}
-
-			parts := strings.Split(fn, "-")
-			ver := parts[len(parts)-1]
-
-			t.Run(fmt.Sprintf("%s-%s", typ, ver),
-				func(t *testing.T) {
-
-					ta := require.New(t)
-
-					if len(ks) > 1000 {
-						iambig(t)
-					}
-
-					path := filepath.Join(folder, fn)
-					b, err := ioutil.ReadFile(path)
-					ta.NoError(err)
-
-					st, err := NewSlimTrie(encode.I32{}, nil, nil)
-					ta.NoError(err)
-
-					err = proto.Unmarshal(b, st)
-					ta.NoError(err)
-
-					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
-					testPresentKeysGRS(t, st, ks, makeI32s(len(ks)))
-				})
-		}
-	}
+		})
 }
 
 // Just keeps old test.

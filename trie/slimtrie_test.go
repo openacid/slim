@@ -2,6 +2,8 @@ package trie
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -1026,6 +1028,65 @@ func testBigKeySet(t *testing.T, f func(t *testing.T, keys []string)) {
 			}
 
 			f(t, keys)
+		})
+	}
+}
+
+func testOldData(t *testing.T, f func(t *testing.T, typ, ver string, keys []string, buf []byte)) {
+
+	ta := require.New(t)
+
+	folder := "testdata/"
+	finfos, err := ioutil.ReadDir(folder)
+	ta.NoError(err)
+
+	// datas[ver][dataSetName] = fn
+	datas := map[string]map[string]string{}
+
+	for _, typ := range testkeys.AssetNames() {
+
+		prf := "slimtrie-data-" + typ + "-"
+
+		for _, finfo := range finfos {
+
+			fn := finfo.Name()
+
+			if !strings.HasPrefix(fn, prf) {
+				continue
+			}
+
+			parts := strings.Split(fn, "-")
+			ver := parts[len(parts)-1]
+
+			if datas[ver] == nil {
+				datas[ver] = map[string]string{}
+			}
+			datas[ver][typ] = fn
+		}
+	}
+
+	for ver, ff := range datas {
+		t.Run(ver, func(t *testing.T) {
+			for dataSetName, fn := range ff {
+				t.Run(dataSetName,
+					func(t *testing.T) {
+
+						ks := getKeys(dataSetName)
+
+						if len(ks) > 1000 {
+							iambig(t)
+						}
+
+						ta := require.New(t)
+
+						path := filepath.Join(folder, fn)
+						b, err := ioutil.ReadFile(path)
+						ta.NoError(err)
+
+						f(t, dataSetName, ver, ks, b)
+
+					})
+			}
 		})
 	}
 }
