@@ -15,9 +15,11 @@ check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
 travis: vet gofmt misspell unconvert ineffassign unparam test
 
-test:
+test-short:
 	# fail fast with severe bugs
 	$(GO) test -short      $(PKGS)
+
+test:
 	# $(GO) test -tags debug $(PKGS)
 	# test release version and generate coverage data for task `coveralls`.
 	$(GO) test -covermode=count -coverprofile=coverage.out $(PKGS)
