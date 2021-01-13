@@ -1017,6 +1017,36 @@ func testPresentKeysSearch(t *testing.T, st *SlimTrie, keys []string, values []i
 	}
 }
 
+func testBigKeySet(t *testing.T, f func(t *testing.T, keys []string)) {
+
+	for _, typ := range testkeys.AssetNames() {
+
+		if typ == "1mvl5_10" {
+			continue
+		}
+
+		t.Run(typ, func(t *testing.T) {
+			keys := getKeys(typ)
+			n := len(keys)
+			if n >= 1000 {
+				iambig(t)
+			}
+
+			f(t, keys)
+		})
+	}
+}
+
+func clap(n, min, max int) int {
+	if n < min {
+		n = min
+	}
+	if n > max {
+		n = max
+	}
+	return n
+}
+
 func iambig(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
