@@ -49,7 +49,11 @@ unconvert:
 
 ineffassign:
 	$(GO) get github.com/gordonklaus/ineffassign
-	find $(SRCDIRS) -name '*.go' | grep -v "\bvendor/" | xargs ineffassign
+	# With ineffassign v0.0.0-20210104184537-8eed68eb605f
+	# The following form now complains error: "named files must all be in one directory"
+	#    find $(SRCDIRS) -name '*.go' | grep -v "\bvendor/" | xargs ineffassign
+	# Seems this works:
+	ineffassign $(PKGS)
 
 pedantic: check errcheck
 
