@@ -1,0 +1,8 @@
+fixbug:
+  slimtrie:
+  - creating or loading empty slimtrie data should leave the NodeTypeBM a nil so that
+    querying routine wont access empty bitmap; by drdr xp; 2020-11-29
+new-feature:
+  ScanFrom():
+  - and ScanFromTo() scans slimtrie with a callback function; NewIter() returns a
+    "next" function to iterate items in slimtrie; by drdr xp; 2020-12-03
