@@ -179,6 +179,11 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 		if i == l {
 			// must be a leaf
+			// the key finished and matches the 0-th bit in the bitmap
+			// In this case, the leaf has no prefix, other with it wont be the 0-th bit.
+			// And qr.worSize is 0
+			// Thus there is no need to check LeafPrefix.
+			// TODO test and optimize this
 			break
 		}
 
@@ -482,6 +487,29 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 	}
 }
 
+// getLabelIdxOfKey returns the index of label of an inner node a key pointing to.
+func (st *SlimTrie) getLabelIdxOfKey(qr *querySession, keyBitIdx int32) int32 {
+	ithBit := int32(0)
+
+	if keyBitIdx < qr.keyBitLen {
+
+		if qr.wordSize == bigWordSize {
+			ithBit = 1 + int32(qr.key[keyBitIdx>>3])
+		} else {
+
+			b := qr.key[keyBitIdx>>3]
+
+			if keyBitIdx&7 < 4 {
+				b >>= 4
+			}
+			b &= 0xf
+
+			ithBit = 1 + int32(b)
+		}
+	}
+	return ithBit
+}
+
 // getLeftChildID returns the node id of the child on the left to the node current label pointing to,
 // and if the current label bit is set.
 // the left-child-id is the rank upto the ithBit(exclude),
@@ -497,24 +525,7 @@ func (st *SlimTrie) getLeftChildID(qr *querySession, ki int32) (int32, int32) {
 
 	ns := st.inner
 
-	ithBit := int32(0)
-
-	if ki < qr.keyBitLen {
-
-		if qr.wordSize == bigWordSize {
-			ithBit = 1 + int32(qr.key[ki>>3])
-		} else {
-
-			b := qr.key[ki>>3]
-
-			if ki&7 < 4 {
-				b >>= 4
-			}
-			b &= 0xf
-
-			ithBit = 1 + int32(b)
-		}
-	}
+	ithBit := st.getLabelIdxOfKey(qr, ki)
 
 	if qr.to-qr.from == ns.ShortSize {
 
