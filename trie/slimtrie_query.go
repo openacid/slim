@@ -146,10 +146,6 @@ func (st *SlimTrie) GetID(key string) int32 {
 
 	for {
 
-		qr.isInner = false
-		qr.prefixLen = 0
-		qr.hasPrefixContent = false
-
 		st.getInner(eqID, qr)
 		if !qr.isInner {
 			// leaf
@@ -251,10 +247,6 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 	i := int32(0)
 
 	for {
-
-		qr.isInner = false
-		qr.prefixLen = 0
-		qr.hasPrefixContent = false
 
 		st.getInner(eqID, qr)
 		if !qr.isInner {
@@ -413,6 +405,10 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 	ns := st.inner
+
+	qr.isInner = false
+	qr.prefixLen = 0
+	qr.hasPrefixContent = false
 
 	wordI := nodeid >> 6
 	bitI := uint32(nodeid & 63)
