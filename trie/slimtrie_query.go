@@ -326,25 +326,28 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 		lID = st.rightMost(lID)
 	}
 	if rID != -1 {
-		rID = st.leftMost(rID)
+		rID = st.leftMost(rID, nil)
 	}
 
 	return
 }
 
-func (st *SlimTrie) leftMost(idx int32) int32 {
+func (st *SlimTrie) leftMost(idx int32, path *[]int32) int32 {
 
 	ns := st.inner
+	qr := &querySession{}
 
 	for {
-
-		qr := &querySession{}
+		if path != nil {
+			*path = append(*path, idx)
+		}
 
 		st.getNode(idx, qr)
 		if qr.isInner == 0 {
 			break
 		}
 
+		// follow the first child
 		r0, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
 		idx = r0 + 1
 	}
