@@ -32,6 +32,7 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 - [Synopsis](#synopsis)
   - [Index keys, get by key](#index-keys-get-by-key)
   - [Index key ranges, get by key](#index-key-ranges-get-by-key)
+  - [Scan](#scan)
 - [Getting started](#getting-started)
 - [Who are using slim](#who-are-using-slim)
 - [Feedback and contributions](#feedback-and-contributions)
@@ -87,10 +88,6 @@ memory, as a minimized index of huge amount external data.
     -   **Ready for transport**:
         a single `proto.Marshal()` is all it requires to serialize, transport or persisting on disk etc.
 
-    -   **Loosely coupled design**:
-        index logic and data storage is completely separated.
-        Piece of cake using `SlimTrie` to index huge data.
-
 
 ## Memory overhead
 
@@ -136,7 +133,7 @@ See: [trie/report/](trie/report/)
 
 ## Roadmap
 
--   [ ] Query by range
+-   [x] **2021-01-15** v0.5.11 Query by range
 -   [x] **2019-09-18** v0.5.10 Reduce false positive rate to less than 0.05%
 -   [x] **2019-06-03** v0.5.9  Large key set benchmark
 -   [x] **2019-05-29** v0.5.6  Support up to 2 billion keys
@@ -309,6 +306,93 @@ func Example_indexRanges() {
 }
 ```
 
+
+### Scan
+
+
+```go
+package trie
+
+import (
+	"fmt"
+
+	"github.com/openacid/slim/encode"
+)
+
+func ExampleSlimTrie_ScanFrom() {
+	var keys = []string{
+		"",
+		"`",
+		"a",
+		"ab",
+		"abc",
+		"abca",
+		"abcd",
+		"abcd1",
+		"abce",
+		"be",
+		"c",
+		"cde0",
+		"d",
+	}
+	values := makeI32s(len(keys))
+
+	codec := encode.I32{}
+	st, _ := NewSlimTrie(codec, keys, values, Opt{
+		Complete: Bool(true),
+	})
+
+	// untilD stops when encountering "d".
+	untilD := func(k, v []byte) bool {
+		if string(k) == "d" {
+			return false
+		}
+
+		_, i32 := codec.Decode(v)
+		fmt.Println(string(k), i32)
+		return true
+	}
+
+	fmt.Println("scan (ab, +∞):")
+	st.ScanFrom("ab", false, true, untilD)
+
+	fmt.Println()
+	fmt.Println("scan [be, +∞):")
+	st.ScanFrom("be", true, true, untilD)
+
+	fmt.Println()
+	fmt.Println("scan (ab, be):")
+	st.ScanFromTo(
+		"ab", false,
+		"be", false,
+		true, untilD)
+
+	// Output:
+	//
+	// scan (ab, +∞):
+	// abc 4
+	// abca 5
+	// abcd 6
+	// abcd1 7
+	// abce 8
+	// be 9
+	// c 10
+	// cde0 11
+	//
+	// scan [be, +∞):
+	// be 9
+	// c 10
+	// cde0 11
+	//
+	// scan (ab, be):
+	// abc 4
+	// abca 5
+	// abcd 6
+	// abcd1 7
+	// abce 8
+}
+```
+
 <!-- ## FAQ -->
 
 ## Getting started
@@ -316,7 +400,7 @@ func Example_indexRanges() {
 **Install**
 
 ```sh
-go get github.com/openacid/slim
+go get github.com/openacid/slim/trie
 ```
 
 

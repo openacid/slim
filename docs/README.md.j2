@@ -76,10 +76,6 @@ memory, as a minimized index of huge amount external data.
     -   **Ready for transport**:
         a single `proto.Marshal()` is all it requires to serialize, transport or persisting on disk etc.
 
-    -   **Loosely coupled design**:
-        index logic and data storage is completely separated.
-        Piece of cake using `SlimTrie` to index huge data.
-
 
 ## Memory overhead
 
@@ -125,7 +121,7 @@ See: [trie/report/](trie/report/)
 
 ## Roadmap
 
--   [ ] Query by range
+-   [x] **2021-01-15** v0.5.11 Query by range
 -   [x] **2019-09-18** v0.5.10 Reduce false positive rate to less than 0.05%
 -   [x] **2019-06-03** v0.5.9  Large key set benchmark
 -   [x] **2019-05-29** v0.5.6  Support up to 2 billion keys
@@ -159,6 +155,14 @@ costs 20ms for either reading 4KB or reading 1MB).
 {% include 'index/example_range_test.go' %}
 ```
 
+
+### Scan
+
+
+```go
+{% include 'trie/example_scan_test.go' %}
+```
+
 <!-- ## FAQ -->
 
 ## Getting started
@@ -166,7 +170,7 @@ costs 20ms for either reading 4KB or reading 1MB).
 **Install**
 
 ```sh
-go get github.com/openacid/slim
+go get github.com/openacid/slim/trie
 ```
 
 
