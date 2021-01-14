@@ -53,8 +53,9 @@ def command(cmd, *arguments, **options):
 
 
 if __name__ == "__main__":
-    pkg = command('go', 'list', '.')
-    name = pkg.strip().split('/')[-1]
+    #  pkg = command('go', 'list', '.')
+    #  name = pkg.strip().split('/')[-1]
+    name = 'slim'
     tmpl_vars = {
             "name": name
     }

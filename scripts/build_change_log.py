@@ -16,6 +16,7 @@ typs = {x:x for x in typs}
 categories = {
         'api-change:':   typs['api-change'],
         'new-feature:':  typs['new-feature'],
+        'internal:':     typs['internal'],
         'doc:':          typs['doc'],
         'refactor:':     typs['refactor'],
         'fixbug:':       typs['fixbug'],
@@ -33,6 +34,8 @@ categories = {
 to_display = {
         'doc': False,
         'refactor': False,
+        'internal': False,
+        'test': False,
 }
 
 def cmd(cmds):
