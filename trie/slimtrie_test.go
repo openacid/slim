@@ -1032,7 +1032,7 @@ func testBigKeySet(t *testing.T, f func(t *testing.T, keys []string)) {
 	}
 }
 
-func testOldData(t *testing.T, f func(t *testing.T, typ, ver string, keys []string, buf []byte)) {
+func testOldData(t *testing.T, f func(t *testing.T, typ, opt, ver string, keys []string, buf []byte)) {
 
 	ta := require.New(t)
 
@@ -1055,18 +1055,30 @@ func testOldData(t *testing.T, f func(t *testing.T, typ, ver string, keys []stri
 				continue
 			}
 
+			// without option:
+			//	slimtrie-data-10ll16k-0.5.9
+			//
+			// with option:
+			// slimtrie-data-10ll16k-allpref-0.5.10
 			parts := strings.Split(fn, "-")
 			ver := parts[len(parts)-1]
+			opt := ""
 
-			if datas[ver] == nil {
-				datas[ver] = map[string]string{}
+			if len(parts) == 5 {
+				opt = parts[3]
 			}
-			datas[ver][typ] = fn
+
+			dataKey := opt + "-" + ver
+
+			if datas[dataKey] == nil {
+				datas[dataKey] = map[string]string{}
+			}
+			datas[dataKey][typ] = fn
 		}
 	}
 
-	for ver, ff := range datas {
-		t.Run(ver, func(t *testing.T) {
+	for optVer, ff := range datas {
+		t.Run(optVer, func(t *testing.T) {
 			for dataSetName, fn := range ff {
 				t.Run(dataSetName,
 					func(t *testing.T) {
@@ -1077,13 +1089,17 @@ func testOldData(t *testing.T, f func(t *testing.T, typ, ver string, keys []stri
 							iambig(t)
 						}
 
+						parts := strings.Split(optVer, "-")
+						opt := parts[0]
+						ver := parts[1]
+
 						ta := require.New(t)
 
 						path := filepath.Join(folder, fn)
 						b, err := ioutil.ReadFile(path)
 						ta.NoError(err)
 
-						f(t, dataSetName, ver, ks, b)
+						f(t, dataSetName, opt, ver, ks, b)
 
 					})
 			}

@@ -180,7 +180,7 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 
 	testOldData(t,
 		func(t *testing.T,
-			dataSetName, ver string,
+			dataSetName, dataOpt, ver string,
 			keys []string,
 			buf []byte) {
 
@@ -194,6 +194,16 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 			testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
 			testPresentKeysGRS(t, st, keys, makeI32s(len(keys)))
 
+			if dataOpt == "allpref" {
+				// only slim with Opt{Complete:true} support scan and iter
+				n := len(keys)
+				frm := clap(n/5, 0, n)
+				to := clap(frm+10, frm, n)
+				subTestIter(t, st, keys, keys[frm:to])
+				subTestIter(t, st, keys, randVStrings(clap(len(keys), 50, 1024), 0, 10))
+				subTestScan(t, st, keys, keys[frm:to])
+				subTestScan(t, st, keys, randVStrings(clap(len(keys), 50, 1024), 0, 10))
+			}
 		})
 }
 
