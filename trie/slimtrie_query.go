@@ -227,15 +227,15 @@ func (st *SlimTrie) cmpLeafPrefix(tail string, qr *querySession) int32 {
 // The id of `key`. It is -1 if there is not a matching.
 // The id of smallest key > `key`. It is -1 if `key` is the greatest.
 func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
+	ns := st.inner
 
 	if st.inner.NodeTypeBM == nil {
 		return -1, -1, -1
 	}
 
 	lID, eqID, rID = -1, 0, -1
-	l := int32(8 * len(key))
-	ns := st.inner
 
+	l := int32(8 * len(key))
 	qr := &querySession{
 		keyBitLen: l,
 		key:       key,
@@ -312,14 +312,18 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 	}
 
 	if eqID != -1 {
-		tail := key[i>>3:]
-		r := st.cmpLeafPrefix(tail, qr)
-		if r == -1 {
-			rID = eqID
-			eqID = -1
-		} else if r == 1 {
-			lID = eqID
-			eqID = -1
+		// if i == l the leaf does not have leaf prefix
+		if i <= l {
+			tail := key[i>>3:]
+			r := st.cmpLeafPrefix(tail, qr)
+			if r == -1 {
+				rID = eqID
+				eqID = -1
+			} else if r == 1 {
+				lID = eqID
+				eqID = -1
+			}
+
 		}
 	}
 
@@ -401,8 +405,6 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 
 func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
-	var bm uint64
-
 	ns := st.inner
 
 	wordI := nodeid >> 6
@@ -437,6 +439,8 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 
 			j := qr.from & 63
 			w := ns.Inners.Words[qr.from>>6]
+
+			var bm uint64
 
 			if j <= 64-ns.ShortSize {
 				bm = (w >> uint32(j)) & ns.ShortMask
