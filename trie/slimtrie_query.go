@@ -560,6 +560,21 @@ func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 	return v
 }
 
+func (st *SlimTrie) getIthLeafBytes(ith int32) []byte {
+
+	ls := st.inner.Leaves
+	if ls == nil {
+		return nil
+	}
+
+	// TODO use FixedSize or bitmap for var-len leaves
+	// TODO it is possible there is a absent leaf
+	size := st.encoder.GetEncodedSize(nil)
+	idx := ith * int32(size)
+
+	return ls.Bytes[idx : idx+int32(size)]
+}
+
 func (st *SlimTrie) getLabels(qr *querySession) []uint64 {
 	bm, _ := st.getInnerBM(qr)
 	return bmtree.Decode(qr.to-qr.from, bm)
