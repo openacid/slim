@@ -561,13 +561,21 @@ func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 }
 
 func (st *SlimTrie) getLabels(qr *querySession) []uint64 {
+	bm, _ := st.getInnerBM(qr)
+	return bmtree.Decode(qr.to-qr.from, bm)
+}
+
+// getInnerBM retrieves the inner node bitmap cached by a querySession, and the size of bitmap.
+func (st *SlimTrie) getInnerBM(qr *querySession) ([]uint64, int32) {
 
 	ns := st.inner
 
-	if qr.to-qr.from == ns.ShortSize {
-		return bmtree.Decode(innerSize, []uint64{qr.bm})
+	storedBMSize := qr.to - qr.from
+
+	if storedBMSize == ns.ShortSize {
+		return bmtree.Decode(innerSize, []uint64{qr.bm}), innerSize
 	}
 
-	bm := bitmap.Slice(ns.Inners.Words, qr.from, qr.to)
-	return bmtree.Decode(qr.to-qr.from, bm)
+	// normal or big inner node
+	return bitmap.Slice(ns.Inners.Words, qr.from, qr.to), storedBMSize
 }
