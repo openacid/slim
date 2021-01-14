@@ -21,6 +21,8 @@ type querySession struct {
 	// Whether current node is an inner node or leaf node.
 	isInner bool
 
+	ithInner int32
+
 	keyBitLen int32
 	key       string
 
@@ -416,21 +418,21 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 	}
 	qr.isInner = true
 
-	ithInner := ns.NodeTypeBM.RankIndex[wordI] + int32(bits.OnesCount64(ns.NodeTypeBM.Words[wordI]&bitmap.Mask[bitI]))
+	qr.ithInner = ns.NodeTypeBM.RankIndex[wordI] + int32(bits.OnesCount64(ns.NodeTypeBM.Words[wordI]&bitmap.Mask[bitI]))
 
-	innWordI := ithInner >> 6
-	innBitI := ithInner & 63
+	innWordI := qr.ithInner >> 6
+	innBitI := qr.ithInner & 63
 
-	if ithInner < ns.BigInnerCnt {
+	if qr.ithInner < ns.BigInnerCnt {
 		qr.wordSize = bigWordSize
-		qr.from = ithInner * bigInnerSize
+		qr.from = qr.ithInner * bigInnerSize
 		qr.to = qr.from + bigInnerSize
 	} else {
 		qr.wordSize = wordSize
 
 		ithShort := ns.ShortBM.RankIndex[innWordI] + int32(bits.OnesCount64(ns.ShortBM.Words[innWordI]&bitmap.Mask[innBitI]))
 
-		qr.from = ns.BigInnerOffset + innerSize*ithInner + ns.ShortMinusInner*ithShort
+		qr.from = ns.BigInnerOffset + innerSize*qr.ithInner + ns.ShortMinusInner*ithShort
 
 		// if this is a short node
 		if ns.ShortBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
@@ -462,7 +464,7 @@ func (st *SlimTrie) getInner(nodeid int32, qr *querySession) {
 	if prefs.EltCnt > 0 && prefs.PresenceBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
 
 		inn := prefs.PresenceBM
-		ithPref, _ := bitmap.Rank128(inn.Words, inn.RankIndex, ithInner)
+		ithPref, _ := bitmap.Rank128(inn.Words, inn.RankIndex, qr.ithInner)
 
 		if prefs.PositionBM != nil {
 
