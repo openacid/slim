@@ -26,8 +26,9 @@ package trie
 
 import (
 	"fmt"
-	"github.com/openacid/must"
 	"reflect"
+
+	"github.com/openacid/must"
 
 	"github.com/openacid/low/bitmap"
 	"github.com/openacid/slim/encode"
@@ -171,6 +172,7 @@ func (st *SlimTrie) compatibleVersions() []string {
 		"==1.0.0", // before 0.5.8 it is "1.0.0" for historical reason.
 		"==0.5.8",
 		"==0.5.9",
+		"==0.5.10",
 		"==" + slimtrieVersion,
 	}
 }

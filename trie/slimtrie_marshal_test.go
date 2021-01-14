@@ -57,7 +57,7 @@ func TestSlimTrie_Unmarshal_incompatible(t *testing.T) {
 		want  error
 	}{
 		{slimtrieVersion, nil},
-		{"0.5.11", ErrIncompatible},
+		{"0.5.12", ErrIncompatible},
 		{"0.6.0", ErrIncompatible},
 		{"0.9.9", ErrIncompatible},
 		{"1.0.1", ErrIncompatible},
