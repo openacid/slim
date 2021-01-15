@@ -35,4 +35,12 @@ jobs:
               ${{ runner.os }}-go-
 
         - name: test
-          run: make test
+          run: |
+            make test
+
+        - name: Send coverage
+          uses: shogo82148/actions-goveralls@v1
+          with:
+            path-to-profile: coverage.out
+            flag-name: Go-${{ matrix.go }}
+            parallel: true
