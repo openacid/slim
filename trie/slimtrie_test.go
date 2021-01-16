@@ -13,6 +13,7 @@ import (
 	"github.com/openacid/errors"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/testkeys"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -116,7 +117,7 @@ func TestNewSlimTrie_empty(t *testing.T) {
 
 	st, err := NewSlimTrie(encode.I32{}, ks, vs)
 	ta.NoError(err)
-	testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 
 	// marshal
 	buf1, err := proto.Marshal(st)
@@ -126,7 +127,7 @@ func TestNewSlimTrie_empty(t *testing.T) {
 	err = proto.Unmarshal(buf1, st2)
 	ta.NoError(err)
 	slimtrieEqual(st, st2, t)
-	testUnknownKeysGRS(t, st2, randVStrings(100, 0, 10))
+	testUnknownKeysGRS(t, st2, testutil.RandStrSlice(100, 0, 10))
 }
 
 func TestSlimTrie_GRS_1_zerokeys(t *testing.T) {
@@ -141,7 +142,7 @@ func TestSlimTrie_GRS_1_zerokeys(t *testing.T) {
 
 	ta.Equal("", st.String())
 
-	ks := randVStrings(500, 0, 10)
+	ks := testutil.RandStrSlice(500, 0, 10)
 	for i, key := range ks {
 		_ = i
 
@@ -209,7 +210,7 @@ func TestSlimTrie_GRS_1_zeroLengthValues(t *testing.T) {
 
 	ta.Equal(wantstr, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for _, key := range keys {
 
@@ -277,7 +278,7 @@ func TestSlimTrie_GRS_1_nilValuesIgnoreEncoder(t *testing.T) {
 
 	ta.Equal(wantstr, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for _, key := range keys {
 
@@ -323,7 +324,7 @@ func TestSlimTrie_GRS_1_onekey(t *testing.T) {
 `)
 	ta.Equal(wantstr, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -349,7 +350,7 @@ func TestSlimTrie_GRS_1_twokeys_emptysteps(t *testing.T) {
 	dd(st)
 
 	ta.Equal(wantstr, st.String())
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -536,7 +537,7 @@ func TestSlimTrie_GRS_1_u16step_bug_2019_05_29(t *testing.T) {
 	st, err := NewSlimTrie(encode.I32{}, keys, values)
 	ta.NoError(err)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -580,7 +581,7 @@ func TestSlimTrie_GRS_0_tiny(t *testing.T) {
 
 	ta.Equal(wantstr, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -618,7 +619,7 @@ func TestSlimTrie_GRS_3_bigInner_a2t(t *testing.T) {
 
 	ta.True(st.inner.BigInnerCnt > 0)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 20))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -635,7 +636,7 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 
 	ta.True(st.inner.BigInnerCnt > 0)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -648,7 +649,7 @@ func TestSlimTrie_GRS_9_allkeyset(t *testing.T) {
 		st, err := NewSlimTrie(encode.I32{}, keys, values)
 		ta.NoError(err)
 
-		testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 20))
+		testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 20))
 		testPresentKeysGRS(t, st, keys, values)
 	})
 }
@@ -689,7 +690,7 @@ func TestSlimTrie_GRS_1_empty_string_branch(t *testing.T) {
 
 	ta.Equal(wantstr, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 	testPresentKeysGRS(t, st, keys, values)
 }
 
@@ -865,7 +866,7 @@ func makeAbsentKeys(keys []string, n, minLen, maxLen int) []string {
 
 	for len(rst) < n {
 
-		ks := randVStrings(100, minLen, maxLen)
+		ks := testutil.RandStrSlice(100, minLen, maxLen)
 		for _, k := range ks {
 			if mp[k] {
 				continue

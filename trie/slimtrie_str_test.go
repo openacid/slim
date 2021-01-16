@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +23,7 @@ func TestSlimTrie_String_empty(t *testing.T) {
 
 	ta.Equal(want, st.String())
 
-	testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 	testPresentKeysGet(t, st, keys, values)
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/testkeys"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -108,7 +109,7 @@ func TestSlimTrie_Complete_GRS_1_zerokeys(t *testing.T) {
 
 	ta.Equal("", st.String())
 
-	ks := randVStrings(500, 0, 10)
+	ks := testutil.RandStrSlice(500, 0, 10)
 	for i, key := range ks {
 		_ = i
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -132,11 +133,11 @@ func TestSlimTrie_Iter(t *testing.T) {
 			subTestPath(t, st, c.keys, c.paths, c.scanFromKeys)
 			subTestIter(t, st, c.keys, c.keys)
 			subTestIter(t, st, c.keys, c.scanFromKeys)
-			subTestIter(t, st, c.keys, randVStrings(len(c.keys)*5, 0, 10))
+			subTestIter(t, st, c.keys, testutil.RandStrSlice(len(c.keys)*5, 0, 10))
 
 			subTestScan(t, st, c.keys, c.keys)
 			subTestScan(t, st, c.keys, c.scanFromKeys)
-			subTestScan(t, st, c.keys, randVStrings(len(c.keys)*5, 0, 10))
+			subTestScan(t, st, c.keys, testutil.RandStrSlice(len(c.keys)*5, 0, 10))
 		})
 	}
 }
@@ -196,8 +197,8 @@ func TestSlimTrie_Iter_large(t *testing.T) {
 		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
 		ta.NoError(err)
 
-		subTestIter(t, st, keys, randVStrings(clap(len(keys), 50, 10*1024), 0, 10))
-		subTestScan(t, st, keys, randVStrings(clap(len(keys), 50, 10*1024), 0, 10))
+		subTestIter(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
+		subTestScan(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
 	})
 }
 

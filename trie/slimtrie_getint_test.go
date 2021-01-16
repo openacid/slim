@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestSlimTrie_GetI8(t *testing.T) {
 	st, err := NewSlimTrie(encode.I8{}, keys, values)
 	ta.NoError(err)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for i, key := range keys {
 
@@ -49,7 +50,7 @@ func TestSlimTrie_GetI16(t *testing.T) {
 	st, err := NewSlimTrie(encode.I16{}, keys, values)
 	ta.NoError(err)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for i, key := range keys {
 
@@ -74,7 +75,7 @@ func TestSlimTrie_GetI32(t *testing.T) {
 	st, err := NewSlimTrie(encode.I32{}, keys, values)
 	ta.NoError(err)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for i, key := range keys {
 
@@ -99,7 +100,7 @@ func TestSlimTrie_GetI64(t *testing.T) {
 	st, err := NewSlimTrie(encode.I64{}, keys, values)
 	ta.NoError(err)
 
-	testUnknownKeysGRS(t, st, randVStrings(len(keys)*5, 0, 10))
+	testUnknownKeysGRS(t, st, testutil.RandStrSlice(len(keys)*5, 0, 10))
 
 	for i, key := range keys {
 

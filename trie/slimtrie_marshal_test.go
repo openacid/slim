@@ -10,6 +10,7 @@ import (
 	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/low/vers"
 	"github.com/openacid/slim/encode"
+	"github.com/openacid/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -160,7 +161,7 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 		st, err := NewSlimTrie(encode.I32{}, keys, values)
 		ta.NoError(err)
 
-		testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+		testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 		testPresentKeysGet(t, st, keys, values)
 
 		buf, err := proto.Marshal(st)
@@ -172,7 +173,7 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 		err = proto.Unmarshal(buf, st2)
 		ta.NoError(err)
 
-		testUnknownKeysGRS(t, st2, randVStrings(100, 0, 10))
+		testUnknownKeysGRS(t, st2, testutil.RandStrSlice(100, 0, 10))
 		testPresentKeysGet(t, st2, keys, values)
 	})
 }
@@ -198,9 +199,9 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 			if vers.Check(ver, slimtrieVersion, ">=0.5.10") {
 				switch dataOpt {
 				case "nopref":
-					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+					testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 				case "innpref":
-					testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+					testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 				case "allpref":
 					// in all prefmode, there is no false positive
 					testAbsentKeysGRS(t, st, keys)
@@ -209,7 +210,7 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 			} else {
 				// < 0.5.10, slimtrie does not store complete info. There is
 				// false positive
-				testUnknownKeysGRS(t, st, randVStrings(100, 0, 10))
+				testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
 			}
 
 			testPresentKeysGRS(t, st, keys, makeI32s(len(keys)))
@@ -222,9 +223,9 @@ func TestSlimTrie_Unmarshal_old_data(t *testing.T) {
 				frm := clap(n/5, 0, n)
 				to := clap(frm+10, frm, n)
 				subTestIter(t, st, keys, keys[frm:to])
-				subTestIter(t, st, keys, randVStrings(clap(len(keys), 50, 1024), 0, 10))
+				subTestIter(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 1024), 0, 10))
 				subTestScan(t, st, keys, keys[frm:to])
-				subTestScan(t, st, keys, randVStrings(clap(len(keys), 50, 1024), 0, 10))
+				subTestScan(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 1024), 0, 10))
 			}
 		})
 }
