@@ -82,7 +82,7 @@ memory, as a minimized index of huge amount external data.
         Range-scan will be ready in `0.6.0`.
 
     -   **Fast**:
-        **~100 ns** per `Get()`.
+        **~150 ns** per `Get()`.
         Time complexity for a get is `O(log(n) + k); n: key count; k: key length`.
 
     -   **Ready for transport**:
@@ -129,12 +129,12 @@ Time(in nano second) spent on a `Get()` with golang-map, SlimTrie, array and [bt
 - **3.3 times faster** than the [btree][].
 - **2.3 times faster** than binary search.
 
-![](trie/report/bench_msab_present.jpg)
+![](trie/report/bench_msab_present_zipf.jpg)
 
 
 Time(in nano second) spent on a `Get()` with different key count(`n`) and key length(`k`):
 
-![](trie/report/bench_get_present.jpg)
+![](trie/report/bench_get_present_zipf.jpg)
 
 
 ## False Positive Rate

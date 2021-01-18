@@ -5,6 +5,9 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/trie/benchmark"
 )
@@ -24,73 +27,90 @@ var flg *benchhelper.ReportCmdFlag
 func main() {
 	flg = benchhelper.InitCmdFlag()
 
-	getPresent()
-	getAbsent()
-	getMapSlimArrayBtree()
+	for _, workload := range []string{
+		"zipf", "scan",
+	} {
+		getPresent(workload)
+		getAbsent(workload)
+		getMapSlimArrayBtree(workload)
+
+	}
 	memOverhead()
 	fprGet()
 }
 
-func getPresent() {
+func getPresent(workload string) {
+
+	fn := fmt.Sprintf("report/bench_get_present_%s", workload)
+
 	if flg.Bench {
-		results := benchmark.GetPresent(keyCounts)
-		benchhelper.WriteTableFiles("report/bench_get_present", results)
+		results := benchmark.BenchGet(keyCounts, "present", workload)
+		benchhelper.WriteTableFiles(fn, results)
 	}
 
 	if flg.Plot {
-		script := `
-fn = "report/bench_get_present.data"
-set yr [0:300]
-set xlabel 'key-count: n'
-set ylabel 'ns/Get() present key' offset 1,0
-`
+		script := strings.Join([]string{
+			fmt.Sprintf(`fn = "%s.data"`, fn),
+			`set yr [0:300]`,
+			`set xlabel 'key-count: n'`,
+			`set ylabel 'ns/Get() present key' offset 1,0`,
+			``,
+		}, "\n")
 		script += benchhelper.Fformat.JPGHistogramTiny
 		script += benchhelper.LineStyles.Green
 		script += benchhelper.Plot.Histogram
 
-		benchhelper.Fplot("report/bench_get_present.jpg", script)
+		benchhelper.Fplot(fn+".jpg", script)
 	}
 }
 
-func getAbsent() {
+func getAbsent(workload string) {
+
+	fn := fmt.Sprintf("report/bench_get_absent_%s", workload)
+
 	if flg.Bench {
-		results := benchmark.GetAbsent(keyCounts)
-		benchhelper.WriteTableFiles("report/bench_get_absent", results)
+		results := benchmark.BenchGet(keyCounts, "absent", workload)
+		benchhelper.WriteTableFiles(fn, results)
 	}
 
 	if flg.Plot {
-		script := `
-fn = "report/bench_get_absent.data"
-set yr [00:300]
-set xlabel 'key-count: n'
-set ylabel 'ns/Get() absent key' offset 1,0
-`
+		script := strings.Join([]string{
+			fmt.Sprintf(`fn = "%s.data"`, fn),
+			`set yr [0:300]`,
+			`set xlabel 'key-count: n'`,
+			`set ylabel 'ns/Get() absent key' offset 1,0`,
+			``,
+		}, "\n")
 		script += benchhelper.Fformat.JPGHistogramTiny
 		script += benchhelper.LineStyles.Green
 		script += benchhelper.Plot.Histogram
 
-		benchhelper.Fplot("report/bench_get_absent.jpg", script)
+		benchhelper.Fplot(fn+".jpg", script)
 	}
 }
 
-func getMapSlimArrayBtree() {
+func getMapSlimArrayBtree(workload string) {
+
+	fn := fmt.Sprintf("report/bench_msab_present_%s", workload)
+
 	if flg.Bench {
-		results := benchmark.GetMapSlimArrayBtree(keyCounts)
-		benchhelper.WriteTableFiles("report/bench_msab_present", results)
+		results := benchmark.GetMapSlimArrayBtree(keyCounts, workload)
+		benchhelper.WriteTableFiles(fn, results)
 	}
 
 	if flg.Plot {
-		script := `
-fn = "report/bench_msab_present.data"
-set yr [0:700]
-set xlabel 'key-count: n'
-set ylabel 'ns/Get()' offset 1,0
-`
+		script := strings.Join([]string{
+			fmt.Sprintf(`fn = "%s.data"`, fn),
+			`set yr [0:1000]`,
+			`set xlabel 'key-count: n'`,
+			`set ylabel 'ns/Get()' offset 1,0`,
+			``,
+		}, "\n")
 		script += benchhelper.Fformat.JPGHistogramTiny
 		script += benchhelper.LineStyles.Blue
 		script += benchhelper.Plot.Histogram
 
-		benchhelper.Fplot("report/bench_msab_present.jpg", script)
+		benchhelper.Fplot(fn+".jpg", script)
 	}
 }
 

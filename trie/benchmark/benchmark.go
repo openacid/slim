@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/btree"
+	"github.com/openacid/low/mathext/zipf"
 	"github.com/openacid/low/size"
 	"github.com/openacid/slim/benchhelper"
 	"github.com/openacid/slim/encode"
@@ -28,11 +29,11 @@ type Config struct {
 type SearchResult struct {
 	KeyCnt                int
 	KeyLen                int
-	ExsitingKeyNsPerOp    int64
-	NonexsitentKeyNsPerOp int64
+	ExistingKeyNsPerOp    int64
+	NonexistentKeyNsPerOp int64
 }
 
-// GetResult represent the ns/Get() for virous key count and several predefined
+// GetResult represent the ns/Get() for various key count and several predefined
 // key length = 64, 128, 256
 type GetResult struct {
 	KeyCount int `tw-title:"key-count"`
@@ -61,8 +62,8 @@ type MemResult GetResult
 
 var Rec int32
 
-// GetPresent benchmark the Get() of present key.
-func GetPresent(keyCounts []int) []GetResult {
+// BenchGet benchmark the Get().
+func BenchGet(keyCounts []int, typ, workload string) []GetResult {
 
 	var rst = make([]GetResult, 0, len(keyCounts))
 
@@ -70,29 +71,9 @@ func GetPresent(keyCounts []int) []GetResult {
 
 		r := GetResult{
 			KeyCount: n,
-			K64:      benchGet(NewGetSetting(n, 64), "present"),
-			K128:     benchGet(NewGetSetting(n, 128), "present"),
-			K256:     benchGet(NewGetSetting(n, 256), "present"),
-		}
-
-		rst = append(rst, r)
-	}
-
-	return rst
-}
-
-// GetAbsent benchmark the Get() of absent key.
-func GetAbsent(keyCounts []int) []GetResult {
-
-	var rst = make([]GetResult, 0, len(keyCounts))
-
-	for _, n := range keyCounts {
-
-		r := GetResult{
-			KeyCount: n,
-			K64:      benchGet(NewGetSetting(n, 64), "absent"),
-			K128:     benchGet(NewGetSetting(n, 128), "absent"),
-			K256:     benchGet(NewGetSetting(n, 256), "absent"),
+			K64:      benchGet(NewGetSetting(n, 64), typ, workload),
+			K128:     benchGet(NewGetSetting(n, 128), typ, workload),
+			K256:     benchGet(NewGetSetting(n, 256), typ, workload),
 		}
 
 		rst = append(rst, r)
@@ -171,22 +152,18 @@ func Mem(keyCounts []int) []MemResult {
 func slimtrieMem(keyCnt, keyLen int) int64 {
 
 	keys := benchhelper.RandSortedStrings(keyCnt, keyLen, nil)
-	vals := make([]uint16, keyCnt)
-	for i := 0; i < len(keys); i++ {
-		vals[i] = uint16(i)
-	}
 
-	t, err := trie.NewSlimTrie(encode.U16{}, keys, vals)
+	t, err := trie.NewSlimTrie(encode.U16{}, keys, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	size := size.Of(t) - size.Of(vals)
+	sz := size.Of(t)
 
-	return int64(size) * 8 / int64(keyCnt)
+	return int64(sz) * 8 / int64(keyCnt)
 }
 
-func benchGet(setting *GetSetting, typ string) int {
+func benchGet(setting *GetSetting, typ string, workload string) int {
 
 	var keys []string
 
@@ -197,17 +174,16 @@ func benchGet(setting *GetSetting, typ string) int {
 	}
 
 	st := setting.SlimKV
-	n := len(setting.Keys)
-	mask := 1
-	for ; (mask << 1) <= n; mask <<= 1 {
-	}
+	n := len(keys)
+	mask := maxMask(n)
+	accesses := newWorkLoad(workload, n)
 
 	var rec int32
 
 	rst := testing.Benchmark(
 		func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				v := st.Get(keys[i&mask])
+				v := st.Get(keys[accesses[i&mask]])
 				rec += v
 			}
 		})
@@ -217,13 +193,13 @@ func benchGet(setting *GetSetting, typ string) int {
 	return int(rst.NsPerOp())
 }
 
-func GetMapSlimArrayBtree(keyCounts []int) []MSABResult {
+func GetMapSlimArrayBtree(keyCounts []int, workload string) []MSABResult {
 
 	var rst = make([]MSABResult, 0, len(keyCounts))
 
 	for _, n := range keyCounts {
 
-		mp := benchGet_map_slim_array_btree(NewGetSetting(n, 64), "present")
+		mp := benchGet_map_slim_array_btree(NewGetSetting(n, 64), "present", workload)
 
 		r := MSABResult{
 			KeyCount: n,
@@ -241,7 +217,7 @@ func GetMapSlimArrayBtree(keyCounts []int) []MSABResult {
 
 var OutputMSAB int32 = 0
 
-func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]int {
+func benchGet_map_slim_array_btree(setting *GetSetting, typ string, workload string) map[string]int {
 
 	gst := setting
 	var keys []string
@@ -255,16 +231,15 @@ func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]i
 	}
 
 	n := len(keys)
-	mask := 1
-	for ; (mask << 1) <= n; mask <<= 1 {
-	}
+	mask := maxMask(n)
+	accesses := newWorkLoad(workload, n)
 
 	v := int32(0)
 
 	rst := testing.Benchmark(
 		func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				v += gst.SlimKV.Get(keys[i&mask])
+				v += gst.SlimKV.Get(keys[accesses[i&mask]])
 			}
 		})
 	nsops["slim"] = int(rst.NsPerOp())
@@ -272,7 +247,7 @@ func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]i
 	rst = testing.Benchmark(
 		func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				v += gst.Map[keys[i&mask]]
+				v += gst.Map[keys[accesses[i&mask]]]
 			}
 		})
 	nsops["map"] = int(rst.NsPerOp())
@@ -280,7 +255,7 @@ func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]i
 	rst = testing.Benchmark(
 		func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				itm := &KVElt{Key: keys[i&mask], Val: gst.Values[i&mask]}
+				itm := &KVElt{Key: keys[accesses[i&mask]], Val: gst.Values[i&mask]}
 				ee := gst.Btree.Get(itm)
 				v += ee.(*KVElt).Val
 			}
@@ -290,7 +265,7 @@ func benchGet_map_slim_array_btree(setting *GetSetting, typ string) map[string]i
 	rst = testing.Benchmark(
 		func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				v += sortedArraySearch(keys, gst.Values, keys[i&mask])
+				v += sortedArraySearch(keys, gst.Values, keys[accesses[i&mask]])
 			}
 		})
 	nsops["array"] = int(rst.NsPerOp())
@@ -323,11 +298,11 @@ func NewGetSetting(cnt int, keyLen int) *GetSetting {
 	ks := benchhelper.RandSortedStrings(cnt*2, keyLen, nil)
 
 	keys := make([]string, cnt)
-	absentkeys := make([]string, cnt)
+	absentKeys := make([]string, cnt)
 
 	for i := 0; i < cnt; i++ {
 		keys[i] = ks[i*2]
-		absentkeys[i] = ks[i*2+1]
+		absentKeys[i] = ks[i*2+1]
 	}
 
 	vals := make([]int32, cnt)
@@ -366,7 +341,7 @@ func NewGetSetting(cnt int, keyLen int) *GetSetting {
 		Keys:   keys,
 		Values: vals,
 
-		AbsentKeys: absentkeys,
+		AbsentKeys: absentKeys,
 
 		SlimKV: &slimKV{Elts: elts, slim: st},
 		Map:    m,
@@ -411,6 +386,37 @@ func (s *slimKV) Get(key string) int32 {
 	}
 
 	return elt.Val
+}
+
+func maxMask(n int) int {
+	mask := 1
+	for ; (mask<<1 | 1) <= n; mask = mask<<1 | 1 {
+	}
+	return mask
+}
+
+func newWorkLoad(workload string, n int) []int {
+	if workload == "zipf" {
+		return accessesZipf(n)
+	} else if workload == "scan" {
+		return accessesScan(n)
+	}
+
+	panic("unknown workload:" + workload)
+}
+
+func accessesZipf(n int) []int {
+	times := maxMask(n) + 1
+	return zipf.Accesses(1, 1.5, n, times, nil)
+}
+
+func accessesScan(n int) []int {
+	times := maxMask(n) + 1
+	a := make([]int, times)
+	for i := 0; i < times; i++ {
+		a[i] = i
+	}
+	return a
 }
 
 // KVElt defines a key-value struct to be used as a value in SlimTrie in test.
