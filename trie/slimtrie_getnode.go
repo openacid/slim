@@ -64,3 +64,33 @@ func (st *SlimTrie) getIthInnerFrom(ithInner int32, qr *querySession) {
 		qr.from = vars.BigInnerOffset + innerSize*ithInner + vars.ShortMinusInner*ithShort
 	}
 }
+
+// getInnerTo fills in qr.ithInner, qr.from and qr.to
+func (st *SlimTrie) getInnerTo(nodeId int32, qr *querySession) {
+
+	ns := st.inner
+	vars := st.vars
+
+	qr.ithInner, qr.isInner = bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, nodeId)
+
+	if qr.isInner == 0 {
+		return
+	}
+
+	if qr.ithInner < ns.BigInnerCnt {
+		qr.from = qr.ithInner * bigInnerSize
+		qr.to = qr.from + bigInnerSize
+	} else {
+
+		ithShort, isShort := bitmap.Rank64(ns.ShortBM.Words, ns.ShortBM.RankIndex, qr.ithInner)
+
+		qr.from = vars.BigInnerOffset + innerSize*qr.ithInner + vars.ShortMinusInner*ithShort
+
+		// if this is a short node
+		if isShort != 0 {
+			qr.to = qr.from + ns.ShortSize
+		} else {
+			qr.to = qr.from + innerSize
+		}
+	}
+}
