@@ -642,7 +642,7 @@ func TestSlimTrie_GRS_3_bigInner_300(t *testing.T) {
 
 func TestSlimTrie_GRS_9_allkeyset(t *testing.T) {
 
-	testBigKeySet(t, func(t *testing.T, keys []string) {
+	testBigKeySet(t, func(t *testing.T, typ string, keys []string) {
 		ta := require.New(t)
 
 		values := makeI32s(len(keys))
@@ -1013,7 +1013,7 @@ func testPresentKeysSearch(t *testing.T, st *SlimTrie, keys []string, values []i
 	}
 }
 
-func testBigKeySet(t *testing.T, f func(t *testing.T, keys []string)) {
+func testBigKeySet(t *testing.T, f func(t *testing.T, typ string, keys []string)) {
 
 	for _, typ := range testkeys.AssetNames() {
 
@@ -1028,7 +1028,7 @@ func testBigKeySet(t *testing.T, f func(t *testing.T, keys []string)) {
 				iambig(t)
 			}
 
-			f(t, keys)
+			f(t, typ, keys)
 		})
 	}
 }

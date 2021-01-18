@@ -282,7 +282,7 @@ func TestSlimTrie_Complete_GRS_4_20kvlen10(t *testing.T) {
 }
 
 func TestSlimTrie_Complete_GRS_9_allkeyset(t *testing.T) {
-	testBigKeySet(t, func(t *testing.T, keys []string) {
+	testBigKeySet(t, func(t *testing.T, typ string, keys []string) {
 		ta := require.New(t)
 		values := makeI32s(len(keys))
 		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})

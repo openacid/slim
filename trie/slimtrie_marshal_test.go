@@ -154,7 +154,7 @@ func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 
 func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 
-	testBigKeySet(t, func(t *testing.T, keys []string) {
+	testBigKeySet(t, func(t *testing.T, typ string, keys []string) {
 		ta := require.New(t)
 
 		values := makeI32s(len(keys))

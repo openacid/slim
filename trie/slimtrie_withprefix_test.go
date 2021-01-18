@@ -106,7 +106,7 @@ func TestSlimTrie_withPrefixContent_Get_small_keyset(t *testing.T) {
 
 func TestSlimTrie_withPrefixContent_GRS_all_keyset(t *testing.T) {
 
-	testBigKeySet(t, func(t *testing.T, keys []string) {
+	testBigKeySet(t, func(t *testing.T, typ string, keys []string) {
 		ta := require.New(t)
 		values := makeI32s(len(keys))
 		st, err := NewSlimTrie(encode.I32{}, keys, values,
