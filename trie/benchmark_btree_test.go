@@ -1,11 +1,10 @@
 package trie
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/btree"
-	"github.com/openacid/testkeys"
+	"github.com/openacid/low/mathext/zipf"
 )
 
 type KVElt struct {
@@ -30,52 +29,28 @@ var OutputBtree int
 
 func Benchmark_btree(b *testing.B) {
 
-	for _, typ := range testkeys.AssetNames() {
+	benchBigKeySet(b, func(b *testing.B, typ string, keys []string) {
 
-		if typ == "empty" {
-			continue
+		values := makeI32s(len(keys))
+		bt := btree.New(32)
+		elts := makeKVElts(keys, values)
+		for _, v := range elts {
+			bt.ReplaceOrInsert(v)
 		}
 
-		// if typ != "200kweb2" {
-		// if typ != "50kvl10" {
-		//     continue
-		// }
+		accesses := zipf.Accesses(2, 1.5, len(keys), b.N, nil)
 
-		b.Run(fmt.Sprintf("%s", typ), func(b *testing.B) {
+		b.ResetTimer()
 
-			keys := getKeys(typ)
-			values := makeI32s(len(keys))
-			bt := btree.New(32)
-			elts := makeKVElts(keys, values)
-			for _, v := range elts {
-				bt.ReplaceOrInsert(v)
-			}
+		var id int32
+		for i := 0; i < b.N; i++ {
+			idx := accesses[i]
+			itm := &KVElt{Key: keys[idx], Val: values[idx]}
+			ee := bt.Get(itm)
+			id += ee.(*KVElt).Val
 
-			n := len(keys)
-			mask := 1
-			for ; (mask << 1) <= n; mask <<= 1 {
-			}
-			mask--
+		}
+		OutputBtree = int(id)
+	})
 
-			b.ResetTimer()
-
-			var id int32
-			i := b.N
-			for {
-				for j, k := range keys {
-
-					itm := &KVElt{Key: k, Val: values[j&mask]}
-					ee := bt.Get(itm)
-
-					id += ee.(*KVElt).Val
-
-					i--
-					if i == 0 {
-						OutputBtree = int(id)
-						return
-					}
-				}
-			}
-		})
-	}
 }
