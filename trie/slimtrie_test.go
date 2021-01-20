@@ -1033,6 +1033,22 @@ func testBigKeySet(t *testing.T, f func(t *testing.T, typ string, keys []string)
 	}
 }
 
+func benchBigKeySet(b *testing.B, f func(b *testing.B, typ string, keys []string)) {
+
+	for _, typ := range testkeys.AssetNames() {
+
+		keys := getKeys(typ)
+		n := len(keys)
+		if n < 1000 {
+			continue
+		}
+
+		b.Run(typ, func(b *testing.B) {
+			f(b, typ, keys)
+		})
+	}
+}
+
 func testOldData(t *testing.T, f func(t *testing.T, typ, opt, ver string, keys []string, buf []byte)) {
 
 	ta := require.New(t)
