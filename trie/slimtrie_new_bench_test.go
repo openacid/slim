@@ -6,27 +6,25 @@ import (
 	"github.com/openacid/slim/encode"
 )
 
-var Output int
+var OutputNewSlimTrie int
 
-func BenchmarkNewSlimTrie_300(b *testing.B) {
-	keys := getKeys("300vl50")
-	values := make([]uint32, len(keys))
+func BenchmarkNewSlimTrie(b *testing.B) {
 
-	n := len(keys)
+	benchBigKeySet(b, func(b *testing.B, typ string, keys []string) {
 
-	for i := 0; i < n; i++ {
-		values[i] = uint32(i)
-	}
+		n := len(keys)
+		values := makeI32s(len(keys))
 
-	b.ResetTimer()
-	var s int
-	for i := 0; i < b.N/n; i++ {
-		st, err := NewSlimTrie(encode.U32{}, keys, values)
-		if err != nil {
-			panic(err)
+		b.ResetTimer()
+		var s int
+		for i := 0; i < b.N/n; i++ {
+			st, err := NewSlimTrie(encode.I32{}, keys, values)
+			if err != nil {
+				panic(err)
+			}
+			s += int(st.inner.NodeTypeBM.Words[0])
 		}
-		s += int(st.inner.NodeTypeBM.Words[0])
-	}
 
-	Output = s
+		OutputNewSlimTrie = s
+	})
 }
