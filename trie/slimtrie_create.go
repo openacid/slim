@@ -37,6 +37,8 @@ type creator struct {
 	bigCnt  int32
 	nodeCnt int32
 
+	leafCnt int32
+
 	withLeaves bool
 
 	// options
@@ -61,6 +63,9 @@ type creator struct {
 	// len: nr of leaf nodes = len(nodes) - len(inner_nodes)
 	leaves [][]byte
 
+	// leafIndexes[i] is the index of the ith leaf
+	leafIndexes []int32
+
 	leafPrefixIndexes []int32
 	leafPrefixLens    []int32
 	leafPrefixes      []byte
@@ -78,6 +83,7 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 		isBig:   true,
 		bigCnt:  0,
 		nodeCnt: 0,
+		leafCnt: 0,
 
 		withLeaves: withLeaves,
 
@@ -93,6 +99,8 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 		prefixes:       make([]byte, 0, n),
 
 		leaves: make([][]byte, 0, n),
+
+		leafIndexes: make([]int32, 0, n),
 
 		leafPrefixIndexes: make([]int32, 0, n),
 		leafPrefixLens:    make([]int32, 0, n),
@@ -204,6 +212,7 @@ func (c *creator) setLeafPrefix(nid int32, key string, keyidx int32) {
 	}
 }
 
+// addLeaf adds the content in []byte of a leaf.
 func (c *creator) addLeaf(nid int32, v []byte) {
 
 	must.Be.Equal(c.nodeCnt, nid)
@@ -211,9 +220,22 @@ func (c *creator) addLeaf(nid int32, v []byte) {
 	c.nodeCnt++
 
 	if c.withLeaves {
+		c.leafCnt++
 		c.leaves = append(c.leaves, v)
 	}
+}
 
+// addLeaf adds the index of a leaf.
+func (c *creator) addLeafIndex(nid int32, idx int32) {
+
+	must.Be.Equal(c.nodeCnt, nid)
+
+	c.nodeCnt++
+
+	if c.withLeaves {
+		c.leafCnt++
+		c.leafIndexes = append(c.leafIndexes, idx)
+	}
 }
 
 // counterElt stores an at most 17 bit bitmap and how many times it is used.
@@ -387,14 +409,9 @@ func (c *creator) build() *Slim {
 		ns.InnerPrefixes.Bytes = c.prefix4BitLens
 	}
 
-	// TODO separate leaf init
-	if c.withLeaves {
-		ns.initLeaves(c.leaves)
-	}
-
 	if *c.option.LeafPrefix {
 		ns.LeafPrefixes = &VLenArray{}
-		ns.LeafPrefixes.PresenceBM = newBM(c.leafPrefixIndexes, int32(len(c.leaves)), "r64")
+		ns.LeafPrefixes.PresenceBM = newBM(c.leafPrefixIndexes, c.leafCnt, "r64")
 		ns.LeafPrefixes.PositionBM = newBM(stepToPos(c.leafPrefixLens, 0), 0, "s32")
 		ns.LeafPrefixes.Bytes = c.leafPrefixes
 	}
@@ -402,7 +419,48 @@ func (c *creator) build() *Slim {
 	return ns
 }
 
-// TODO filter mode: InnerPrefix
+func (c *creator) buildLeaves(bytesValues [][]byte) *VLenArray {
+
+	// Since 0.5.12
+	// when creating, creator only records the value indexes;
+	// when unmarshal and rebuild old version < 0.5.10, it appends leaves one by one.
+
+	if !c.withLeaves {
+		return nil
+	}
+
+	leaves := &VLenArray{}
+
+	if len(c.leafIndexes) > 0 {
+		sz := 0
+		for _, idx := range c.leafIndexes {
+			sz += len(bytesValues[idx])
+		}
+		lb := make([]byte, 0, sz)
+		for _, idx := range c.leafIndexes {
+			lb = append(lb, bytesValues[idx]...)
+		}
+		leaves.Bytes = lb
+
+	} else {
+
+		// maybe an empty slim, e.g., c.leaves is empty, or a slim with leaves filled
+		n := len(c.leaves)
+		sz := 0
+		for _, elt := range c.leaves {
+			sz += len(elt)
+		}
+
+		lb := make([]byte, 0, sz)
+		for i := 0; i < n; i++ {
+			lb = append(lb, c.leaves[i]...)
+		}
+		leaves.Bytes = lb
+	}
+	return leaves
+
+}
+
 func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 
 	n := len(keys)
@@ -417,15 +475,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		}
 	}
 
-	var tokeep []bool
-	if *opt.DedupValue {
-		tokeep = newValueToKeep(keys, bytesValues)
-	} else {
-		tokeep = make([]bool, n)
-		for i := 0; i < n; i++ {
-			tokeep[i] = true
-		}
-	}
+	tokeep := newToKeep(n, bytesValues, opt)
 
 	sb := sigbits.New(keys)
 	c := newCreator(n, bytesValues != nil, opt)
@@ -441,11 +491,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		// single key, it is a leaf
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
-			if bytesValues == nil {
-				c.addLeaf(nid, nil)
-			} else {
-				c.addLeaf(nid, bytesValues[s])
-			}
+			c.addLeafIndex(nid, s)
 			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
 			continue
 		}
@@ -549,7 +595,10 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		}
 	}
 
-	return c.build(), nil
+	slim := c.build()
+	slim.Leaves = c.buildLeaves(bytesValues)
+
+	return slim, nil
 }
 
 func encodeValues(n int, values interface{}, e encode.Encoder) [][]byte {
@@ -568,33 +617,23 @@ func encodeValues(n int, values interface{}, e encode.Encoder) [][]byte {
 	return vals
 }
 
-// newValueToKeep creates a slice indicating which key to keep.
-// Value of key[i+1] with the same value with key[i] do not need to keep.
-func newValueToKeep(keys []string, values [][]byte) []bool {
+// newToKeep creates a []bool about which record to keep in slim.
+// If DedupValue is true, value[i+1] with the same value with value[i] do not need to keep.
+func newToKeep(n int, values [][]byte, opt *Opt) []bool {
 
-	n := len(keys)
 	tokeep := make([]bool, n)
 
-	// In filter mode, it only returns existence.
-	// In filter mode, by default to keep all keys.
-	if values == nil {
-		for i := 0; i < n; i++ {
-			tokeep[i] = true
-		}
-	} else {
-
-		// Use SlimTrie as an index, do not keep keys with same value as
-		// previous.
-
+	// If slim does not store value, it has to store all keys.
+	if *opt.DedupValue && values != nil {
 		tokeep[0] = true
-
-		prev := values[0]
-
 		for i := 1; i < n; i++ {
-			v := values[i]
-			tokeep[i] = bytes.Compare(prev, v) != 0
-			prev = v
+			tokeep[i] = bytes.Compare(values[i-1], values[i]) != 0
 		}
+		return tokeep
+	}
+
+	for i := 0; i < n; i++ {
+		tokeep[i] = true
 	}
 
 	return tokeep
@@ -605,22 +644,6 @@ func getV(reflectSlice reflect.Value, i int32) interface{} {
 		return nil
 	}
 	return reflectSlice.Index(int(i)).Interface()
-}
-
-func (ns *Slim) initLeaves(elts [][]byte) {
-
-	n := len(elts)
-	sz := 0
-	for _, elt := range elts {
-		sz += len(elt)
-	}
-
-	lb := make([]byte, 0, sz)
-	for i := 0; i < n; i++ {
-		lb = append(lb, elts[i]...)
-	}
-	ns.Leaves = &VLenArray{}
-	ns.Leaves.Bytes = lb
 }
 
 func stepToPos(steps []int32, shift int32) []int32 {
