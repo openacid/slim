@@ -18,14 +18,8 @@ github.com/openacid/errors v0.8.1 h1:Hrj9WENDoj5jP27ZfF60SY5LShbxei+sxKZa0EP+oDw
 github.com/openacid/errors v0.8.1/go.mod h1:GUQEJJOJE3W9skHm8E8Y4phdl2LLEN8iD7c5gcGgdx0=
 github.com/openacid/genr v0.1.1 h1:8POqVvFYSxVws0GuVNdBV37F1qbstkKzdlflQsVuROg=
 github.com/openacid/genr v0.1.1/go.mod h1:2B9wMFQKBKZnmo8AR/3JCRGnHs85r4OzeNy0RStLTiU=
-github.com/openacid/low v0.1.14 h1:DVg5kcwDrJMtKIGrMHU6ytr1ck2XZ3Ey1b6jm/BTS9I=
-github.com/openacid/low v0.1.14/go.mod h1:flqvccAtSrKeD+b5AejKgxCQVhVrsNYEWU7NlkpNCI8=
-github.com/openacid/low v0.1.16 h1:z3hQaJL792/hebkAZcQ4fDJuaAbvUnmxrdskqX600bE=
-github.com/openacid/low v0.1.16/go.mod h1:flqvccAtSrKeD+b5AejKgxCQVhVrsNYEWU7NlkpNCI8=
-github.com/openacid/low v0.1.17 h1:oY+nzNm37PdXtqDfXM5CkFL7ldFurBGNRt1DmlAXO0o=
-github.com/openacid/low v0.1.17/go.mod h1:flqvccAtSrKeD+b5AejKgxCQVhVrsNYEWU7NlkpNCI8=
-github.com/openacid/low v0.1.18 h1:duUyChtu3uYh4FaZFJz+TZxjYeevLRppCDp1a6h6LVM=
-github.com/openacid/low v0.1.18/go.mod h1:flqvccAtSrKeD+b5AejKgxCQVhVrsNYEWU7NlkpNCI8=
+github.com/openacid/low v0.1.19 h1:4Fy/znGk7Uw7xivDuvboN88ik/Jvbu5aQoGhFrV8+q0=
+github.com/openacid/low v0.1.19/go.mod h1:flqvccAtSrKeD+b5AejKgxCQVhVrsNYEWU7NlkpNCI8=
 github.com/openacid/must v0.1.3 h1:deanGZVyVwV+ozfwNFbRU5YF7czXeQ67s8GVyZxzKW4=
 github.com/openacid/must v0.1.3/go.mod h1:luPiXCuJlEo3UUFQngVQokV0MPGryeYvtCbQPs3U1+I=
 github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86 h1:VDKQXFTUgOiucWNpIruW0TQAG6oAq9p2pVQGlXkgtT0=
