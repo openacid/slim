@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+// Built with protobuf 1.2.0:
+// go get github.com/golang/protobuf/{proto,protoc-gen-go}@v1.2.0
+
 option go_package = "trie";
 
 // Bitmap is an array of bits.
