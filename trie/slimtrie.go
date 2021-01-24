@@ -75,6 +75,7 @@ const (
 // Since 0.2.0
 type SlimTrie struct {
 	inner   *Slim
+	levels  []levelInfo
 	encoder encode.Encoder
 }
 
@@ -217,10 +218,12 @@ func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Op
 		return nil, err
 	}
 
-	return &SlimTrie{
+	st := &SlimTrie{
 		inner:   ns,
 		encoder: e,
-	}, nil
+	}
+	st.init()
+	return st, nil
 }
 
 // func (st *SlimTrie) GetStat() map[string]float64 {
@@ -239,4 +242,8 @@ func (st *SlimTrie) content() []string {
 	}
 
 	return rst
+}
+
+func (st *SlimTrie) init() {
+	st.initLevels()
 }

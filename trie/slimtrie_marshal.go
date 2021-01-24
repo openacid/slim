@@ -62,6 +62,7 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 		if err != nil {
 			return errors.WithMessage(err, "failed to unmarshal inner")
 		}
+		st.init()
 		return nil
 	}
 
@@ -104,6 +105,7 @@ func (st *SlimTrie) ProtoMessage() {}
 // Since 0.4.3
 func (st *SlimTrie) Reset() {
 	st.inner = &Slim{}
+	st.levels = []levelInfo{{0, 0, 0, nil}}
 }
 
 func before000510(st *SlimTrie, ver string, ch *array.Array32, steps *array.U16, lvs *array.Array) {
@@ -209,6 +211,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 		ns.Leaves = c.buildLeaves(nil)
 
 		st.inner = ns
+		st.init()
 	}
 }
 

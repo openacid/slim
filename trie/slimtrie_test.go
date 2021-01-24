@@ -44,9 +44,7 @@ func TestNewSlimTrie(t *testing.T) {
 	ta := require.New(t)
 
 	st, err := NewSlimTrie(encode.Int{}, []string{"ab", "cd"}, []int{1, 2})
-	if err != nil {
-		t.Fatalf("expect no error but: %v", err)
-	}
+	ta.NoError(err)
 
 	v, found := st.Get("ab")
 	ta.True(found)
@@ -95,15 +93,11 @@ func TestNewSlimTrie_Error(t *testing.T) {
 
 		if err == nil && len(c.keys) > 0 {
 			v, found := st.Get(c.keys[0])
-			if !found {
-				t.Fatalf("%d-th: should be found but not. key=%q",
-					i+1, c.keys[0])
-			}
+			ta.True(found, "%d-th: should be found but not. key=%q",
+				i+1, c.keys[0])
 
-			if v == nil {
-				t.Fatalf("%d-th: should be found but not. key=%q",
-					i+1, c.keys[0])
-			}
+			ta.NotNil(v, "%d-th: should be found but not. key=%q",
+				i+1, c.keys[0])
 		}
 	}
 }
@@ -786,12 +780,17 @@ func TestSlimTrie_Search_0_tiny(t *testing.T) {
 }
 
 func slimtrieEqual(st1, st2 *SlimTrie, t *testing.T) {
+
+	ta := require.New(t)
+
 	if !proto.Equal((st1.inner), (st2.inner)) {
 		fmt.Println(st1)
 		fmt.Println(st2)
 		fmt.Println(pretty.Diff(st1.inner, st2.inner))
 		t.Fatalf("Children not the same")
 	}
+
+	ta.Equal(st1.levels, st2.levels)
 }
 
 func makeI32s(n int) []int32 {

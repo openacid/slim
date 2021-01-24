@@ -2,7 +2,6 @@ package trie
 
 import (
 	"bytes"
-	"reflect"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -141,11 +140,10 @@ func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 	st2.Reset()
 	empty := &SlimTrie{
 		encoder: encode.Int{},
+		levels:  []levelInfo{{0, 0, 0, nil}},
 		inner:   &Slim{},
 	}
-	if !reflect.DeepEqual(st2, empty) {
-		t.Fatalf("reset slimtrie error")
-	}
+	ta.Equal(empty, st2, "reset")
 
 	// ensure slimtrie.String()
 
