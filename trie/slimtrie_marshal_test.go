@@ -140,6 +140,7 @@ func TestSlimTrie_MarshalUnmarshal(t *testing.T) {
 	st2.Reset()
 	empty := &SlimTrie{
 		encoder: encode.Int{},
+		vars:    nil,
 		levels:  []levelInfo{{0, 0, 0, nil}},
 		inner:   &Slim{},
 	}

@@ -105,6 +105,7 @@ func (st *SlimTrie) ProtoMessage() {}
 // Since 0.4.3
 func (st *SlimTrie) Reset() {
 	st.inner = &Slim{}
+	st.vars = nil
 	st.levels = []levelInfo{{0, 0, 0, nil}}
 }
 

@@ -404,6 +404,7 @@ func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
 func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 
 	ns := st.inner
+	vars := st.vars
 
 	qr.innerPrefixLen = 0
 	qr.hasInnerPrefix = false
@@ -427,7 +428,7 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 
 		ithShort, isShort := bitmap.Rank64(ns.ShortBM.Words, ns.ShortBM.RankIndex, qr.ithInner)
 
-		qr.from = ns.BigInnerOffset + innerSize*qr.ithInner + ns.ShortMinusInner*ithShort
+		qr.from = vars.BigInnerOffset + innerSize*qr.ithInner + vars.ShortMinusInner*ithShort
 
 		// if this is a short node
 		if isShort != 0 {
@@ -440,10 +441,10 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 			var bm uint64
 
 			if j <= 64-ns.ShortSize {
-				bm = (w >> uint32(j)) & ns.ShortMask
+				bm = (w >> uint32(j)) & vars.ShortMask
 			} else {
 				w2 := ns.Inners.Words[qr.to>>6]
-				bm = (w >> uint32(j)) | (w2 << uint(64-j) & ns.ShortMask)
+				bm = (w >> uint32(j)) | (w2 << uint(64-j) & vars.ShortMask)
 			}
 
 			qr.bm = uint64(ns.ShortTable[bm])

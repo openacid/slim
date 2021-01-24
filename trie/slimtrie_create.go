@@ -326,11 +326,8 @@ func (c *creator) build() *Slim {
 	_ = shortCnt
 
 	ns := &Slim{
-		ShortSize:       shortSize,
-		ShortMask:       bitmap.Mask[shortSize],
-		ShortMinusInner: shortSize - innerSize,
-		BigInnerOffset:  (bigInnerSize - innerSize) * c.bigCnt,
-		BigInnerCnt:     c.bigCnt,
+		ShortSize:   shortSize,
+		BigInnerCnt: c.bigCnt,
 	}
 
 	// Mapping most used 17-bit bitmap inner node to short inner node.

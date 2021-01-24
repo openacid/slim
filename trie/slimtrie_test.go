@@ -790,6 +790,7 @@ func slimtrieEqual(st1, st2 *SlimTrie, t *testing.T) {
 		t.Fatalf("Children not the same")
 	}
 
+	ta.Equal(st1.vars, st2.vars)
 	ta.Equal(st1.levels, st2.levels)
 }
 

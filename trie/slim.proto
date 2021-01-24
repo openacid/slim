@@ -74,41 +74,18 @@ message VLenArray {
 // Since 0.5.10
 message Slim {
 
+    // Reserve removed fields:
+    // Never reuse a removed field number.
+
+    reserved 12; // int32 BigInnerOffset = 12;
+    reserved 13; // int32 ShortMinusInner = 13;
+    reserved 15; // uint64 ShortMask = 15;
+
+
     // BigInnerCnt is number of big (257 bit) inner node.
     //
     // Since 0.5.10
     int32 BigInnerCnt = 11;
-
-
-    // BigInnerOffset is the offset caused by "BigInner" nodes:
-    //
-    // Supposing that the i-th inner node is the j-th short inner node(an inner
-    // node can be a short).
-    //
-    // The offset of this node in "Inners" is
-    //
-    //     257 * BigInnerCnt +
-    //     17 * (i-BigInnerCnt-j) +
-    //     ShortSize * j
-    //
-    // Thus we could create 2 variables to reduce offset calculation time:
-    //
-    //     BigInnerOffset = (257 - 17) * BigInnerCnt
-    //     ShortMinusInner = ShortSize - 17
-    //
-    // The the offset is:
-    //
-    //     BigInnerOffset + 17 * i + ShortMinusInner * j
-    //
-    // Since 0.5.10
-    int32 BigInnerOffset = 12;
-
-
-    // ShortMinusInner is ShortSize minus 17.
-    // See BigInnerOffset.
-    //
-    // Since 0.5.10
-    int32 ShortMinusInner = 13;
 
 
     // ShortSize is the number of bit of short bitmap that reduce most memory
@@ -116,12 +93,6 @@ message Slim {
     //
     // Since 0.5.10
     int32 ShortSize = 14;
-
-
-    // ShortMask has the lower ShortSize bit set to 1.
-    //
-    // Since 0.5.10
-    uint64 ShortMask = 15;
 
 
     // NodeTypeBM is a bitmap in which a "1" indicates the i-th node is an inner

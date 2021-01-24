@@ -8,6 +8,7 @@ import (
 
 func (st *SlimTrie) getIthInner(ithInner int32, qr *querySession) {
 	ns := st.inner
+	vars := st.vars
 
 	innWordI := ithInner >> 6
 	innBitI := ithInner & 63
@@ -21,7 +22,7 @@ func (st *SlimTrie) getIthInner(ithInner int32, qr *querySession) {
 
 		ithShort := ns.ShortBM.RankIndex[innWordI] + int32(bits.OnesCount64(ns.ShortBM.Words[innWordI]&bitmap.Mask[innBitI]))
 
-		qr.from = ns.BigInnerOffset + innerSize*ithInner + ns.ShortMinusInner*ithShort
+		qr.from = vars.BigInnerOffset + innerSize*ithInner + vars.ShortMinusInner*ithShort
 
 		// if this is a short node
 		if ns.ShortBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
@@ -34,10 +35,10 @@ func (st *SlimTrie) getIthInner(ithInner int32, qr *querySession) {
 			var bm uint64
 
 			if j <= 64-ns.ShortSize {
-				bm = (w >> uint32(j)) & ns.ShortMask
+				bm = (w >> uint32(j)) & vars.ShortMask
 			} else {
 				w2 := ns.Inners.Words[qr.to>>6]
-				bm = (w >> uint32(j)) | (w2 << uint(64-j) & ns.ShortMask)
+				bm = (w >> uint32(j)) | (w2 << uint(64-j) & vars.ShortMask)
 			}
 
 			qr.bm = uint64(ns.ShortTable[bm])
@@ -51,6 +52,7 @@ func (st *SlimTrie) getIthInner(ithInner int32, qr *querySession) {
 // getIthInnerFrom finds out the start position of the label bitmap of the ith inner node(not by node id).
 func (st *SlimTrie) getIthInnerFrom(ithInner int32, qr *querySession) {
 	ns := st.inner
+	vars := st.vars
 
 	if ithInner < ns.BigInnerCnt {
 		qr.from = ithInner * bigInnerSize
@@ -59,6 +61,6 @@ func (st *SlimTrie) getIthInnerFrom(ithInner int32, qr *querySession) {
 
 		ithShort := ns.ShortBM.RankIndex[innWordI] + int32(bits.OnesCount64(ns.ShortBM.Words[innWordI]&bitmap.Mask[ithInner&63]))
 
-		qr.from = ns.BigInnerOffset + innerSize*ithInner + ns.ShortMinusInner*ithShort
+		qr.from = vars.BigInnerOffset + innerSize*ithInner + vars.ShortMinusInner*ithShort
 	}
 }

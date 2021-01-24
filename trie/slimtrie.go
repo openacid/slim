@@ -75,6 +75,7 @@ const (
 // Since 0.2.0
 type SlimTrie struct {
 	inner   *Slim
+	vars    *slimVars
 	levels  []levelInfo
 	encoder encode.Encoder
 }
@@ -245,5 +246,6 @@ func (st *SlimTrie) content() []string {
 }
 
 func (st *SlimTrie) init() {
+	st.initVars()
 	st.initLevels()
 }
