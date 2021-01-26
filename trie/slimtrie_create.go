@@ -119,7 +119,7 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 }
 
 // addInner adds an inner node of node id "nid".
-func (c *creator) addInner(nid int32, bmindex []int32, bmsize int32, step int32, key string, keyidx int32) {
+func (c *creator) addInner(nid int32, bmindex []int32, bmsize int32, prefixBitFrom, prefixBitTo int32, key string) {
 
 	must.Be.Equal(c.nodeCnt, nid)
 
@@ -142,7 +142,7 @@ func (c *creator) addInner(nid int32, bmindex []int32, bmsize int32, step int32,
 	c.innerSizes = append(c.innerSizes, bmsize)
 	c.innerBMs = append(c.innerBMs, bmindex)
 
-	c.setPrefix(nid, step, key, keyidx)
+	c.setPrefix(nid, prefixBitFrom, prefixBitTo, key)
 }
 
 func get17bitmap(bmindex []int32) uint64 {
@@ -153,17 +153,19 @@ func get17bitmap(bmindex []int32) uint64 {
 }
 
 // setPrefix add prefix information to node "nid".
-func (c *creator) setPrefix(nid int32, prefBitLen int32, key string, keyidx int32) {
+func (c *creator) setPrefix(nid int32, prefixBitFrom, prefixBitTo int32, key string) {
 
 	must.Be.OK(func() {
 		must.Be.Equal(c.nodeCnt-1, nid)
 	})
 
-	if prefBitLen == 0 {
+	prefixBitLen := prefixBitTo - prefixBitFrom
+
+	if prefixBitLen == 0 {
 		return
 	}
 
-	if prefBitLen&3 != 0 {
+	if prefixBitLen&3 != 0 {
 		panic("step not mod 3")
 	}
 
@@ -171,14 +173,14 @@ func (c *creator) setPrefix(nid int32, prefBitLen int32, key string, keyidx int3
 
 	if *c.option.InnerPrefix {
 
-		prefix := bitstr.New(key, keyidx, keyidx+prefBitLen)
+		prefix := bitstr.New(key, prefixBitFrom, prefixBitFrom+prefixBitLen)
 
 		c.prefixByteLens = append(c.prefixByteLens, int32(len(prefix)))
 		c.prefixes = append(c.prefixes, prefix...)
 
 	} else {
 
-		c.prefix4BitLens = append(c.prefix4BitLens, encStep(prefBitLen)...)
+		c.prefix4BitLens = append(c.prefix4BitLens, encStep(prefixBitLen)...)
 	}
 }
 
@@ -551,14 +553,13 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		labelPaths := bmtree.PathsOf(ks, wordStart, wordsize, true)
 		must.Be.True(len(labelPaths) > 0)
 
-		// Without the bits of label word at parent node
-		step := wordStart - o.fromKeyBit
-
 		idxs := make([]int32, len(labelPaths))
 		for i, p := range labelPaths {
 			idxs[i] = bmtree.PathToIndex(bitmapSize, p)
 		}
-		c.addInner(nid, idxs, bitmapSize, step, keys[s], o.fromKeyBit)
+
+		// Without the bits of label word at parent node
+		c.addInner(nid, idxs, bitmapSize, o.fromKeyBit, wordStart, keys[s])
 
 		// put keys with the same starting word to queue.
 

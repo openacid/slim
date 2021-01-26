@@ -247,7 +247,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 
 			bmidx := bitmap.ToArray([]uint64{bm})
 
-			c.addInner(newid, bmidx, innerSize, qelt.step, "", -1)
+			c.addInner(newid, bmidx, innerSize, 0, qelt.step, "")
 		}
 
 		ns := c.build()
