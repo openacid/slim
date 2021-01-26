@@ -8,6 +8,7 @@ import (
 
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitmap"
+	"github.com/openacid/low/bitstr"
 	"github.com/openacid/low/bmtree"
 	"github.com/openacid/low/sigbits"
 	"github.com/openacid/must"
@@ -170,7 +171,7 @@ func (c *creator) setPrefix(nid int32, prefBitLen int32, key string, keyidx int3
 
 	if *c.option.InnerPrefix {
 
-		prefix := newPrefix(key, keyidx, keyidx+prefBitLen)
+		prefix := bitstr.New(key, keyidx, keyidx+prefBitLen)
 
 		c.prefixByteLens = append(c.prefixByteLens, int32(len(prefix)))
 		c.prefixes = append(c.prefixes, prefix...)

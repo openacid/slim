@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	fmt "fmt"
+	"math/bits"
 	"strings"
 
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitmap"
+	"github.com/openacid/low/bitstr"
 	"github.com/openacid/low/pbcmpl"
 	"github.com/openacid/low/vers"
 	"github.com/openacid/must"
@@ -62,6 +64,9 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 		if err != nil {
 			return errors.WithMessage(err, "failed to unmarshal inner")
 		}
+
+		before000512InnerPrefixTobitstr(st)
+
 		st.init()
 		return nil
 	}
@@ -93,6 +98,43 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 	before000510(st, ver, children, steps, leaves)
 
 	return nil
+}
+
+func before000512InnerPrefixTobitstr(st *SlimTrie) {
+
+	ips := st.inner.InnerPrefixes
+
+	if ips != nil && ips.PositionBM != nil && len(ips.Bytes) > 0 {
+
+		// convert control-byte followed by text format to text followed by
+		// trailing byte format.
+
+		pbm := ips.PositionBM
+
+		for i := int32(0); ; i++ {
+
+			from, to := bitmap.Select32R64(pbm.Words, pbm.SelectIndex, pbm.RankIndex, i)
+
+			old := ips.Bytes[from:to]
+
+			bitLen := int32(0)
+			pl := int32(len(old)) - 1
+			if old[0]&1 == 0 {
+				bitLen = pl << 3
+			} else {
+				last := old[pl]
+				nZero := int32(bits.TrailingZeros8(last))
+				bitLen = pl<<3 - nZero - 1
+			}
+
+			newPref := bitstr.New(string(old[1:]), 0, bitLen)
+			copy(old, newPref)
+
+			if to == int32(len(ips.Bytes)) {
+				break
+			}
+		}
+	}
 }
 
 // ProtoMessage implements proto.Message

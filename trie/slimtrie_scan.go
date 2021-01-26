@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/openacid/low/bitmap"
+	"github.com/openacid/low/bitstr"
 )
 
 // NextRaw returns next key-value pair in []byte.
@@ -207,7 +208,7 @@ func (st *SlimTrie) getGEPath(key string) ([]int32, bool) {
 		}
 
 		if qr.hasInnerPrefix {
-			r := prefixCompare(key[i>>3:], qr.innerPrefix)
+			r := bitstr.StrCmpUpto(key[i>>3:], qr.innerPrefix)
 			if r == 0 {
 				i = i&(^7) + qr.innerPrefixLen
 			} else if r < 0 {
@@ -414,7 +415,7 @@ func (v *scanStackElt) appendLabel(buf *[]byte) {
 
 func (v *scanStackElt) appendInnerPrefix(buf *[]byte, qr *querySession) {
 	if qr.hasInnerPrefix {
-		*buf = append((*buf)[:v.prefixStart>>3], qr.innerPrefix[1:]...)
+		*buf = append((*buf)[:v.prefixStart>>3], qr.innerPrefix[:len(qr.innerPrefix)-1]...)
 	}
 }
 

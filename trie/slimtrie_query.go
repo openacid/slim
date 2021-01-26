@@ -5,6 +5,7 @@ import (
 	"math/bits"
 
 	"github.com/openacid/low/bitmap"
+	"github.com/openacid/low/bitstr"
 	"github.com/openacid/low/bmtree"
 )
 
@@ -149,7 +150,7 @@ func (st *SlimTrie) GetID(key string) int32 {
 		}
 
 		if qr.hasInnerPrefix {
-			r := prefixCompare(key[i>>3:], qr.innerPrefix)
+			r := bitstr.StrCmpUpto(key[i>>3:], qr.innerPrefix)
 			if r != 0 {
 				return -1
 			}
@@ -251,7 +252,7 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 		}
 
 		if qr.hasInnerPrefix {
-			r := prefixCompare(key[i>>3:], qr.innerPrefix)
+			r := bitstr.StrCmpUpto(key[i>>3:], qr.innerPrefix)
 			if r == 0 {
 				i = i&(^7) + qr.innerPrefixLen
 			} else if r < 0 {
@@ -468,7 +469,7 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 			from, to := bitmap.Select32R64(ps.Words, ps.SelectIndex, ps.RankIndex, ithPref)
 
 			qr.innerPrefix = ips.Bytes[from:to]
-			qr.innerPrefixLen = prefixLen(qr.innerPrefix)
+			qr.innerPrefixLen = bitstr.Len(qr.innerPrefix)
 			qr.hasInnerPrefix = true
 
 		} else {
