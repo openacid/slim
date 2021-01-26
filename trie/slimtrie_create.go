@@ -21,6 +21,7 @@ type subset struct {
 	keyStart   int32
 	keyEnd     int32
 	fromKeyBit int32
+	level      int32
 }
 
 type creator struct {
@@ -481,7 +482,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 	c := newCreator(n, bytesValues != nil, opt)
 
 	queue := make([]subset, 0, n*2)
-	queue = append(queue, subset{0, int32(n), 0})
+	queue = append(queue, subset{0, int32(n), 0, 1})
 
 	for i := 0; i < len(queue); i++ {
 		nid := int32(i)
@@ -588,6 +589,8 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 
 				// skip the label word
 				fromKeyBit: wordStart + bmtree.PathLen(pth),
+
+				level: o.level + 1,
 			}
 			queue = append(queue, p)
 			s = j
