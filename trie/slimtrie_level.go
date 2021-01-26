@@ -102,15 +102,16 @@ func levelsStr(l []levelInfo) []string {
 // Since 0.5.12
 func (st *SlimTrie) initLevels() {
 	ns := st.inner
+	ntyps := ns.NodeTypeBM
 
-	if ns.NodeTypeBM == nil {
+	if ntyps == nil {
 		st.levels = []levelInfo{{0, 0, 0, nil}}
 		return
 	}
 
 	st.levels = make([]levelInfo, 0)
 
-	totalInner, b := bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, int32(len(ns.NodeTypeBM.Words)*64-1))
+	totalInner, b := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, int32(len(ntyps.Words)*64-1))
 	totalInner += b
 
 	// single leaf slim
@@ -130,7 +131,7 @@ func (st *SlimTrie) initLevels() {
 	for {
 		// currId is the first node id at current level
 
-		nextInnerIdx, _ := bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, currId)
+		nextInnerIdx, _ := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, currId)
 
 		// update prev level
 		st.levels = append(st.levels, levelInfo{total: currId, inner: nextInnerIdx, leaf: currId - nextInnerIdx})
