@@ -45,17 +45,31 @@ func (st *SlimTrie) String() string {
 
 	for _, nid := range s.inners {
 
-		s.labels[nid] = make(map[string]int32)
-
 		st.getNode(nid, qr)
 
-		paths := st.getLabels(qr)
+		s.labels[nid] = make(map[string]int32)
 
-		leftChildId, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+		if qr.clustered == nil {
+			// normal inner node
+			paths := st.getLabels(qr)
 
-		for i, label := range paths {
-			labelStr := bmtree.PathStr(label)
-			s.labels[nid][labelStr] = leftChildId + 1 + int32(i)
+			leftChildId, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+
+			for i, label := range paths {
+				labelStr := bmtree.PathStr(label)
+				s.labels[nid][labelStr] = leftChildId + 1 + int32(i)
+			}
+		} else {
+			// clustered inner node
+			keys := qr.clustered.keys()
+			for i, k := range keys {
+
+				// escape and remove quotes
+				kStr := fmt.Sprintf("%q", k)
+				kStr = kStr[1 : len(kStr)-1]
+
+				s.labels[nid][kStr] = qr.clustered.FirstLeafId + int32(i)
+			}
 		}
 	}
 
@@ -80,6 +94,7 @@ func (s *slimTrieStringly) Child(node, branch interface{}) interface{} {
 
 	n := stNodeID(node)
 	b := branch.(string)
+
 	return s.labels[n][b]
 }
 
@@ -90,14 +105,16 @@ func (s *slimTrieStringly) Labels(node interface{}) []interface{} {
 
 	n := stNodeID(node)
 
-	rst := make([]string, 0, n)
+	rst := make([]string, 0)
+
 	labels := s.labels[n]
 	for l := range labels {
 		rst = append(rst, l)
 	}
+
 	sort.Strings(rst)
 
-	r := []interface{}{}
+	var r []interface{}
 	for _, x := range rst {
 		r = append(r, x)
 	}
@@ -124,11 +141,8 @@ func (s *slimTrieStringly) LabelInfo(label interface{}) string {
 func (s *slimTrieStringly) NodeInfo(node interface{}) string {
 	nid := stNodeID(node)
 	n := &querySession{}
-	emp := querySession{}
 
 	if bitmap.Get(s.st.inner.NodeTypeBM.Words, nid) != 0 {
-
-		*n = emp
 
 		s.st.getNode(nid, n)
 		step := n.innerPrefixLen

@@ -25,6 +25,8 @@ type querySession struct {
 	isInner  int32
 	ithInner int32
 
+	clustered *ClusteredLeaves
+
 	// Whether an inner node has common prefix.
 	// It may stores only length of prefix in prefixBitLen, or exact prefix
 	// string in prefix.
@@ -159,6 +161,10 @@ func (st *SlimTrie) GetID(key string) int32 {
 			i += qr.innerPrefixLen
 		}
 
+		if qr.clustered != nil {
+			return qr.clustered.get(key[i>>3:])
+		}
+
 		if i > l {
 			return -1
 		}
@@ -274,6 +280,29 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 			}
 		}
 
+		if qr.clustered != nil {
+			var l, r int32
+			l, eqID, r = qr.clustered.search(key[i>>3:])
+
+			if l != -1 {
+				lID = l
+			} else {
+				if lID != -1 {
+					lID = st.rightMost(lID)
+				}
+			}
+
+			if r != -1 {
+				rID = r
+			} else {
+				if rID != -1 {
+					rID = st.leftMost(rID, nil)
+				}
+			}
+
+			return lID, eqID, rID
+		}
+
 		leftChild, has := st.getLeftChildID(qr, i)
 		// If branch bit is set, chID is the child node id, otherwise it is the left child id.
 		chID := leftChild + has
@@ -348,6 +377,10 @@ func (st *SlimTrie) leftMost(nodeId int32, path *[]int32) int32 {
 			break
 		}
 
+		if qr.clustered != nil {
+			return qr.clustered.firstLeafId()
+		}
+
 		// follow the first child
 		r0, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
 		nodeId = r0 + 1
@@ -364,6 +397,10 @@ func (st *SlimTrie) rightMost(nodeId int32) int32 {
 		st.getNode(nodeId, qr)
 		if qr.isInner == 0 {
 			break
+		}
+
+		if qr.clustered != nil {
+			return qr.clustered.lastLeafId()
 		}
 
 		r0, bit := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.to-1)
@@ -409,6 +446,7 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 
 	qr.innerPrefixLen = 0
 	qr.hasInnerPrefix = false
+	qr.clustered = nil
 
 	qr.ithInner, qr.isInner = bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, nodeId)
 
@@ -419,6 +457,33 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 
 	innWordI := qr.ithInner >> 6
 	innBitI := qr.ithInner & 63
+
+	// if this node has prefix
+	ips := ns.InnerPrefixes
+	if ips.EltCnt > 0 && ips.PresenceBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
+
+		inn := ips.PresenceBM
+		ithPref, _ := bitmap.Rank128(inn.Words, inn.RankIndex, qr.ithInner)
+
+		if ips.PositionBM != nil {
+
+			// stored actual prefix of a node.
+			ps := ips.PositionBM
+			from, to := bitmap.Select32R64(ps.Words, ps.SelectIndex, ps.RankIndex, ithPref)
+
+			qr.innerPrefix = ips.Bytes[from:to]
+			qr.innerPrefixLen = bitstr.Len(qr.innerPrefix)
+			qr.hasInnerPrefix = true
+
+		} else {
+			qr.innerPrefixLen = decStep(ips.Bytes[ithPref<<1:])
+		}
+	}
+
+	if qr.ithInner >= vars.FirstClusteredInnerIdx {
+		qr.clustered = ns.Clustered[qr.ithInner-vars.FirstClusteredInnerIdx]
+		return
+	}
 
 	if qr.ithInner < ns.BigInnerCnt {
 		qr.wordSize = bigWordSize
@@ -455,27 +520,6 @@ func (st *SlimTrie) getNode(nodeId int32, qr *querySession) {
 		}
 	}
 
-	// if this node has prefix
-	ips := ns.InnerPrefixes
-	if ips.EltCnt > 0 && ips.PresenceBM.Words[innWordI]&bitmap.Bit[innBitI] != 0 {
-
-		inn := ips.PresenceBM
-		ithPref, _ := bitmap.Rank128(inn.Words, inn.RankIndex, qr.ithInner)
-
-		if ips.PositionBM != nil {
-
-			// stored actual prefix of a node.
-			ps := ips.PositionBM
-			from, to := bitmap.Select32R64(ps.Words, ps.SelectIndex, ps.RankIndex, ithPref)
-
-			qr.innerPrefix = ips.Bytes[from:to]
-			qr.innerPrefixLen = bitstr.Len(qr.innerPrefix)
-			qr.hasInnerPrefix = true
-
-		} else {
-			qr.innerPrefixLen = decStep(ips.Bytes[ithPref<<1:])
-		}
-	}
 }
 
 // getLabelIdxOfKey returns the index of label of an inner node a key pointing to.

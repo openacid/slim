@@ -64,3 +64,43 @@ func (st *SlimTrie) getIthInnerFrom(ithInner int32, qr *querySession) {
 		qr.from = vars.BigInnerOffset + innerSize*ithInner + vars.ShortMinusInner*ithShort
 	}
 }
+
+// getIthInnerFromTo fills in qr.from and qr.to
+func (st *SlimTrie) getIthInnerFromTo(ithInner int32, qr *querySession) {
+
+	ns := st.inner
+	vars := st.vars
+
+	if ithInner < ns.BigInnerCnt {
+		qr.from = ithInner * bigInnerSize
+		qr.to = qr.from + bigInnerSize
+	} else {
+
+		ithShort, isShort := bitmap.Rank64(ns.ShortBM.Words, ns.ShortBM.RankIndex, ithInner)
+
+		qr.from = vars.BigInnerOffset + innerSize*ithInner + vars.ShortMinusInner*ithShort
+
+		// if this is a short node
+		if isShort != 0 {
+			qr.to = qr.from + ns.ShortSize
+		} else {
+			qr.to = qr.from + innerSize
+		}
+	}
+}
+
+// getIthInnerChildren returns the first child id and the last child id of the ith-inner node(not node id)
+// An node i(first  <= i <= last) is also a child of the ith-inner node.
+func (st *SlimTrie) getIthInnerChildren(idx int32) (int32, int32) {
+	ns := st.inner
+	qr := &querySession{}
+
+	st.getIthInnerFromTo(idx, qr)
+	firstChildId, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+	firstChildId = firstChildId + 1
+
+	lastChildId, b := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.to-1)
+	lastChildId = lastChildId + b
+
+	return firstChildId, lastChildId
+}

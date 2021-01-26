@@ -40,12 +40,18 @@ type slimVars struct {
 	//
 	// Since 0.5.12
 	ShortMask uint64
+
+	// FirstClusteredInnerIdx is the index(not node id) of the first inner node
+	// at the bottom-1 level, if the bottom-1 level stores clustered leaves.
+	//
+	// Since 0.5.12
+	FirstClusteredInnerIdx int32
 }
 
-// initVars initialize internal st.vars
+// initNodeLocatingVars initialize internal st.vars that are related to locating an inner node
 //
 // Since 0.5.12
-func (st *SlimTrie) initVars() {
+func (st *SlimTrie) initNodeLocatingVars() {
 
 	ns := st.inner
 
@@ -54,4 +60,19 @@ func (st *SlimTrie) initVars() {
 		ShortMinusInner: ns.ShortSize - innerSize,
 		ShortMask:       bitmap.Mask[ns.ShortSize],
 	}
+}
+
+// initClusteredVars initialized vars related to clustered leaf nodes.
+// It requires the st.levels to be initialized first.
+//
+// Since 0.5.12
+func (st *SlimTrie) initClusteredVars() {
+	if len(st.inner.Clustered) == 0 {
+		// No clustered inner nodes
+		st.vars.FirstClusteredInnerIdx = st.levels[len(st.levels)-1].inner
+	} else {
+		// The bottom - 1 level contains clustered inner nodes
+		st.vars.FirstClusteredInnerIdx = st.levels[len(st.levels)-3].inner
+	}
+
 }

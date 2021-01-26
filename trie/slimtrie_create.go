@@ -79,6 +79,8 @@ type creator struct {
 	// stats those affect creating
 
 	innerBMCnt []map[uint64]int32
+
+	clustered []*ClusteredLeaves
 }
 
 func newCreator(n int, withLeaves bool, opt *Opt) *creator {
@@ -115,6 +117,8 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 		prefs:             make(map[string]int32),
 
 		innerBMCnt: make([]map[uint64]int32, maxShortSize+1),
+
+		clustered: make([]*ClusteredLeaves, 0),
 	}
 
 	for i := int32(0); i < maxShortSize+1; i++ {
@@ -159,6 +163,25 @@ func (c *creator) addInner(nid, level int32, bmindex []int32, bmsize int32, pref
 	c.innerBMs = append(c.innerBMs, bmindex)
 
 	c.setPrefix(nid, prefixBitFrom, prefixBitTo, key)
+}
+
+// addClusteredInner adds an inner node "nid" with clustered leaves.
+func (c *creator) addClusteredInner(nodeId, level int32,
+	prefixBitFrom, prefixBitTo int32,
+	firstLeafId int32,
+	keys []string,
+) {
+
+	c.addNode(nodeId, level)
+
+	// the prefix of this key set from the beginning.
+	fullPrefixByteLen := prefixBitTo >> 3
+
+	c.innerIndexes = append(c.innerIndexes, nodeId)
+	c.setPrefix(nodeId, prefixBitFrom, prefixBitTo, keys[0])
+
+	cc := newClusteredLeaves(firstLeafId, keys, fullPrefixByteLen)
+	c.clustered = append(c.clustered, cc)
 }
 
 func get17bitmap(bmindex []int32) uint64 {
@@ -343,6 +366,7 @@ func (c *creator) build() *Slim {
 	ns := &Slim{
 		ShortSize:   shortSize,
 		BigInnerCnt: c.bigCnt,
+		Clustered:   c.clustered,
 	}
 
 	// Mapping most used 17-bit bitmap inner node to short inner node.
@@ -475,6 +499,11 @@ func (c *creator) buildLeaves(bytesValues [][]byte) *VLenArray {
 
 func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 
+	maxLevel := int32(0x7fffffff)
+	if opt.MaxLevel != nil {
+		maxLevel = *opt.MaxLevel
+	}
+
 	n := len(keys)
 	if n == 0 {
 		return &Slim{}, nil
@@ -558,6 +587,29 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 			if tokeep[i] {
 				ks = append(ks, keys[i])
 			}
+		}
+
+		if o.level == maxLevel-1 {
+			// too many levels, build clustered leaves
+
+			// Manually set the leaf node level.
+			// Because clustered leaves does not need creator.
+			c.maxLevel = o.level + 1
+			c.addClusteredInner(nid, o.level, o.fromKeyBit, wordStart, int32(len(queue)), ks)
+
+			// add all lower level nodes as leaves
+			if bytesValues != nil {
+				for i := s; i < e; i++ {
+					if tokeep[i] {
+						queue = append(queue, subset{
+							keyStart: i,
+							keyEnd:   i + 1,
+							level:    o.level + 1,
+						})
+					}
+				}
+			}
+			continue
 		}
 
 		// A label is a word with 0, 4 or 8 bits.

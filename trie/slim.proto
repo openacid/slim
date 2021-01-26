@@ -2,6 +2,7 @@ syntax = "proto3";
 
 // Built with protobuf 1.2.0:
 // go get github.com/golang/protobuf/{proto,protoc-gen-go}@v1.2.0
+// protoc --proto_path=. --go_out=. slim.proto
 
 option go_package = "trie";
 
@@ -65,6 +66,24 @@ message VLenArray {
     //
     // Since 0.5.10
     bytes Bytes = 30;
+}
+
+// ClusteredLeaves stores leaf prefixes and leaf ids.
+//
+// Since 0.5.12
+message ClusteredLeaves {
+
+    // FirstLeafId is the leaf id of the first key
+    int32 FirstLeafId = 10;
+
+    // Offsets stores the offset of every record, plus one last
+    // offset equals to len(Bytes).
+    //
+    // To read records[i]: Bytes[Offsets[i]: Offsets[i+1]]
+    repeated uint32 Offsets = 11;
+
+    // Bytes are packed records.
+    bytes Bytes = 21;
 }
 
 // Slim is the internal structure of slim trie and other slim data structure.
@@ -164,4 +183,10 @@ message Slim {
     //
     // Since 0.5.10
     VLenArray Leaves = 60;
+
+
+    // Clustered key suffixes and values that are lower than `BottomLevel`.
+    //
+    // Since 0.5.12
+    repeated ClusteredLeaves Clustered = 70;
 }

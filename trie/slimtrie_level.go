@@ -104,48 +104,65 @@ func (st *SlimTrie) initLevels() {
 	ns := st.inner
 	ntyps := ns.NodeTypeBM
 
+	st.levels = []levelInfo{{0, 0, 0, nil}}
+
 	if ntyps == nil {
-		st.levels = []levelInfo{{0, 0, 0, nil}}
 		return
 	}
 
-	st.levels = make([]levelInfo, 0)
+	if len(ntyps.Words) == 1 && ntyps.Words[0] == 0 {
+		// there is no inner node, single leaf slim
+		st.levels = append(st.levels, levelInfo{1, 0, 1, nil})
+		return
+	}
 
 	totalInner, b := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, int32(len(ntyps.Words)*64-1))
 	totalInner += b
 
-	// single leaf slim
-	total := int32(1)
-	if totalInner > 0 {
+	// From root node, walks to the first/last node at next level, until there is no
+	// inner node at next level.
+
+	// the first/last node id at current level
+	firstId := int32(0)
+	lastId := int32(0)
+	total := int32(0)
+
+	for {
+
+		// the global index of the first/last inner node at this level
+		firstInnerIdx, _ := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, firstId)
+
+		lastInnerIdx, b := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, lastId)
+		lastInnerIdx = lastInnerIdx + b - 1
+
+		total = lastId + 1
+
+		// update this level
+		st.levels = append(st.levels, levelInfo{
+			total: lastId + 1,
+			inner: lastInnerIdx + 1,
+			leaf:  lastId - lastInnerIdx})
+
+		if lastInnerIdx == totalInner-1 {
+			break
+		}
+
+		firstId, _ = st.getIthInnerChildren(firstInnerIdx)
+		_, lastId = st.getIthInnerChildren(lastInnerIdx)
+	}
+
+	// The last level may be clustered leaves level.
+
+	if len(ns.Clustered) > 0 {
+		// the bottom -1 level is clustered.
+		// plus all clustered leaves
+		for _, rs := range ns.Clustered {
+			total += int32(len(rs.Offsets)) - 1
+		}
+	} else {
 		var b int32
 		total, b = bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, int32(len(ns.Inners.Words)*64-1))
 		total += b + 1
 	}
-
-	// From root node, walks to the first node at next level, until there is no
-	// inner node at next level.
-
-	currId := int32(0)
-
-	qr := &querySession{}
-	for {
-		// currId is the first node id at current level
-
-		nextInnerIdx, _ := bitmap.Rank64(ntyps.Words, ntyps.RankIndex, currId)
-
-		// update prev level
-		st.levels = append(st.levels, levelInfo{total: currId, inner: nextInnerIdx, leaf: currId - nextInnerIdx})
-
-		if nextInnerIdx == totalInner {
-			// no more inner node at this level, this is the bottom level
-			break
-		}
-
-		st.getIthInnerFrom(nextInnerIdx, qr)
-
-		leftMostChild, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
-		currId = leftMostChild + 1
-	}
-
 	st.levels = append(st.levels, levelInfo{total: total, inner: totalInner, leaf: total - totalInner})
 }

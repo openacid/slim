@@ -138,6 +138,24 @@ type Opt struct {
 	//
 	// Since 0.5.10
 	Complete *bool
+
+	// MaxLevel specifies the max number of levels.
+	// If the MaxLevel reached, trie nodes are clustered into a key-value list.
+	// The root level is level 1, the bottom level, e.g., all-leaves level is the MaxLevel.
+	// E.g. a trie with 2 levels looks like:
+	//    root -> abc=1
+	//         `> bcd=2
+	//
+	// MaxLevel must be >= 1 for a single leaf trie(using only one key to build it);
+	// MaxLevel must be >= 2 for a trie with more than 1 keys;
+	// Otherwise it has not effect at all.
+	//
+	// Since 0.5.12
+	MaxLevel *int32
+}
+
+func I32(v int32) *int32 {
+	return &v
 }
 
 func Bool(v bool) *bool {
@@ -247,6 +265,10 @@ func (st *SlimTrie) content() []string {
 }
 
 func (st *SlimTrie) init() {
-	st.initVars()
+	// vars must be initialized first to enable trie traversing.
+	st.initNodeLocatingVars()
+
 	st.initLevels()
+
+	st.initClusteredVars()
 }
