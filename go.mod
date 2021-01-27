@@ -9,7 +9,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/openacid/errors v0.8.1
 	github.com/openacid/genr v0.1.1
-	github.com/openacid/low v0.1.20
+	github.com/openacid/low v0.1.21
 	github.com/openacid/must v0.1.3
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/openacid/testkeys v0.1.6
