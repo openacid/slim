@@ -333,51 +333,51 @@ func (st *SlimTrie) searchID(key string) (lID, eqID, rID int32) {
 	return
 }
 
-func (st *SlimTrie) leftMost(idx int32, path *[]int32) int32 {
+func (st *SlimTrie) leftMost(nodeId int32, path *[]int32) int32 {
 
 	ns := st.inner
 	qr := &querySession{}
 
 	for {
 		if path != nil {
-			*path = append(*path, idx)
+			*path = append(*path, nodeId)
 		}
 
-		st.getNode(idx, qr)
+		st.getNode(nodeId, qr)
 		if qr.isInner == 0 {
 			break
 		}
 
 		// follow the first child
 		r0, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
-		idx = r0 + 1
+		nodeId = r0 + 1
 	}
-	return idx
+	return nodeId
 }
 
-func (st *SlimTrie) rightMost(idx int32) int32 {
+func (st *SlimTrie) rightMost(nodeId int32) int32 {
 
 	ns := st.inner
+	qr := &querySession{}
 
 	for {
-		qr := &querySession{}
-		st.getNode(idx, qr)
+		st.getNode(nodeId, qr)
 		if qr.isInner == 0 {
 			break
 		}
 
 		r0, bit := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.to-1)
-		idx = r0 + bit
+		nodeId = r0 + bit
 		// index out of range with this:
 		// r0, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, n.to)
-		// idx = r0
+		// nodeId = r0
 	}
-	return idx
+	return nodeId
 }
 
-func (st *SlimTrie) getLeafPrefix(nodeid int32, qr *querySession) {
+func (st *SlimTrie) getLeafPrefix(nodeId int32, qr *querySession) {
 
-	qr.ithLeaf, _ = st.getLeafIndex(nodeid)
+	qr.ithLeaf, _ = st.getLeafIndex(nodeId)
 
 	qr.hasLeafPrefix = false
 
@@ -531,14 +531,14 @@ func (st *SlimTrie) getLeftChildID(qr *querySession, keyBitIdx int32) (int32, in
 }
 
 // the second return value being 0 indicates it is a leaf
-func (st *SlimTrie) getLeafIndex(nodeid int32) (int32, int32) {
+func (st *SlimTrie) getLeafIndex(nodeId int32) (int32, int32) {
 	ns := st.inner
-	r, ith := bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, nodeid)
-	return nodeid - r, ith
+	r, ith := bitmap.Rank64(ns.NodeTypeBM.Words, ns.NodeTypeBM.RankIndex, nodeId)
+	return nodeId - r, ith
 }
 
-func (st *SlimTrie) getLeaf(nodeid int32) interface{} {
-	leafI, nodeType := st.getLeafIndex(nodeid)
+func (st *SlimTrie) getLeaf(nodeId int32) interface{} {
+	leafI, nodeType := st.getLeafIndex(nodeId)
 	if nodeType == 1 {
 		panic("impossible!!")
 	}
@@ -553,8 +553,8 @@ func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 		return nil
 	}
 
-	eltsize := st.encoder.GetEncodedSize(nil)
-	stIdx := ith * int32(eltsize)
+	eltSize := st.encoder.GetEncodedSize(nil)
+	stIdx := ith * int32(eltSize)
 
 	bs := ls.Bytes[stIdx:]
 

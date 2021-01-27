@@ -40,24 +40,22 @@ func (st *SlimTrie) String() string {
 		labels: make(map[int32]map[string]int32),
 	}
 
-	ch := st.inner
-	n := &querySession{}
-	emp := querySession{}
+	ns := st.inner
+	qr := &querySession{}
 
 	for _, nid := range s.inners {
-		*n = emp
 
 		s.labels[nid] = make(map[string]int32)
 
-		st.getNode(nid, n)
+		st.getNode(nid, qr)
 
-		paths := st.getLabels(n)
+		paths := st.getLabels(qr)
 
-		leftChildId, _ := bitmap.Rank128(ch.Inners.Words, ch.Inners.RankIndex, n.from)
+		leftChildId, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
 
-		for i, l := range paths {
-			lstr := bmtree.PathStr(l)
-			s.labels[nid][lstr] = leftChildId + 1 + int32(i)
+		for i, label := range paths {
+			labelStr := bmtree.PathStr(label)
+			s.labels[nid][labelStr] = leftChildId + 1 + int32(i)
 		}
 	}
 
