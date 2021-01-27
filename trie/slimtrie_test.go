@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/kr/pretty"
 	"github.com/openacid/errors"
+	. "github.com/openacid/low/mathext/util"
 	"github.com/openacid/slim/encode"
 	"github.com/openacid/testkeys"
 	"github.com/openacid/testutil"
@@ -815,7 +816,10 @@ func testPresentKeysGRS(t *testing.T, st *SlimTrie, keys []string, values []int3
 
 func testAbsentKeysGRS(t *testing.T, st *SlimTrie, keys []string) {
 
-	absentKeys := makeAbsentKeys(keys, len(keys)*5, 0, 20)
+	nAbsent := len(keys)
+	nAbsent = MaxI(nAbsent, 400)
+
+	absentKeys := makeAbsentKeys(keys, nAbsent, 0, 20)
 
 	testAbsentKeysGet(t, st, absentKeys)
 	testAbsentKeysRangeGet(t, st, keys, absentKeys)
@@ -941,6 +945,12 @@ func testAbsentKeysSearch(t *testing.T, st *SlimTrie, keys, absentKeys []string)
 		l, e, r := st.Search(key)
 
 		ta.Equal(nil, e, "Search:%v e", key)
+
+		if len(keys) == 0 {
+			ta.Nil(l, "Search:%v e", key)
+			ta.Nil(r, "Search:%v e", key)
+			continue
+		}
 
 		if prev == -1 {
 
@@ -1125,13 +1135,8 @@ func testOldData(t *testing.T, f func(t *testing.T, typ, opt, ver string, keys [
 }
 
 func clap(n, min, max int) int {
-	if n < min {
-		n = min
-	}
-	if n > max {
-		n = max
-	}
-	return n
+	// TODO remove me
+	return ClapI(n, min, max)
 }
 
 func iambig(t *testing.T) {
