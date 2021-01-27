@@ -809,9 +809,11 @@ func trim(s string) string {
 
 func testPresentKeysGRS(t *testing.T, st *SlimTrie, keys []string, values []int32) {
 
-	testPresentKeysGet(t, st, keys, values)
-	testPresentKeysRangeGet(t, st, keys, values)
-	testPresentKeysSearch(t, st, keys, values)
+	t.Run("presentKeys", func(t *testing.T) {
+		testPresentKeysGet(t, st, keys, values)
+		testPresentKeysRangeGet(t, st, keys, values)
+		testPresentKeysSearch(t, st, keys, values)
+	})
 }
 
 func testAbsentKeysGRS(t *testing.T, st *SlimTrie, keys []string) {
@@ -821,42 +823,36 @@ func testAbsentKeysGRS(t *testing.T, st *SlimTrie, keys []string) {
 
 	absentKeys := makeAbsentKeys(keys, nAbsent, 0, 20)
 
-	testAbsentKeysGet(t, st, absentKeys)
-	testAbsentKeysRangeGet(t, st, keys, absentKeys)
-	testAbsentKeysSearch(t, st, keys, absentKeys)
+	t.Run("absentKeys", func(t *testing.T) {
+		testAbsentKeysGet(t, st, absentKeys)
+		testAbsentKeysRangeGet(t, st, keys, absentKeys)
+		testAbsentKeysSearch(t, st, keys, absentKeys)
+	})
 }
 
 func testUnknownKeysGRS(t *testing.T, st *SlimTrie, keys []string) {
 
-	for i, key := range keys {
-		_ = i
+	t.Run("unknownKeys/GetRangeGetSearch", func(t *testing.T) {
+		for _, key := range keys {
 
-		// dd("test unknown: %s", key)
+			// There may be false positive result
 
-		// There may be false positive result
+			id := st.GetID(key)
+			_ = id
 
-		id := st.GetID(key)
-		_ = id
+			v, found := st.Get(key)
+			_, _ = v, found
 
-		v, found := st.Get(key)
-		_ = v
-		_ = found
+			v, found = st.RangeGet(key)
+			_, _ = v, found
 
-		v, found = st.RangeGet(key)
-		_ = v
-		_ = found
+			lid, eid, rid := st.searchID(key)
+			_, _, _ = lid, eid, rid
 
-		lid, eid, rid := st.searchID(key)
-		_ = lid
-		_ = eid
-		_ = rid
-
-		l, e, r := st.Search(key)
-		_ = l
-		_ = e
-		_ = r
-
-	}
+			l, e, r := st.Search(key)
+			_, _, _ = l, e, r
+		}
+	})
 }
 
 func makeAbsentKeys(keys []string, n, minLen, maxLen int) []string {
@@ -886,141 +882,142 @@ func makeAbsentKeys(keys []string, n, minLen, maxLen int) []string {
 
 func testAbsentKeysGet(t *testing.T, st *SlimTrie, absentKeys []string) {
 
-	ta := require.New(t)
+	t.Run("Get", func(t *testing.T) {
 
-	for i, key := range absentKeys {
-		_ = i
+		ta := require.New(t)
 
-		// dd("test Get: absent: %s", key)
+		for i, key := range absentKeys {
+			_ = i
 
-		v, found := st.Get(key)
-		ta.Nil(v, "get absent %s", key)
-		ta.False(found, "get absent %s", key)
-	}
+			v, found := st.Get(key)
+			ta.Nil(v, "get absent %s", key)
+			ta.False(found, "get absent %s", key)
+		}
+	})
 }
 
 func testAbsentKeysRangeGet(t *testing.T, st *SlimTrie, keys, absentKeys []string) {
 
-	ta := require.New(t)
+	t.Run("RangeGet", func(t *testing.T) {
 
-	j := int32(0)
-	prev := int32(-1)
+		ta := require.New(t)
 
-	for i, key := range absentKeys {
-		_ = i
+		j := int32(0)
+		prev := int32(-1)
 
-		for ; j < int32(len(keys)) && keys[j] < key; j++ {
-			prev = j
+		for i, key := range absentKeys {
+			_ = i
+
+			for ; j < int32(len(keys)) && keys[j] < key; j++ {
+				prev = j
+			}
+
+			v, found := st.RangeGet(key)
+
+			if prev == -1 {
+				ta.Nil(v, "range get %v", key)
+				ta.False(found, "range get %v", key)
+			} else {
+				ta.Equal(prev, v, "range get %v", key)
+				ta.True(found, "range get %v", key)
+			}
 		}
-
-		// dd("test RangeGet: absent: %s", key)
-
-		v, found := st.RangeGet(key)
-		// dd(v, found)
-
-		if prev == -1 {
-			ta.Nil(v, "range get %v", key)
-			ta.False(found, "range get %v", key)
-		} else {
-			ta.Equal(prev, v, "range get %v", key)
-			ta.True(found, "range get %v", key)
-		}
-	}
+	})
 }
 
 func testAbsentKeysSearch(t *testing.T, st *SlimTrie, keys, absentKeys []string) {
 
-	ta := require.New(t)
+	t.Run("Search", func(t *testing.T) {
 
-	j := int32(0)
-	prev := int32(-1)
-	for i, key := range absentKeys {
-		_ = i
-		for ; j < int32(len(keys)) && keys[j] < key; j++ {
-			prev = j
+		ta := require.New(t)
+
+		j := int32(0)
+		prev := int32(-1)
+		for i, key := range absentKeys {
+			_ = i
+			for ; j < int32(len(keys)) && keys[j] < key; j++ {
+				prev = j
+			}
+
+			l, e, r := st.Search(key)
+
+			ta.Equal(nil, e, "Search:%v e", key)
+
+			if len(keys) == 0 {
+				ta.Nil(l, "Search:%v e", key)
+				ta.Nil(r, "Search:%v e", key)
+				continue
+			}
+
+			if prev == -1 {
+
+				ta.Equal(nil, l, "Search:%v l", key)
+				ta.Equal(int32(0), r, "Search:%v r", key)
+
+			} else if prev == int32(len(keys))-1 {
+
+				ta.Equal(prev, l, "Search:%v l", key)
+				ta.Equal(nil, r, "Search:%v r", key)
+
+			} else {
+				ta.Equal(prev, l, "Search:%v l", key)
+				ta.Equal(prev+1, r, "Search:%v r", key)
+			}
 		}
-
-		// dd("test Search: absent: %s", key)
-
-		l, e, r := st.Search(key)
-
-		ta.Equal(nil, e, "Search:%v e", key)
-
-		if len(keys) == 0 {
-			ta.Nil(l, "Search:%v e", key)
-			ta.Nil(r, "Search:%v e", key)
-			continue
-		}
-
-		if prev == -1 {
-
-			ta.Equal(nil, l, "Search:%v l", key)
-			ta.Equal(int32(0), r, "Search:%v r", key)
-
-		} else if prev == int32(len(keys))-1 {
-
-			ta.Equal(prev, l, "Search:%v l", key)
-			ta.Equal(nil, r, "Search:%v r", key)
-
-		} else {
-			ta.Equal(prev, l, "Search:%v l", key)
-			ta.Equal(prev+1, r, "Search:%v r", key)
-		}
-
-	}
+	})
 }
 
 func testPresentKeysGet(t *testing.T, st *SlimTrie, keys []string, values []int32) {
 
-	ta := require.New(t)
+	t.Run("Get", func(t *testing.T) {
+		ta := require.New(t)
 
-	for i, key := range keys {
+		for i, key := range keys {
 
-		// dd("test Get: present: %s", key)
-
-		v, found := st.Get(key)
-		ta.True(found, "get %v", key)
-		ta.Equal(values[i], v, "search for %v", key)
-	}
+			v, found := st.Get(key)
+			ta.True(found, "get %v", key)
+			ta.Equal(values[i], v, "search for %v", key)
+		}
+	})
 }
 
 func testPresentKeysRangeGet(t *testing.T, st *SlimTrie, keys []string, values []int32) {
 
-	ta := require.New(t)
+	t.Run("RangeGet", func(t *testing.T) {
+		ta := require.New(t)
 
-	for i, key := range keys {
+		for i, key := range keys {
 
-		// dd("test RangeGet: present:%s", key)
-
-		v, found := st.RangeGet(key)
-		ta.True(found, "RangeGet:%v", key)
-		ta.Equal(values[i], v, "RangeGet:%v", key)
-	}
+			v, found := st.RangeGet(key)
+			ta.True(found, "RangeGet:%v", key)
+			ta.Equal(values[i], v, "RangeGet:%v", key)
+		}
+	})
 }
 
 func testPresentKeysSearch(t *testing.T, st *SlimTrie, keys []string, values []int32) {
 
-	ta := require.New(t)
+	t.Run("Search", func(t *testing.T) {
+		ta := require.New(t)
 
-	for i, key := range keys {
+		for i, key := range keys {
 
-		// dd("test Search: present: %s", key)
+			l, e, r := st.Search(key)
+			if i == 0 {
+				ta.Equal(nil, l)
+			} else {
+				ta.Equal(values[i-1], l, "Search:%v, l", key)
+			}
 
-		l, e, r := st.Search(key)
-		if i == 0 {
-			ta.Equal(nil, l)
-		} else {
-			ta.Equal(values[i-1], l, "Search:%v, l", key)
+			ta.Equal(values[i], e, "Search:%v, eq", key)
+
+			if i == len(keys)-1 {
+				ta.Equal(nil, r)
+			} else {
+				ta.Equal(values[i+1], r, "Search:%v, r", key)
+			}
 		}
-
-		ta.Equal(values[i], e, "Search:%v, eq", key)
-
-		if i == len(keys)-1 {
-			ta.Equal(nil, r)
-		} else {
-			ta.Equal(values[i+1], r, "Search:%v, r", key)
-		}
-	}
+	})
 }
 
 func testBigKeySet(t *testing.T, f func(t *testing.T, typ string, keys []string)) {
