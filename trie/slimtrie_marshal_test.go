@@ -58,7 +58,7 @@ func TestSlimTrie_Unmarshal_incompatible(t *testing.T) {
 		want  error
 	}{
 		{slimtrieVersion, nil},
-		{"0.5.12", ErrIncompatible},
+		{"0.5.13", ErrIncompatible},
 		{"0.6.0", ErrIncompatible},
 		{"0.9.9", ErrIncompatible},
 		{"1.0.1", ErrIncompatible},
@@ -157,23 +157,48 @@ func TestSlimTrie_Marshal_allkeys(t *testing.T) {
 		ta := require.New(t)
 
 		values := makeI32s(len(keys))
-		st, err := NewSlimTrie(encode.I32{}, keys, values)
-		ta.NoError(err)
 
-		testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
-		testPresentKeysGet(t, st, keys, values)
+		t.Run("Default", func(t *testing.T) {
+			st, err := NewSlimTrie(encode.I32{}, keys, values)
+			ta.NoError(err)
 
-		buf, err := proto.Marshal(st)
-		ta.NoError(err)
+			testUnknownKeysGRS(t, st, testutil.RandStrSlice(100, 0, 10))
+			testPresentKeysGet(t, st, keys, values)
 
-		st2, err := NewSlimTrie(encode.I32{}, nil, nil)
-		ta.NoError(err)
+			buf, err := proto.Marshal(st)
+			ta.NoError(err)
 
-		err = proto.Unmarshal(buf, st2)
-		ta.NoError(err)
+			st2, err := NewSlimTrie(encode.I32{}, nil, nil)
+			ta.NoError(err)
 
-		testUnknownKeysGRS(t, st2, testutil.RandStrSlice(100, 0, 10))
-		testPresentKeysGet(t, st2, keys, values)
+			err = proto.Unmarshal(buf, st2)
+			ta.NoError(err)
+
+			testUnknownKeysGRS(t, st2, testutil.RandStrSlice(100, 0, 10))
+			testPresentKeysGet(t, st2, keys, values)
+		})
+
+		t.Run("Complete", func(t *testing.T) {
+			st, err := NewSlimTrie(encode.I32{}, keys, values,
+				Opt{Complete: Bool(true)})
+			ta.NoError(err)
+
+			testAbsentKeysGRS(t, st, keys)
+			testPresentKeysGet(t, st, keys, values)
+
+			buf, err := proto.Marshal(st)
+			ta.NoError(err)
+
+			st2, err := NewSlimTrie(encode.I32{}, nil, nil)
+			ta.NoError(err)
+
+			err = proto.Unmarshal(buf, st2)
+			ta.NoError(err)
+
+			testAbsentKeysGRS(t, st2, keys)
+			testPresentKeysGet(t, st2, keys, values)
+		})
+
 	})
 }
 
