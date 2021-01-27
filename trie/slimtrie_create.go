@@ -41,6 +41,9 @@ type creator struct {
 
 	leafCnt int32
 
+	// the max level ever seen by creator.
+	maxLevel int32
+
 	withLeaves bool
 
 	// options
@@ -87,6 +90,8 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 		nodeCnt: 0,
 		leafCnt: 0,
 
+		maxLevel: 0,
+
 		withLeaves: withLeaves,
 
 		option: opt,
@@ -119,12 +124,22 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 	return c
 }
 
-// addInner adds an inner node of node id "nid".
-func (c *creator) addInner(nid int32, bmindex []int32, bmsize int32, prefixBitFrom, prefixBitTo int32, key string) {
+// addNode get done the common job of addLeaf and addInner.
+func (c *creator) addNode(nid, level int32) {
 
 	must.Be.Equal(c.nodeCnt, nid)
 
 	c.nodeCnt++
+
+	if c.maxLevel < level {
+		c.maxLevel = level
+	}
+}
+
+// addInner adds an inner node of node id "nid".
+func (c *creator) addInner(nid, level int32, bmindex []int32, bmsize int32, prefixBitFrom, prefixBitTo int32, key string) {
+
+	c.addNode(nid, level)
 
 	if c.isBig {
 		c.bigCnt++
@@ -217,11 +232,9 @@ func (c *creator) setLeafPrefix(nid int32, key string, keyidx int32) {
 }
 
 // addLeaf adds the content in []byte of a leaf.
-func (c *creator) addLeaf(nid int32, v []byte) {
+func (c *creator) addLeaf(nid, level int32, v []byte) {
 
-	must.Be.Equal(c.nodeCnt, nid)
-
-	c.nodeCnt++
+	c.addNode(nid, level)
 
 	if c.withLeaves {
 		c.leafCnt++
@@ -230,11 +243,9 @@ func (c *creator) addLeaf(nid int32, v []byte) {
 }
 
 // addLeaf adds the index of a leaf.
-func (c *creator) addLeafIndex(nid int32, idx int32) {
+func (c *creator) addLeafIndex(nid, level int32, idx int32) {
 
-	must.Be.Equal(c.nodeCnt, nid)
-
-	c.nodeCnt++
+	c.addNode(nid, level)
 
 	if c.withLeaves {
 		c.leafCnt++
@@ -492,7 +503,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		// single key, it is a leaf
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
-			c.addLeafIndex(nid, s)
+			c.addLeafIndex(nid, o.level, s)
 			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
 			continue
 		}
@@ -560,7 +571,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		}
 
 		// Without the bits of label word at parent node
-		c.addInner(nid, idxs, bitmapSize, o.fromKeyBit, wordStart, keys[s])
+		c.addInner(nid, o.level, idxs, bitmapSize, o.fromKeyBit, wordStart, keys[s])
 
 		// put keys with the same starting word to queue.
 

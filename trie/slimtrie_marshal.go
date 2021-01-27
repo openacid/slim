@@ -175,6 +175,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 			oldid    int32
 			step     int32
 			leafOnly bool
+			level    int32
 		}
 
 		// before 0.5.10 it stores steps only, no prefix
@@ -188,6 +189,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 			oldid:    0,
 			step:     getStepBefore000510(steps, 0),
 			leafOnly: false,
+			level:    1,
 		}
 		queue = append(queue, elt)
 
@@ -209,7 +211,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 				lv, found := lvs.GetBytes(oldid, st.encoder.GetEncodedSize(nil))
 				must.Be.True(found)
 
-				c.addLeaf(newid, lv)
+				c.addLeaf(newid, qelt.level, lv)
 				continue
 			}
 
@@ -230,6 +232,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 				queue = append(queue, &eltType{
 					oldid:    oldid,
 					leafOnly: true,
+					level:    qelt.level + 1,
 				})
 			}
 
@@ -238,6 +241,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 					oldid:    nextOldID,
 					step:     getStepBefore000510(steps, nextOldID),
 					leafOnly: false,
+					level:    qelt.level + 1,
 				}
 				queue = append(queue, ee)
 				nextOldID++
@@ -249,7 +253,7 @@ func before000510ToNewChildrenArray(st *SlimTrie, ver string, ch *array.Array32,
 
 			bmidx := bitmap.ToArray([]uint64{bm})
 
-			c.addInner(newid, bmidx, innerSize, 0, qelt.step, "")
+			c.addInner(newid, qelt.level, bmidx, innerSize, 0, qelt.step, "")
 		}
 
 		ns := c.build()
