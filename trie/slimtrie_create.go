@@ -80,7 +80,9 @@ type creator struct {
 
 	innerBMCnt []map[uint64]int32
 
-	clustered []*ClusteredLeaves
+	clusteredStarts  []uint32
+	clusteredOffsets []uint32
+	clusteredBytes   []byte
 }
 
 func newCreator(n int, withLeaves bool, opt *Opt) *creator {
@@ -118,7 +120,9 @@ func newCreator(n int, withLeaves bool, opt *Opt) *creator {
 
 		innerBMCnt: make([]map[uint64]int32, maxShortSize+1),
 
-		clustered: make([]*ClusteredLeaves, 0),
+		clusteredStarts:  make([]uint32, 0),
+		clusteredOffsets: make([]uint32, 0),
+		clusteredBytes:   make([]byte, 0),
 	}
 
 	for i := int32(0); i < maxShortSize+1; i++ {
@@ -168,7 +172,6 @@ func (c *creator) addInner(nid, level int32, bmindex []int32, bmsize int32, pref
 // addClusteredInner adds an inner node "nid" with clustered leaves.
 func (c *creator) addClusteredInner(nodeId, level int32,
 	prefixBitFrom, prefixBitTo int32,
-	firstLeafId int32,
 	keys []string,
 ) {
 
@@ -180,8 +183,13 @@ func (c *creator) addClusteredInner(nodeId, level int32,
 	c.innerIndexes = append(c.innerIndexes, nodeId)
 	c.setPrefix(nodeId, prefixBitFrom, prefixBitTo, keys[0])
 
-	cc := newClusteredLeaves(firstLeafId, keys, fullPrefixByteLen)
-	c.clustered = append(c.clustered, cc)
+	c.clusteredStarts = append(c.clusteredStarts,
+		uint32(len(c.clusteredOffsets)))
+
+	for _, k := range keys {
+		c.clusteredOffsets = append(c.clusteredOffsets, uint32(len(c.clusteredBytes)))
+		c.clusteredBytes = append(c.clusteredBytes, k[fullPrefixByteLen:]...)
+	}
 }
 
 func get17bitmap(bmindex []int32) uint64 {
@@ -363,10 +371,21 @@ func (c *creator) build() *Slim {
 
 	_ = shortCnt
 
+	if len(c.clusteredOffsets) > 0 {
+		// there are clustered leaves
+		c.clusteredStarts = append(c.clusteredStarts, uint32(len(c.clusteredOffsets)))
+		c.clusteredOffsets = append(c.clusteredOffsets, uint32(len(c.clusteredBytes)))
+	}
+
 	ns := &Slim{
 		ShortSize:   shortSize,
 		BigInnerCnt: c.bigCnt,
-		Clustered:   c.clustered,
+
+		Clustered: &Clustered{
+			Starts:  c.clusteredStarts,
+			Offsets: c.clusteredOffsets,
+			Bytes:   c.clusteredBytes,
+		},
 	}
 
 	// Mapping most used 17-bit bitmap inner node to short inner node.
@@ -595,7 +614,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 			// Manually set the leaf node level.
 			// Because clustered leaves does not need creator.
 			c.maxLevel = o.level + 1
-			c.addClusteredInner(nid, o.level, o.fromKeyBit, wordStart, int32(len(queue)), ks)
+			c.addClusteredInner(nid, o.level, o.fromKeyBit, wordStart, ks)
 
 			// add all lower level nodes as leaves
 			if bytesValues != nil {

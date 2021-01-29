@@ -5,10 +5,34 @@ import (
 	"unsafe"
 )
 
-// newClusteredLeaves creates a ClusteredLeaves struct.
+type clusteredInner struct {
+	FirstLeafId int32
+	Offsets     []uint32
+	Bytes       []byte
+}
+
+// initClusteredInner initiates a clusteredInner struct.
 //
 // Since 0.5.12
-func newClusteredLeaves(firstLeafId int32, keys []string, prefixLen int32) *ClusteredLeaves {
+func (st *SlimTrie) initClusteredInner(
+	ithInner int32,
+	cl *clusteredInner,
+) {
+	ns := st.inner
+	vars := st.vars
+
+	i := ithInner - vars.clustered.firstInnerIdx
+	s, e := ns.Clustered.Starts[i], ns.Clustered.Starts[i+1]
+	offsets := ns.Clustered.Offsets[s : e+1]
+
+	bottom := len(st.levels) - 1
+
+	cl.FirstLeafId = st.levels[bottom-1].total + int32(s)
+	cl.Offsets = offsets
+	cl.Bytes = ns.Clustered.Bytes
+}
+
+func newClusteredInner(first int32, keys []string, prefixLen int32) *clusteredInner {
 	size := 0
 	offsetCnt := int32(len(keys)) + 1
 	for i := int32(0); i < int32(len(keys)); i++ {
@@ -25,20 +49,20 @@ func newClusteredLeaves(firstLeafId int32, keys []string, prefixLen int32) *Clus
 
 	offsets[offsetCnt-1] = uint32(len(records))
 
-	r := &ClusteredLeaves{
-		FirstLeafId: firstLeafId,
+	r := &clusteredInner{
+		FirstLeafId: first,
 		Offsets:     offsets,
 		Bytes:       records,
 	}
 	return r
 }
 
-func (cl *ClusteredLeaves) keyCnt() int {
-	// There are n + 1 offsets. the last one is len(cl.ClusteredLeaves)
+func (cl *clusteredInner) keyCnt() int {
+	// There are n + 1 offsets. the last one is len(cl.clusteredInner)
 	return len(cl.Offsets) - 1
 }
 
-func (cl *ClusteredLeaves) keys() [][]byte {
+func (cl *clusteredInner) keys() [][]byte {
 	n := cl.keyCnt()
 	keys := make([][]byte, 0, n)
 
@@ -50,7 +74,7 @@ func (cl *ClusteredLeaves) keys() [][]byte {
 	return keys
 }
 
-func (cl *ClusteredLeaves) get(key string) int32 {
+func (cl *clusteredInner) get(key string) int32 {
 
 	kBytes := *(*[]byte)(unsafe.Pointer(&key))
 	n := cl.keyCnt()
@@ -84,16 +108,16 @@ func (cl *ClusteredLeaves) get(key string) int32 {
 }
 
 // firstLeafId returns the node id of the first record.
-func (cl *ClusteredLeaves) firstLeafId() int32 {
+func (cl *clusteredInner) firstLeafId() int32 {
 	return cl.FirstLeafId
 }
 
 // lastLeafId returns the node id of the last record.
-func (cl *ClusteredLeaves) lastLeafId() int32 {
+func (cl *clusteredInner) lastLeafId() int32 {
 	return cl.FirstLeafId + int32(len(cl.Offsets)) - 2
 }
 
-func (cl *ClusteredLeaves) search(key string) (int32, int32, int32) {
+func (cl *clusteredInner) search(key string) (int32, int32, int32) {
 
 	kBytes := *(*[]byte)(unsafe.Pointer(&key))
 	n := cl.keyCnt()

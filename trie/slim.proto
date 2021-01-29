@@ -68,13 +68,27 @@ message VLenArray {
     bytes Bytes = 30;
 }
 
-// ClusteredLeaves stores leaf prefixes and leaf ids.
+// Clustered stores leaf prefixes and leaf ids.
+//
+// E.g. The 0-th clustered inner node has 3 leaves(Offsets:0, 1, 2)
+// The 1-th clustered inner node has 2 leaves.
+// The 0-th leaf of the 0-th clustered inner is ab
+// The 1-th leaf of the 0-th clustered inner is abc
+//
+//      Starts       Offsets    Bytes
+//           0 --->  0 -------> a
+//           1 -.    1 -----.   b
+//           2 .|    2 ----. `> a
+//             |`->  3      |   b
+//             |     4      |   c
+//              `->  5      `-> a
 //
 // Since 0.5.12
-message ClusteredLeaves {
+message Clustered {
 
-    // FirstLeafId is the leaf id of the first key
-    int32 FirstLeafId = 10;
+    // Starts[i] is the index of the first clustered leaf of the i-th clustered
+    // inner node.
+    repeated uint32 Starts = 71;
 
     // Offsets stores the offset of every record, plus one last
     // offset equals to len(Bytes).
@@ -185,8 +199,8 @@ message Slim {
     VLenArray Leaves = 60;
 
 
-    // Clustered key suffixes and values that are lower than `BottomLevel`.
+    // Clustered key suffixes and values.
     //
     // Since 0.5.12
-    repeated ClusteredLeaves Clustered = 70;
+    Clustered Clustered = 70;
 }
