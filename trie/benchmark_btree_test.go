@@ -38,6 +38,9 @@ func Benchmark_btree(b *testing.B) {
 			bt.ReplaceOrInsert(v)
 		}
 
+		// sz := size.Of(bt)
+		// fmt.Println(sz/1024, sz/len(keys))
+
 		accesses := zipf.Accesses(2, 1.5, len(keys), b.N, nil)
 
 		b.ResetTimer()
@@ -52,5 +55,4 @@ func Benchmark_btree(b *testing.B) {
 		}
 		OutputBtree = int(id)
 	})
-
 }
