@@ -49,7 +49,7 @@ func (st *SlimTrie) String() string {
 
 		s.labels[nid] = make(map[string]int32)
 
-		if qr.clustered == nil {
+		if qr.clustered.FirstLeafId == -1 {
 			// normal inner node
 			paths := st.getLabels(qr)
 

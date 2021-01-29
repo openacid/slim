@@ -153,12 +153,10 @@ func (st *SlimTrie) initLevels() {
 
 	// The last level may be clustered leaves level.
 
-	if len(ns.Clustered) > 0 {
+	if ns.Clustered != nil && len(ns.Clustered.Offsets) > 0 {
 		// the bottom -1 level is clustered.
 		// plus all clustered leaves
-		for _, rs := range ns.Clustered {
-			total += int32(len(rs.Offsets)) - 1
-		}
+		total += int32(len(ns.Clustered.Offsets)) - 1
 	} else {
 		var b int32
 		total, b = bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, int32(len(ns.Inners.Words)*64-1))

@@ -269,6 +269,4 @@ func (st *SlimTrie) init() {
 	st.initNodeLocatingVars()
 
 	st.initLevels()
-
-	st.initClusteredVars()
 }
