@@ -22,6 +22,9 @@ type subset struct {
 	keyEnd     int32
 	fromKeyBit int32
 	level      int32
+
+	//if it is a clustered leaf thus does not need to store leaf prefix
+	isClustered bool
 }
 
 type creator struct {
@@ -539,7 +542,7 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 	c := newCreator(n, bytesValues != nil, opt)
 
 	queue := make([]subset, 0, n*2)
-	queue = append(queue, subset{0, int32(n), 0, 1})
+	queue = append(queue, subset{0, int32(n), 0, 1, false})
 
 	for i := 0; i < len(queue); i++ {
 		nid := int32(i)
@@ -550,7 +553,10 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 		if e-s == 1 {
 			must.Be.True(tokeep[s])
 			c.addLeafIndex(nid, o.level, s)
-			c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
+
+			if !o.isClustered {
+				c.setLeafPrefix(nid, keys[s], o.fromKeyBit)
+			}
 			continue
 		}
 
@@ -619,9 +625,10 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 				for i := s; i < e; i++ {
 					if tokeep[i] {
 						queue = append(queue, subset{
-							keyStart: i,
-							keyEnd:   i + 1,
-							level:    o.level + 1,
+							keyStart:    i,
+							keyEnd:      i + 1,
+							level:       o.level + 1,
+							isClustered: true,
 						})
 					}
 				}
@@ -670,7 +677,8 @@ func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
 				// skip the label word
 				fromKeyBit: wordStart + bmtree.PathLen(pth),
 
-				level: o.level + 1,
+				level:       o.level + 1,
+				isClustered: false,
 			}
 			queue = append(queue, p)
 			s = j
