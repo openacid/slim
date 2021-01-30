@@ -239,7 +239,7 @@ func TestSlimTrie_Iter_large(t *testing.T) {
 		values := makeI32s(len(keys))
 
 		for _, lvl := range []int32{4, 8, 100} {
-			t.Run(fmt.Sprintf("MaxLevel:%d", lvl), func(t *testing.T) {
+			t.Run(fmt.Sprintf("Lvl:%d", lvl), func(t *testing.T) {
 				ta := require.New(t)
 
 				st, err := NewSlimTrie(encode.I32{}, keys, values,

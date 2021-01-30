@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/openacid/low/mathext/zipf"
+	"github.com/openacid/low/size"
 	"github.com/openacid/slim/encode"
 )
 
@@ -31,7 +33,29 @@ func BenchmarkSlimTrie_GetXXX(b *testing.B) {
 
 					st, _ := NewSlimTrie(encode.I32{}, keys, values, opt)
 
-					b.Run(fmt.Sprintf("Lvl-%d", maxLevel),
+					protosz := proto.Size(st)
+					sz := size.Of(st)
+					n := len(keys)
+					avg := sz/n - 4 // exclude value size
+					fmt.Println("protosize:", protosz/1024, "kb")
+					fmt.Println("total size: ", sz/1024, "kb; sz/n:", avg)
+					// fmt.Println(size.Stat(st, 10, 3))
+
+					// mx := uint32(0)
+					// ofs := st.inner.Clustered.Offsets
+					// pp := 8
+					// for i := pp; i < len(ofs); i++ {
+					//     diff := ofs[i] - ofs[i-pp]
+					//     if diff > mx {
+					//         mx = diff
+					//     }
+
+					// }
+					// fmt.Println("max offset diff(32):", mx)
+
+					// panic("foo")
+
+					b.Run(fmt.Sprintf("Lvl:%d", maxLevel),
 						func(b *testing.B) {
 							subBenGetID(b, st, keys)
 							subBenGet(b, st, keys)
