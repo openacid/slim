@@ -130,6 +130,21 @@ func (st *SlimTrie) newIter(path []int32, skipFirst, withValue bool) NextRaw {
 			last.appendLabel(&buf)
 
 			childId := last.firstChildId + last.ithLabel
+
+			if last.clustered.FirstLeafId != -1 {
+				s := last.clustered.Offsets[last.ithLabel]
+				e := last.clustered.Offsets[last.ithLabel+1]
+				leafPrefix := last.clustered.Bytes[s:e]
+				buf = buf[:last.labelEnd>>3]
+				buf = append(buf, leafPrefix...)
+
+				if withValue {
+					leafI, _ := st.getLeafIndex(childId)
+					val = st.getIthLeafBytes(leafI)
+				}
+				break
+			}
+
 			qr := &querySession{}
 			st.getNode(childId, qr)
 			if qr.isInner == 0 {
@@ -225,6 +240,22 @@ func (st *SlimTrie) getGEPath(key string) ([]int32, bool) {
 
 		path = append(path, eqID)
 
+		if qr.clustered.FirstLeafId != -1 {
+			// TODO do not need search(), it only need eq-id and right-id
+			_, e, r := qr.clustered.search(key[i>>3:])
+			if e != -1 {
+				path = append(path, e)
+				return path, true
+			}
+			if r != -1 {
+				path = append(path, r)
+				return path, false
+			}
+			// No leaf in this clustered inner node GE key.
+			// Finish loop and check rID
+			break
+		}
+
 		leftChild, has := st.getLeftChildID(qr, i)
 		chID := leftChild + has
 		rightChild := chID + 1
@@ -278,6 +309,7 @@ type scanStackElt struct {
 	nodeId       int32
 	firstChildId int32
 	ithLabel     int32
+	clustered    clusteredInner
 
 	// labelBit is the index of the label in a inner node bitmap
 	labelBit int32
@@ -307,11 +339,19 @@ func (v *scanStackElt) init(st *SlimTrie, parentId, childId int32, qr *querySess
 		prefEnd = bufBitIdx&(^7) + qr.innerPrefixLen
 	}
 
-	// childId = rank_inclusive(globalLabelBitIdx)
-	//         = rank_exclusive(qr.from) + ithBit + 1
-	// ithBit = childId - 1 - rank_exclusive(qr.from)
-	rnk, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
-	firstChildId := rnk + 1
+	var firstChildId int32
+
+	if qr.clustered.FirstLeafId != -1 {
+		v.clustered = qr.clustered
+		firstChildId = qr.clustered.FirstLeafId
+	} else {
+		v.clustered.FirstLeafId = -1
+		// childId = rank_inclusive(globalLabelBitIdx)
+		//         = rank_exclusive(qr.from) + ithBit + 1
+		// ithBit = childId - 1 - rank_exclusive(qr.from)
+		rnk, _ := bitmap.Rank128(ns.Inners.Words, ns.Inners.RankIndex, qr.from)
+		firstChildId = rnk + 1
+	}
 
 	labelIdx := childId - firstChildId
 	// childId=-1 to find the first childId
@@ -343,6 +383,7 @@ func (v *scanStackElt) nextLabelBit(n int32) int32 {
 	for n > 0 {
 		v.labelBit++
 		if v.bm != 0 {
+			// short bitmap
 			if v.labelBit == 17 {
 				return -1
 			}
@@ -366,36 +407,62 @@ func (v *scanStackElt) nextLabelBit(n int32) int32 {
 func (v *scanStackElt) nextLabel(n int32) int32 {
 	v.ithLabel++
 
-	labelBit := v.nextLabelBit(n)
-	if labelBit == -1 {
-		return -1
+	if v.clustered.FirstLeafId != -1 {
+
+		// clustered inner node
+
+		leafCnt := len(v.clustered.Offsets) - 1
+		if v.ithLabel == int32(leafCnt) {
+			return -1
+		}
+	} else {
+
+		// bitmap inner node
+
+		labelBit := v.nextLabelBit(n)
+		if labelBit == -1 {
+			return -1
+		}
 	}
+
 	v.updateLabel()
 	return v.labelWidth
 }
 
 // update the size and label
 func (v *scanStackElt) updateLabel() {
-	if v.labelBit == 0 {
-		v.labelWidth, v.label = 0, 0
-	} else if v.bm != 0 {
-		// short bitmap is alias of 17 bit bitmap
-		v.labelWidth, v.label = 4, v.labelBit-1
-	} else {
+	if v.clustered.FirstLeafId != -1 {
 
-		size := v.bitTo - v.bitFrom
-		if size == 17 {
+		v.labelWidth, v.label = 0, 0
+
+	} else {
+		if v.labelBit == 0 {
+			v.labelWidth, v.label = 0, 0
+		} else if v.bm != 0 {
+			// short bitmap is alias of 17 bit bitmap
 			v.labelWidth, v.label = 4, v.labelBit-1
-		} else if size == 257 {
-			v.labelWidth, v.label = 8, v.labelBit-1
 		} else {
-			panic("unknown bitmap size")
+
+			size := v.bitTo - v.bitFrom
+			if size == 17 {
+				v.labelWidth, v.label = 4, v.labelBit-1
+			} else if size == 257 {
+				v.labelWidth, v.label = 8, v.labelBit-1
+			} else {
+				panic("unknown bitmap size")
+			}
 		}
 	}
+
 	v.labelEnd = v.prefixEnd + v.labelWidth
 }
 
 func (v *scanStackElt) appendLabel(buf *[]byte) {
+
+	if v.clustered.FirstLeafId != -1 {
+		// clustered inner node has no label
+		return
+	}
 
 	labelSize := v.labelWidth
 	l := (v.prefixEnd + 7) >> 3

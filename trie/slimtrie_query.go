@@ -378,7 +378,11 @@ func (st *SlimTrie) leftMost(nodeId int32, path *[]int32) int32 {
 		}
 
 		if qr.clustered.FirstLeafId != -1 {
-			return qr.clustered.firstLeafId()
+			id := qr.clustered.firstLeafId()
+			if path != nil {
+				*path = append(*path, id)
+			}
+			return id
 		}
 
 		// follow the first child

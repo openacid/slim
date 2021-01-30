@@ -153,7 +153,7 @@ func (st *SlimTrie) initLevels() {
 
 	// The last level may be clustered leaves level.
 
-	if ns.Clustered != nil && len(ns.Clustered.Offsets) > 0 {
+	if ns.Clustered != nil {
 		// the bottom -1 level is clustered.
 		// plus all clustered leaves
 		total += int32(len(ns.Clustered.Offsets)) - 1

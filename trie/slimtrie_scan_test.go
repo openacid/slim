@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 
@@ -26,17 +27,19 @@ var defaultScan = []string{
 }
 var iterCases = map[string]struct {
 	keys         []string
+	maxLevel     int32
 	slimStr      string
 	paths        [][]int32
 	scanFromKeys []string
 }{
 	"empty": {
 		keys:         []string{},
+		maxLevel:     0,
 		slimStr:      trim(""),
 		paths:        [][]int32{{}},
 		scanFromKeys: defaultScan,
 	},
-	"simple": {
+	"simple-3": {
 		keys: []string{
 			"abc",
 			"abcd",
@@ -47,6 +50,45 @@ var iterCases = map[string]struct {
 			"bcde",
 			"cde",
 		},
+		maxLevel: 3,
+		slimStr: trim(`
+#000+4*3
+    -0001->#001+12*4
+               -c->#004=0
+               -cd->#005=1
+               -d->#006=2
+               -de->#007=3
+    -0010->#002+8*3
+               -->#008=4
+               -d->#009=5
+               -de->#010=6
+    -0011->#003=7
+`),
+		paths: [][]int32{
+			{0, 1, 4},
+			{0, 1, 5},
+			{0, 1, 6},
+			{0, 1, 7},
+			{0, 2, 8},
+			{0, 2, 9},
+			{0, 2, 10},
+			{0, 3},
+			{}, // path seeking from after the last key
+		},
+		scanFromKeys: defaultScan,
+	},
+	"simple-10": {
+		keys: []string{
+			"abc",
+			"abcd",
+			"abd",
+			"abde",
+			"bc",
+			"bcd",
+			"bcde",
+			"cde",
+		},
+		maxLevel: 10,
 		slimStr: trim(`
 #000+4*3
     -0001->#001+12*2
@@ -86,6 +128,7 @@ var iterCases = map[string]struct {
 			"bcd",
 			"cde",
 		},
+		maxLevel: 0,
 		slimStr: trim(`
 #000*2
     -->#001=0
@@ -120,10 +163,12 @@ func TestSlimTrie_Iter(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 
 			ta := require.New(t)
-
 			values := makeI32s(len(c.keys))
 
-			st, err := NewSlimTrie(encode.I32{}, c.keys, values, Opt{Complete: Bool(true)})
+			st, err := NewSlimTrie(encode.I32{}, c.keys, values,
+				Opt{Complete: Bool(true),
+					MaxLevel: I32(c.maxLevel),
+				})
 			ta.NoError(err)
 
 			dd(st)
@@ -145,7 +190,7 @@ func TestSlimTrie_Iter(t *testing.T) {
 func TestSlimTrie_NewIter_panic(t *testing.T) {
 
 	ta := require.New(t)
-	keys := iterCases["simple"].keys
+	keys := iterCases["simple-10"].keys
 	values := makeI32s(len(keys))
 
 	ta.Panics(func() {
@@ -165,7 +210,7 @@ func TestSlimTrie_NewIter_slimWithoutValue(t *testing.T) {
 
 	ta := require.New(t)
 
-	c := iterCases["simple"]
+	c := iterCases["simple-10"]
 	keys := c.keys
 
 	st, err := NewSlimTrie(encode.I32{}, keys, nil, Opt{Complete: Bool(true)})
@@ -190,15 +235,24 @@ func TestSlimTrie_NewIter_slimWithoutValue(t *testing.T) {
 func TestSlimTrie_Iter_large(t *testing.T) {
 
 	testBigKeySet(t, func(t *testing.T, typ string, keys []string) {
-		ta := require.New(t)
 
 		values := makeI32s(len(keys))
 
-		st, err := NewSlimTrie(encode.I32{}, keys, values, Opt{Complete: Bool(true)})
-		ta.NoError(err)
+		for _, lvl := range []int32{4, 8, 100} {
+			t.Run(fmt.Sprintf("MaxLevel:%d", lvl), func(t *testing.T) {
+				ta := require.New(t)
 
-		subTestIter(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
-		subTestScan(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
+				st, err := NewSlimTrie(encode.I32{}, keys, values,
+					Opt{Complete: Bool(true),
+						MaxLevel: I32(int32(lvl)),
+					})
+				ta.NoError(err)
+
+				subTestIter(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
+				subTestScan(t, st, keys, testutil.RandStrSlice(clap(len(keys), 50, 10*1024), 0, 10))
+
+			})
+		}
 	})
 }
 
