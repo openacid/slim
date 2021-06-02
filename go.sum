@@ -20,6 +20,7 @@ github.com/openacid/genr v0.1.1 h1:8POqVvFYSxVws0GuVNdBV37F1qbstkKzdlflQsVuROg=
 github.com/openacid/genr v0.1.1/go.mod h1:2B9wMFQKBKZnmo8AR/3JCRGnHs85r4OzeNy0RStLTiU=
 github.com/openacid/low v0.1.20 h1:anqr2fOO3ASzxo6YyWx59uzGjUUn2dTnjzfhF54EVDI=
 github.com/openacid/low v0.1.20/go.mod h1:EnyHnBP5sNTPaqiwSoLp3ua+gY5qVBsKKiIB9cGg7aw=
+github.com/openacid/low v0.1.21/go.mod h1:q+MsKI6Pz2xsCkzV4BLj7NR5M4EX0sGz5AqotpZDVh0=
 github.com/openacid/must v0.1.3 h1:deanGZVyVwV+ozfwNFbRU5YF7czXeQ67s8GVyZxzKW4=
 github.com/openacid/must v0.1.3/go.mod h1:luPiXCuJlEo3UUFQngVQokV0MPGryeYvtCbQPs3U1+I=
 github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86 h1:VDKQXFTUgOiucWNpIruW0TQAG6oAq9p2pVQGlXkgtT0=
