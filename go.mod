@@ -14,5 +14,5 @@ require (
 	github.com/openacid/tablewriter v0.0.0-20190429071406-b14f71081b86
 	github.com/openacid/testkeys v0.1.6
 	github.com/openacid/testutil v0.1.3
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.4
 )
