@@ -97,6 +97,22 @@ memory, as a minimized index of huge amount external data.
 
 ![](trie/report/mem_usage.jpg)
 
+The data struct in this benchmark is a slice of key-value pairs with a `SlimTrie` serving as the index.
+The slim itself is built in the **filter** mode, to maximize memory reduction and performance.
+The whole struct `slimKV` is a fully functional kv-store, just like a static `btree`.
+
+```go
+type slimKV struct {
+    slim *trie.SlimTrie
+    Elts []*KVElt
+}
+type KVElt struct {
+    Key string
+    Val int32
+}
+```
+
+You can find the benchmark code in [benchmark](trie/benchmark/benchmark.go);
 
 Read more about [Performance](docs/performance.md)
 
