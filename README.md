@@ -21,19 +21,15 @@ corresponding serialization APIs to persisting them on-disk or for transport.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Why slim](#why-slim)
-- [Memory overhead](#memory-overhead)
-- [Performance](#performance)
-- [False Positive Rate](#false-positive-rate)
-- [Status](#status)
-- [Roadmap](#roadmap)
-- [Change-log](#change-log)
+- [Performance and memory overhead](#performance-and-memory-overhead)
 - [Synopsis](#synopsis)
-  - [Index keys, get by key](#index-keys-get-by-key)
-  - [Index key ranges, get by key](#index-key-ranges-get-by-key)
-  - [Scan](#scan)
-- [Getting started](#getting-started)
+  - [1. Index on-disk key-values](#1-index-on-disk-key-values)
+  - [2. Sparse index](#2-sparse-index)
+  - [3. Range scan](#3-range-scan)
+- [Filter mode and KV mode.](#filter-mode-and-kv-mode)
+- [Try it](#try-it)
+  - [Versions](#versions)
 - [Who are using slim](#who-are-using-slim)
 - [Feedback and contributions](#feedback-and-contributions)
 - [Authors](#authors)
@@ -49,6 +45,7 @@ the capacity gap between memory and disk becomes greater.
 Most of the time, a data itself does not need to be loaded into expensive main memory.
 Only the much more important information, WHERE-A-DATA-IS, deserve a seat in
 main memory.
+
 
 This is what `slim` does, keeps as little information as possible in main
 memory, as a minimized index of huge amount external data.
@@ -89,91 +86,31 @@ memory, as a minimized index of huge amount external data.
         a single `proto.Marshal()` is all it requires to serialize, transport or persisting on disk etc.
 
 
-## Memory overhead
-
--   Random string, fixed length, default mode, no label is store if possible:
-
-    **Bits/key**: memory or disk-space in bits a key consumed in average.
-    It does not change when key-length(`k`) becomes larger!
-
-    ![](trie/report/mem_usage.jpg)
-
-
--   1 million var-length string, 10 to 20 byte in different mode SlimTrie:
-
-    | -          | size  | gzip-size |
-    | :--        | --:   | --:       |
-    | Original   | 15.0M | 14.0M     |
-    | Complete   | 14.0M | 10.0M     |
-    | InnerLabel |  1.3M |  0.9M     |
-    | NoLabel    |  1.3M |  0.8M     |
-
-    Raw string list and serialized slim is stored in:
-    https://github.com/openacid/testkeys/tree/master/assets
-
-    -   Original: raw string lines in a text file.
-
-    -   Complete: `NewSlimTrie(..., Opt{Complete:Bool(true)})`: lossless SlimTrie,
-        stores complete info of every string. This mode provides accurate query.
-
-    -   InnerLabel: `NewSlimTrie(..., Opt{InnerPrefix:Bool(true)})` SlimTrie stores
-        only label strings of inner nodes(but not label to a leaf). There is false positive in this mode.
-
-    -   NoLabel: No label info is stored. False positive rate is higher.
-
-
-## Performance
-
-Time(in nano second) spent on a `Get()` with golang-map, SlimTrie, array and [btree][] by google.
+## Performance and memory overhead
 
 - **3.3 times faster** than the [btree][].
 - **2.3 times faster** than binary search.
 
 ![](trie/report/bench_msab_present_zipf.jpg)
 
+- **Memory overhead is about 11 bit per key**.
 
-Time(in nano second) spent on a `Get()` with different key count(`n`) and key length(`k`):
-
-![](trie/report/bench_get_present_zipf.jpg)
-
-
-## False Positive Rate
-
-![](trie/report/fpr_get.jpg)
-
-> Bloom filter requires about 9 bits/key to archieve less than 1% FPR.
-
-See: [trie/report/](trie/report/)
+![](trie/report/mem_usage.jpg)
 
 
-## Status
-
--   `SlimTrie` APIs are stable, and has been used in a production env.
-
-    Meanwhile we focus on optimizing memory usage and query performance.
-
--   Internal data structure are promised to be backward compatible for ever.
-    No data migration issue!
+Read more about [Performance](docs/performance.md)
 
 
-## Roadmap
-
--   [x] **2021-01-15** v0.5.11 Query by range
--   [x] **2019-09-18** v0.5.10 Reduce false positive rate to less than 0.05%
--   [x] **2019-06-03** v0.5.9  Large key set benchmark
--   [x] **2019-05-29** v0.5.6  Support up to 2 billion keys
--   [x] **2019-05-18** v0.5.4  Reduce memory usage from 40 to 14 bits/key
--   [x] **2019-04-20** v0.4.3  Range index: many keys share one index item
--   [x] **2019-04-18** v0.4.1  Marshaling support
--   [x] **2019-03-08** v0.1.0  SlimIndex SlimTrie
-
-## Change-log
-
-[Change-log](docs/change-log.yaml)
 
 ## Synopsis
 
-### Index keys, get by key
+### 1. Index on-disk key-values
+
+One of the typical usages of slim is to index serialized data on disk(e.g., key value records in a SSTable).
+By keeping a slim in memory, one can quickly find the on-disk offset of the record by a key.
+
+<details>
+    <summary>Show me the code ......</summary>
 
 ```go
 package index_test
@@ -241,7 +178,9 @@ func Example() {
 }
 ```
 
-### Index key ranges, get by key
+</details>
+
+### 2. Sparse index
 
 Create an index item for every 4(or more as you wish) keys.
 
@@ -249,6 +188,9 @@ Let several adjacent keys share one index item reduces a lot memory
 cost if there are huge amount keys in external data.
 Such as to index billions of 4KB objects on a 4TB disk(because one disk IO
 costs 20ms for either reading 4KB or reading 1MB).
+
+<details>
+    <summary>Show me the code ......</summary>
 
 ```go
 package index_test
@@ -331,9 +273,19 @@ func Example_indexRanges() {
 }
 ```
 
+</details>
 
-### Scan
 
+### 3. Range scan
+
+Slim can also be used as a traditional in-memory kv-store:
+Building a slim with `Opt{ Complete: Bool(true) }`,
+it won't strip out any information(e.g., it won't eliminate single-branch labels)
+and it will functions the same as a `btree`.
+This snippet shows how to iterate key values.
+
+<details>
+    <summary>Show me the code ......</summary>
 
 ```go
 package trie
@@ -418,15 +370,86 @@ func ExampleSlimTrie_ScanFrom() {
 }
 ```
 
+</details>
+
+
+## Filter mode and KV mode.
+
+Slim can be built into either a filter(like `bloom filter` but with key order preserved.) or a real kv-store(like `btree`)
+There is an `option` in `NewSlimTrie(..., option)` to control the building behavior.
+Ref: [Opt](https://pkg.go.dev/github.com/openacid/slim@v0.5.11/trie#Opt)
+
+- To use slim as a kv-store, set the option to `Complete` then there won't be false positives.
+
+- To use it as a filter, set `InnerPrefix`, `LeafPrefix` to false(`Complete` implies `InnerPrefix==true` and `LeafPrefix==true`).
+  Then slim won't store any single branch label in the trie it builds.
+
+  With  `InnerPrefix==true`, it does not reduce a single label branch that leads to an inner node.
+
+  With  `LeafPrefix==true`, it does not reduce a single label branch that leads to a leaf node.
+
+  E.g.:
+
+  ```
+  // Complete
+  InnerPrefix: true
+  LeafPrefix: true
+  ^ -a-> 1 -b-> $
+   `-c-> 2 -x-> 3 -y-> $
+                 `-z-> $
+  
+  InnerPrefix: true
+  LeafPrefix: false
+  ^ -a-> $
+   `-c-> 2 -x-> 3 -y-> $
+                 `-z-> $
+  
+  InnerPrefix: false
+  LeafPrefix: true
+  ^ -a-> 1 -b-> $
+   `-c-> 3 -y-> $
+          `-z-> $
+  
+  InnerPrefix: false
+  LeafPrefix: false
+  ^ -a-> $
+   `-c-> 3 -y-> $
+          `-z-> $
+  ```
+
+The memory consumption in filter mode and kv mode differs significantly.
+The following chart shows memory consumption by 1 million var-length string, 10 to 20 byte in different mode:
+
+| -                | size  | gzip-size |
+| :--              | --:   | --:       |
+| sample data size | 15.0M | 14.0M     |
+| Complete:true    | 14.0M | 10.0M     |
+| InnerPrefix:ture |  1.3M |  0.9M     |
+| all false        |  1.3M |  0.8M     |
+
+
 <!-- ## FAQ -->
 
-## Getting started
+## Try it
 
 **Install**
 
 ```sh
 go get github.com/openacid/slim/trie
 ```
+
+Change-log: [Change-log](docs/change-log.yaml)
+
+### Versions
+
+A newer version `y` being compatible with an older version `x` means `y` can
+load data serialized by `x`. But `x` should never try to load data serialized by
+a newer version `y`.
+
+- `v0.5.*` is compatible with `0.2.*`, `0.3.*`, `0.4.*`, `0.5.*`.
+- `v0.4.*` is compatible with `0.2.*`, `0.3.*`, `0.4.*`.
+- `v0.3.*` is compatible with `0.2.*`, `0.3.*`.
+- `v0.2.*` is compatible with `0.2.*`.
 
 
 <!-- TODO add FAQ -->
