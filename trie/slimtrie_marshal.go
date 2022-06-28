@@ -67,6 +67,7 @@ func (st *SlimTrie) Unmarshal(buf []byte) error {
 
 		if vers.Check(ver, "<0.5.12") {
 			before000512InnerPrefixTobitstr(st)
+			before000512FixLeafSize(st)
 		}
 
 		st.init()
@@ -137,6 +138,38 @@ func before000512InnerPrefixTobitstr(st *SlimTrie) {
 			}
 		}
 	}
+}
+
+func before000512FixLeafSize(st *SlimTrie) {
+
+	// Before d27f7e9 2021-04-29, no fixed size or var-len size are written to Leaves.
+	// Only Leaves.Bytes are written.
+	// Before this commit, slimtrie only supports fixed-size leaves, and the size of a leaf is decided by st.encoder
+	leaves := st.inner.Leaves
+
+	if leaves == nil {
+		return
+	}
+
+	// PresenceBM is non-nil after d27f7e9 2021-04-29, or it has to be fixed.
+	if leaves.PresenceBM == nil {
+		if leaves.FixedSize != 0 {
+			panic("impossible FixedSize is non-zero while PresenceBM is nil")
+		}
+
+		leaves.FixedSize = int32(st.encoder.GetEncodedSize(nil))
+
+		n := int32(len(leaves.Bytes)) / leaves.FixedSize
+		leaves.N = n
+		leaves.EltCnt = n
+
+		indexes := make([]int32, n)
+		for i := int32(0); i < n; i++ {
+			indexes[i] = i
+		}
+		leaves.PresenceBM = newBM(indexes, n, "r64")
+	}
+
 }
 
 // ProtoMessage implements proto.Message

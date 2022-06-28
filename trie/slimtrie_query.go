@@ -553,10 +553,7 @@ func (st *SlimTrie) getIthLeaf(ith int32) interface{} {
 		return nil
 	}
 
-	eltsize := st.encoder.GetEncodedSize(nil)
-	stIdx := ith * int32(eltsize)
-
-	bs := ls.Bytes[stIdx:]
+	bs := ls.get(ith)
 
 	_, v := st.encoder.Decode(bs)
 	return v

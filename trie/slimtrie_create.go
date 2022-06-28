@@ -230,6 +230,7 @@ func (c *creator) addLeaf(nid int32, v []byte) {
 }
 
 // addLeaf adds the index of a leaf.
+// The `idx` is the position in the key-value set for building this slim.
 func (c *creator) addLeafIndex(nid int32, idx int32) {
 
 	must.Be.Equal(c.nodeCnt, nid)
@@ -430,36 +431,30 @@ func (c *creator) buildLeaves(bytesValues [][]byte) *VLenArray {
 		return nil
 	}
 
-	leaves := &VLenArray{}
-
+	var elts [][]byte
 	if len(c.leafIndexes) > 0 {
-		sz := 0
-		for _, idx := range c.leafIndexes {
-			sz += len(bytesValues[idx])
-		}
-		lb := make([]byte, 0, sz)
-		for _, idx := range c.leafIndexes {
-			lb = append(lb, bytesValues[idx]...)
-		}
-		leaves.Bytes = lb
-
+		// Select in used []byte
+		elts, _ = selectByIndexes(c.leafIndexes, bytesValues)
 	} else {
-
 		// maybe an empty slim, e.g., c.leaves is empty, or a slim with leaves filled
-		n := len(c.leaves)
-		sz := 0
-		for _, elt := range c.leaves {
-			sz += len(elt)
-		}
-
-		lb := make([]byte, 0, sz)
-		for i := 0; i < n; i++ {
-			lb = append(lb, c.leaves[i]...)
-		}
-		leaves.Bytes = lb
+		elts = c.leaves
 	}
-	return leaves
 
+	return newVLenArray(elts)
+}
+
+// Select the `bytes`s by `indexes`. return the result and total size.
+func selectByIndexes(indexes []int32, bytesSlice [][]byte) ([][]byte, int) {
+	res := make([][]byte, 0, len(bytesSlice))
+
+	sz := 0
+
+	for _, idx := range indexes {
+		sz += len(bytesSlice[idx])
+		res = append(res, bytesSlice[idx])
+	}
+
+	return res, sz
 }
 
 func newSlim(keys []string, bytesValues [][]byte, opt *Opt) (*Slim, error) {
@@ -648,6 +643,7 @@ func getV(reflectSlice reflect.Value, i int32) interface{} {
 	return reflectSlice.Index(int(i)).Interface()
 }
 
+// Convert a seq of step to a seq of cumulative values
 func stepToPos(steps []int32, shift int32) []int32 {
 
 	mask := int32(bitmap.Mask[shift])
