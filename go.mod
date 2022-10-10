@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/golang/protobuf v1.3.1
 	github.com/google/btree v1.1.2
-	github.com/kr/pretty v0.3.0
+	github.com/kr/pretty v0.3.1
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/openacid/errors v0.8.1
 	github.com/openacid/genr v0.1.1
