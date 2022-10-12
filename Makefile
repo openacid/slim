@@ -30,13 +30,13 @@ vet:
 	$(GO) vet $(PKGS)
 
 staticcheck:
-	$(GO) get honnef.co/go/tools/cmd/staticcheck
+	$(GO) install honnef.co/go/tools/cmd/staticcheck@latest
 	# ST1016: methods on the same type should have the same receiver name
 	#         .pb.go have this issue.
 	staticcheck -checks all,-ST1016 $(PKGS)
 
 misspell:
-	$(GO) get github.com/client9/misspell/cmd/misspell
+	$(GO) install github.com/client9/misspell/cmd/misspell@latest
 	find $(SRCDIRS) -name '*.go' -or -name '*.md' | grep -v "\bvendor/" | xargs misspell \
 		-locale US \
 		-error
@@ -46,11 +46,11 @@ misspell:
 		*.md *.go
 
 unconvert:
-	$(GO) get github.com/mdempsky/unconvert
+	$(GO) install github.com/mdempsky/unconvert@latest
 	unconvert -v $(PKGS)
 
 ineffassign:
-	$(GO) get github.com/gordonklaus/ineffassign
+	$(GO) install github.com/gordonklaus/ineffassign@latest
 	# With ineffassign v0.0.0-20210104184537-8eed68eb605f
 	# The following form now complains error: "named files must all be in one directory"
 	#    find $(SRCDIRS) -name '*.go' | grep -v "\bvendor/" | xargs ineffassign
@@ -60,11 +60,11 @@ ineffassign:
 pedantic: check errcheck
 
 unparam:
-	$(GO) get mvdan.cc/unparam
+	$(GO) install mvdan.cc/unparam@latest
 	unparam ./...
 
 errcheck:
-	$(GO) get github.com/kisielk/errcheck
+	$(GO) install github.com/kisielk/errcheck@latest
 	errcheck $(PKGS)
 
 gofmt:
@@ -94,7 +94,7 @@ coverage:
 	go tool cover -html=coverage.out
 
 coveralls:
-	$(GO) get golang.org/x/tools/cmd/cover
-	$(GO) get github.com/mattn/goveralls
+	$(GO) install golang.org/x/tools/cmd/cover@latest
+	$(GO) install github.com/mattn/goveralls@latest
 	goveralls -ignore='**/*.pb.go' -coverprofile=coverage.out -service=travis-ci
 	# -repotoken $$COVERALLS_TOKEN
