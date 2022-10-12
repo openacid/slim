@@ -69,8 +69,6 @@ func ExampleSlimTrie_RangeGet() {
 	// abcde      1     true : FALSE POSITIVE: a suffix of abcd
 	// acc        1     true : FALSE POSITIVE
 	// bc         2     true : in single key range [bc]
-	// bc1        3     true : FALSE POSITIVE
+	// bc1        2     true : FALSE POSITIVE
 	// bcd1       3     true : FALSE POSITIVE
-
-	// def        1     true : FALSE POSITIVE
 }
