@@ -3,6 +3,9 @@ language: go
 go:
     - 1.14.x
     - 1.15.x
+    - 1.16.x
+    - 1.17.x
+    - 1.18.x
 
 script:
     - make travis
