@@ -36,6 +36,12 @@ var iterCases = map[string]struct {
 		paths:        [][]int32{{}},
 		scanFromKeys: defaultScan,
 	},
+	"single": {
+		keys:         []string{"ab"},
+		slimStr:      trim(`#000=0`),
+		paths:        [][]int32{{0}, {}},
+		scanFromKeys: defaultScan,
+	},
 	"simple": {
 		keys: []string{
 			"abc",
