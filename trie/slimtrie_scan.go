@@ -114,6 +114,37 @@ func (st *SlimTrie) newIter(path []int32, skipFirst, withValue bool) NextRaw {
 
 	if skipFirst {
 		stackIdx = next(stack, stackIdx)
+	} else {
+
+		if len(path) == 1 {
+			// SlimTrie is built with only one key.
+			//
+			// The walking algo depends on parent node. If there is only one node in a trie, there is no parent node.
+			// Thus, it is a special case.
+
+			consumed := false
+			nodeId := path[0]
+
+			return func() ([]byte, []byte) {
+				if consumed {
+					return nil, nil
+				}
+
+				var val []byte
+				qr := &querySession{}
+				st.getNode(nodeId, qr)
+				if qr.hasLeafPrefix {
+					buf = append(buf, qr.leafPrefix...)
+				}
+				if withValue {
+					leafI, _ := st.getLeafIndex(nodeId)
+					val = st.getIthLeafBytes(leafI)
+				}
+
+				consumed = true
+				return buf, val
+			}
+		}
 	}
 
 	return func() ([]byte, []byte) {
