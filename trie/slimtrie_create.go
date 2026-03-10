@@ -624,7 +624,7 @@ func newToKeep(n int, values [][]byte, opt *Opt) []bool {
 	if *opt.DedupValue && values != nil {
 		tokeep[0] = true
 		for i := 1; i < n; i++ {
-			tokeep[i] = bytes.Compare(values[i-1], values[i]) != 0
+			tokeep[i] = !bytes.Equal(values[i-1], values[i])
 		}
 		return tokeep
 	}
