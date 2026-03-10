@@ -1,4 +1,3 @@
-# `grep -v` does not work on travis. No time to find out why -- xp 2019 Feb 22
 PKGS := $(shell go list ./... | grep -v "^github.com/openacid/slim/\(vendor\|prototype\|iohelper\|serialize\|version\)")
 
 # PKGS := github.com/openacid/slim/array \
@@ -12,8 +11,6 @@ GOFILES := $(shell find $(SRCDIRS) -not -path "*/vendor/*" -name "*.go")
 GO := go
 
 check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
-
-travis: vet gofmt misspell unconvert ineffassign unparam test
 
 test-short:
 	# fail fast with severe bugs
@@ -96,5 +93,5 @@ coverage:
 coveralls:
 	$(GO) install golang.org/x/tools/cmd/cover@latest
 	$(GO) install github.com/mattn/goveralls@latest
-	goveralls -ignore='**/*.pb.go' -coverprofile=coverage.out -service=travis-ci
+	goveralls -ignore='**/*.pb.go' -coverprofile=coverage.out -service=github
 	# -repotoken $$COVERALLS_TOKEN
