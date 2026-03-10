@@ -6,3 +6,11 @@ repository:
   description: Surprisingly space efficient trie in Golang(11 bits/key; 100 ns/get).
   homepage: https://openacid.github.io/
   topics: go, golang, memory, compacted, compress, datastructure, trie, tree
+
+branches:
+  - name: main
+    protection:
+      required_status_checks: null
+      enforce_admins: null
+      required_pull_request_reviews: null
+      restrictions: null
