@@ -5,13 +5,15 @@ on:
       - v*
     branches:
       - '*'
-  pull_request:
+  pull_request_target:
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: actions/setup-go@v5
         with:

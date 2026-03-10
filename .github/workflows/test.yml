@@ -1,7 +1,7 @@
 name: test
 on:
   push:
-  pull_request:
+  pull_request_target:
 
 jobs:
   test:
@@ -25,6 +25,8 @@ jobs:
 
         - name: checkout
           uses: actions/checkout@v4
+          with:
+            ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
         - name: cache
           uses: actions/cache@v4
