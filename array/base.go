@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"reflect"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/openacid/errors"
 	"github.com/openacid/low/bitmap"
 	"github.com/openacid/slim/encode"
@@ -18,6 +19,20 @@ var endian = binary.LittleEndian
 type Base struct {
 	Array32
 	EltEncoder encode.Encoder
+}
+
+// Marshal serializes the underlying Array32 to protobuf bytes.
+//
+// Since 0.5.13
+func (a *Base) Marshal() ([]byte, error) {
+	return proto.Marshal(&a.Array32)
+}
+
+// Unmarshal deserializes protobuf bytes into the underlying Array32.
+//
+// Since 0.5.13
+func (a *Base) Unmarshal(buf []byte) error {
+	return proto.Unmarshal(buf, &a.Array32)
 }
 
 const (
