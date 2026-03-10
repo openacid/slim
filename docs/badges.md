@@ -1,4 +1,3 @@
-[![Travis](https://travis-ci.com/openacid/{{ name }}.svg?branch=main)](https://travis-ci.com/openacid/{{ name }})
 ![test](https://github.com/openacid/{{ name }}/workflows/test/badge.svg)
 
 [![Report card](https://goreportcard.com/badge/github.com/openacid/{{ name }})](https://goreportcard.com/report/github.com/openacid/{{ name }})

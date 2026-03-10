@@ -5,7 +5,6 @@ https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
 # Slim - surprisingly space efficient data types in Golang
 
-[![Travis](https://travis-ci.com/openacid/slim.svg?branch=main)](https://travis-ci.com/openacid/slim)
 ![test](https://github.com/openacid/slim/workflows/test/badge.svg)
 
 [![Report card](https://goreportcard.com/badge/github.com/openacid/slim)](https://goreportcard.com/report/github.com/openacid/slim)
