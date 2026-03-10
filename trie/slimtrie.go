@@ -6,7 +6,7 @@
 //
 // SlimTrie memory overhead is about 14 bits per key(without value), or less.
 //
-// Key value map or key-range value map
+// # Key value map or key-range value map
 //
 // SlimTrie is natively something like a key value map.
 // Actually besides as a key value map,
@@ -17,7 +17,7 @@
 //
 // See SlimTrie.RangeGet .
 //
-// False Positive
+// # False Positive
 //
 // Just like bloom-filter, SlimTrie does not contain full information of keys,
 // thus there could be a false positive return:
@@ -185,8 +185,9 @@ func (st *SlimTrie) compatibleVersions() []string {
 // bytes and back.
 // Leave it nil if element in values are size fixed type and you do not really
 // care about performance.
-//	   int is not of fixed size.
-//	   struct { X int64; Y int32; } hax fixed size.
+//
+//	int is not of fixed size.
+//	struct { X int64; Y int32; } hax fixed size.
 //
 // Since 0.2.0
 func NewSlimTrie(e encode.Encoder, keys []string, values interface{}, opts ...Opt) (*SlimTrie, error) {

@@ -11,18 +11,18 @@ type Stat struct {
 
 // Stat() returns a struct `Stat` describing SlimTrie internal stats. E.g.:
 //
-//     &trie.Stat{
-//         LevelCnt: 5,
-//         Levels:   {
-//             {},
-//             {Total:1, Inner:1, Leaf:0},
-//             {Total:4, Inner:3, Leaf:1},
-//             {Total:8, Inner:6, Leaf:2},
-//             {Total:14, Inner:6, Leaf:8},
-//         },
-//         KeyCnt:  8,
-//         NodeCnt: 14,
-//     }
+//	&trie.Stat{
+//	    LevelCnt: 5,
+//	    Levels:   {
+//	        {},
+//	        {Total:1, Inner:1, Leaf:0},
+//	        {Total:4, Inner:3, Leaf:1},
+//	        {Total:8, Inner:6, Leaf:2},
+//	        {Total:14, Inner:6, Leaf:8},
+//	    },
+//	    KeyCnt:  8,
+//	    NodeCnt: 14,
+//	}
 //
 // Since 0.5.12
 func (st *SlimTrie) Stat() *Stat {

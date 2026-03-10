@@ -3,7 +3,7 @@
 // Unlike a normal array, it does not allocate space for an absent element.
 // In some way it is like a map[int32]interface{} .
 //
-// Memory overhead
+// # Memory overhead
 //
 // Internally it use a bitmap to indicate at which index there is an element.
 //
@@ -11,13 +11,13 @@
 // inidicate if there is an element at this position.
 // Thus the memory overhead is about 1 bit / load-factor.
 //
-//                    count(elements)
-//      load-factor = ----------------
-//                     max(indexes)
+//	              count(elements)
+//	load-factor = ----------------
+//	               max(indexes)
 //
 // An array with load factor = 0.5 requires about 2 extra bit pre present element.
 //
-// Implementation note
+// # Implementation note
 //
 // - The bottom level Array32 is a protobuf message that defines in memory
 // and on-disk structure.
@@ -29,21 +29,22 @@
 // efficient. "U32" accepts only uint32 as its element thus its performance is
 // much better.
 //
-//      Array   U32    U64         // ready-to-use types
-//        `----. | .----'
-//             v v v
-//             Base                // access supporting methods.
-//              |
-//              v
-//      protobuf:Array32           // in-memory and on-disk structure.
+//	Array   U32    U64         // ready-to-use types
+//	  `----. | .----'
+//	       v v v
+//	       Base                // access supporting methods.
+//	        |
+//	        v
+//	protobuf:Array32           // in-memory and on-disk structure.
 //
-// Performance note
+// # Performance note
 //
 // A Get involves at least 2 memory access to a.Bitmaps and a.Elts.
 //
 // An "Array" of general type requires one additional alloc for a Get:
-//   // when Decode convert a concrete type to interface{}
-//   a.EltEncoder.Decode(bs)
+//
+//	// when Decode convert a concrete type to interface{}
+//	a.EltEncoder.Decode(bs)
 //
 // An array of specific type such as "U32" does not requires additional alloc.
 package array
@@ -57,16 +58,18 @@ import (
 // Array is a space efficient array of fixed-size element.
 //
 // A fixed size type could be:
-//		int32
-//		struct { X int32; Y uint16 }
+//
+//	int32
+//	struct { X int32; Y uint16 }
 //
 // A non-fixed size type could be:
-//		int
-//		[]uint32
-//		map
-//		etc.
 //
-// Performance note
+//	int
+//	[]uint32
+//	map
+//	etc.
+//
+// # Performance note
 //
 // A general Array.Get is implemented with reflect.
 // Benchmark shows a Get() costs ~ 168 ns/op and involves 4 alloc.

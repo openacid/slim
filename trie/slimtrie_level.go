@@ -19,35 +19,35 @@ import (
 // - 1,0,1 if the slim has only one(must be a leaf) node.
 // - 1,1,0 if the slim has more than one nodes.
 //
-//
 // With a slim in the following structure:
 //
-//   node-0(root)
-//        +--a--> node-1
-//        |            +--x--> node-4(leaf)
-//        |            `--y--> node-5(leaf)
-//        |
-//        +--b--> node-2(leaf)
-//        |
-//        `--c--> node-3
-//                     +--u--> node-6(leaf)
-//                     `--v--> node-7(leaf)
+//	node-0(root)
+//	     +--a--> node-1
+//	     |            +--x--> node-4(leaf)
+//	     |            `--y--> node-5(leaf)
+//	     |
+//	     +--b--> node-2(leaf)
+//	     |
+//	     `--c--> node-3
+//	                  +--u--> node-6(leaf)
+//	                  `--v--> node-7(leaf)
 //
 // The node count of every level is:
 //
-//   [[0, 0, 0],
-//    [1, 1, 0],
-//    [4, 3, 1],
-//    [8, 2, 5],
-//   ]
+//	[[0, 0, 0],
+//	 [1, 1, 0],
+//	 [4, 3, 1],
+//	 [8, 2, 5],
+//	]
 //
 // The NodeTypeBM is:
-//   1 101 0000
+//
+//	1 101 0000
 //
 // To find out the position of node-2(nodeId=2, level=2):
 //
-//   rank0(NodeTypeBM, nodeId=2) - levels[2].leaf // the count of leaf at level 2.
-//  +rank0(NodeTypeBM, nodeId=6) - levels[3].leaf // the count of leaf at level 3.
+//	 rank0(NodeTypeBM, nodeId=2) - levels[2].leaf // the count of leaf at level 2.
+//	+rank0(NodeTypeBM, nodeId=6) - levels[3].leaf // the count of leaf at level 3.
 //
 // E.g., at every level, count the leaf nodes and sum them.
 // When reaching a leaf, find the next inner node at this level(in our case
@@ -71,6 +71,7 @@ type innerCache struct {
 }
 
 // levelStr builds a slice of string for every level in form of:
+//
 //	<i>: <total> = <inner> + <leaf>  <total'> = <inner'> + <leaf'>
 //
 // Since 0.5.12
