@@ -508,10 +508,10 @@ func (st *SlimTrie) getLabelIdxOfKey(qr *querySession, keyBitIdx int32) int32 {
 // The child node id == NO. nodes before it == NO. "1" before the ithBit plus 1.
 // Because every node has a "1" pointing to it except the root node.
 //
-//          ithBit
-//          v
-//     010011
-//  A   B  C
+//	        ithBit
+//	        v
+//	   010011
+//	A   B  C
 func (st *SlimTrie) getLeftChildID(qr *querySession, keyBitIdx int32) (int32, int32) {
 
 	ns := st.inner

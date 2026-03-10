@@ -149,13 +149,14 @@ func (a *Base) Get(idx int32) (interface{}, bool) {
 
 // GetBytes retrieves the raw data of value in []byte at "idx" and return it.
 //
-// Performance note
+// # Performance note
 //
 // Involves 2 memory access:
-//	 a.Bitmaps
-//	 a.Elts
 //
-// Involves 0 alloc
+//	a.Bitmaps
+//	a.Elts
+//
+// # Involves 0 alloc
 //
 // Since 0.2.0
 func (a *Base) GetBytes(idx int32, eltsize int) ([]byte, bool) {

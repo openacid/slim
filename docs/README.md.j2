@@ -234,52 +234,61 @@ Change-log: [Change-log](docs/change-log.yaml)
 
 
 <!-- TODO add FAQ -->
-<!-- TODO add serialization explanation, on-disk data structure etc. -->
 
 ## Who are using slim
 
 <span> <span> ![][baishancloud-favicon] </span> <span> [baishancloud][] </span> </span>
 
-<!-- ## Slim internal -->
+## Slim internal
 
-<!-- ### Built With -->
+### Protobuf data structures
 
-<!-- - [protobuf][] - Define on-disk data-structure and serialization engine. -->
-<!-- - [dep][] - Dependency Management. -->
-<!-- - [semver][] - For versioning data-structure. -->
+Slim uses [protobuf][] to define its on-disk data structures and as its
+serialization engine. All `.proto` files use **proto3** syntax.
 
-<!-- ### Directory Layout -->
+The protobuf definitions are in the following files:
 
-<!-- We follow the: [golang-standards-project-layout][]. -->
+-   `array/bitmap.proto`: `Bits` – a bitmap with rank index, used as the
+    building block for sparse arrays.
 
-<!-- [> TODO read the doc and add more standards <] -->
+-   `array/array.proto`: `Array32` – a 32-bit sparse array backed by bitmaps
+    and offset tables.
 
-<!-- -   `vendor/`: dependency packages. -->
-<!-- -   `prototype/`: on-disk data-structure. -->
-<!-- -   `docs/`: documents about design, trade-off, etc -->
-<!-- -   `tools/`: documents about design, trade-off, etc -->
-<!-- -   `expamples/`: documents about design, trade-off, etc -->
+-   `trie/slim.proto`: `Bitmap`, `VLenArray`, and `Slim` – the core trie
+    structures. `Slim` stores node-type bitmaps, inner-node label bitmaps,
+    short-bitmap tables, inner/leaf prefixes, and serialized leaf values.
 
-<!-- Other directories are sub-package. -->
+These structures are serialized with `proto.Marshal()` and deserialized with
+`proto.Unmarshal()` from the [`github.com/golang/protobuf`][protobuf-go]
+package (v1.3.1).
 
+### Regenerating protobuf code
 
-<!-- ### Versioning -->
+The generated Go files (`*.pb.go`) should **not** be edited by hand. To
+regenerate them after modifying a `.proto` file:
 
-<!-- We use [SemVer](http://semver.org/) for versioning. -->
+1.  Install `protoc` (the Protocol Buffers compiler).
+    See [protoc installation][protoc-install].
 
-<!-- For the versions available, see the [tags on this repository](https://github.com/your/project/tags).  -->
+2.  Install the Go protobuf plugin:
 
-<!-- ### Data structure explained -->
-<!-- [> TODO  <] -->
+    ```sh
+    go install github.com/golang/protobuf/protoc-gen-go@latest
+    ```
 
-<!-- ## Limitation -->
-<!-- [> TODO  <] -->
+3.  Re-generate the Go source:
 
+    ```sh
+    # array package (has a go:generate directive in array/gen.go)
+    go generate ./array/...
 
-<!-- -   [ ] bitrie: 1 byte-per-key implementation. -->
-<!-- -   [ ] balanced bitrie: which gives better worst-case performance. -->
-<!-- -   [ ] generalised API as a drop-in replacement for map etc. -->
+    # trie package
+    cd trie && protoc --proto_path=. --go_out=. slim.proto
+    ```
 
+> **Note:** `trie/slim.proto` was originally built with `protoc-gen-go`
+> **v1.2.0**. When regenerating, make sure the generated code is compatible
+> with the module dependency `github.com/golang/protobuf v1.3.1`.
 
 ## Feedback and contributions
 
@@ -422,6 +431,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 [dep]: https://github.com/golang/dep
 [protobuf]: https://github.com/protocolbuffers/protobuf
+[protobuf-go]: https://github.com/golang/protobuf
 [semver]: http://semver.org/
 
 [protoc-install]: http://google.github.io/proto-lens/installing-protoc.html
