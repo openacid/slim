@@ -3,6 +3,9 @@ on:
   push:
   pull_request_target:
 
+permissions:
+  contents: read
+
 jobs:
   test-short:
     strategy:
@@ -26,7 +29,17 @@ jobs:
             ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
         - name: cache
+          if: github.event_name == 'push'
           uses: actions/cache@v4
+          with:
+            path: ~/go/pkg/mod
+            key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            restore-keys: |
+              ${{ runner.os }}-go-
+
+        - name: cache (read-only)
+          if: github.event_name != 'push'
+          uses: actions/cache/restore@v4
           with:
             path: ~/go/pkg/mod
             key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}

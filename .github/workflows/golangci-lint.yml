@@ -6,6 +6,10 @@ on:
     branches:
       - '*'
   pull_request_target:
+
+permissions:
+  contents: read
+
 jobs:
   golangci:
     name: lint
